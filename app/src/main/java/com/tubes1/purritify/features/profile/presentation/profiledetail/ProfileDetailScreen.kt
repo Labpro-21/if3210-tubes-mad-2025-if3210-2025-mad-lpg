@@ -121,12 +121,12 @@ fun ProfileScreen() {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 32.dp, start = 40.dp, end = 40.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
+                    .padding(top = 32.dp, start = 10.dp, end = 10.dp),
+                horizontalArrangement = Arrangement.Center
             ) {
-                StatItem(count = "135", label = "LAGU")
-                StatItem(count = "32", label = "DISUKAI")
-                StatItem(count = "50", label = "DIDENGARKAN")
+                StatItem(count = "135", label = "LAGU", modifier = Modifier.weight(1f))
+                StatItem(count = "32", label = "DISUKAI", modifier = Modifier.weight(1f))
+                StatItem(count = "50", label = "DIDENGARKAN", modifier = Modifier.weight(1f))
             }
         }
 
