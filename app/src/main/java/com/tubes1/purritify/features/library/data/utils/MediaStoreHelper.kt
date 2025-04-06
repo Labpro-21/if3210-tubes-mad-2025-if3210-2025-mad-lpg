@@ -1,12 +1,10 @@
 package com.tubes1.purritify.features.library.data.utils
 
-import android.content.ContentResolver
-import android.content.ContentUris
 import android.content.Context
 import android.media.MediaMetadataRetriever
 import android.net.Uri
 import com.tubes1.purritify.features.library.domain.model.Song
-import com.tubes1.purritify.features.library.presentation.addsong.AddSongState
+import com.tubes1.purritify.features.library.presentation.uploadsong.AddSongState
 import java.io.File
 import java.io.FileOutputStream
 import java.util.UUID

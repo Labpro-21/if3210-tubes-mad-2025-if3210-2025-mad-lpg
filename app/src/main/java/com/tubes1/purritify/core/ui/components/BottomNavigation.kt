@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.compose.rememberNavController
@@ -57,19 +58,23 @@ fun BottomNavigation(modifier: Modifier = Modifier, selectedIndex: Int = 0) {
                     Icon(
                         imageVector = icons[index],
                         contentDescription = item,
+                        modifier = Modifier
+                            .height(32.dp)
+                            .width(32.dp),
                         tint = if (selected) Color.White else Color.White.copy(alpha = 0.6f)
                     )
                     Text(
                         text = item,
                         color = if (selected) Color.White else Color.White.copy(alpha = 0.6f),
-                        fontSize = 12.sp
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold
                     )
 
                     if (selected) {
                         Box(
                             modifier = Modifier
                                 .padding(top = 4.dp)
-                                .width(24.dp)
+                                .width(32.dp)
                                 .height(2.dp)
                                 .background(Color.White)
                         )

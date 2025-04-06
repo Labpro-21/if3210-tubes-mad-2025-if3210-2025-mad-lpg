@@ -41,7 +41,6 @@ android {
 }
 
 dependencies {
-
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -61,6 +60,7 @@ dependencies {
     implementation(libs.okhttp)
     implementation(libs.okhttp.logging.interceptor)
     implementation(libs.room.runtime)
+    implementation(libs.androidx.ui.text.android)
     ksp(libs.room.compiler)
     implementation(libs.glide)
     ksp(libs.glide.compiler)

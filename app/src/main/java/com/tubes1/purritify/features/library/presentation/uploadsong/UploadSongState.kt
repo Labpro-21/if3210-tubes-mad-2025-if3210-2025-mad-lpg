@@ -1,4 +1,4 @@
-package com.tubes1.purritify.features.library.presentation.addsong
+package com.tubes1.purritify.features.library.presentation.uploadsong
 
 import android.net.Uri
 

@@ -7,7 +7,7 @@ import com.tubes1.purritify.features.library.data.utils.MediaStoreHelper
 import com.tubes1.purritify.features.library.domain.usecase.AddSongUseCase
 import com.tubes1.purritify.features.library.domain.usecase.DeleteSongUseCase
 import com.tubes1.purritify.features.library.domain.usecase.GetAllSongsUseCase
-import com.tubes1.purritify.features.library.presentation.addsong.AddSongState
+import com.tubes1.purritify.features.library.presentation.uploadsong.AddSongState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
