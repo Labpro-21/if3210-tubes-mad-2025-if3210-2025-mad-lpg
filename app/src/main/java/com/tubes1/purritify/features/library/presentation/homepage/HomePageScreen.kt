@@ -95,9 +95,5 @@ fun HomeScreen() {
                 SongListItem(song)
             }
         }
-        BottomNavigation(
-            modifier = Modifier.align(Alignment.BottomCenter),
-            selectedIndex = 0
-        )
     }
 }

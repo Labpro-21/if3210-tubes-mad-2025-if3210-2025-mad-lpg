@@ -76,7 +76,7 @@ fun UploadSongBottomSheet(
                     ) {
                         // header
                         Text(
-                            text = "Upload Song",
+                            text = "Upload Lagu",
                             color = Color.White,
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
@@ -91,7 +91,7 @@ fun UploadSongBottomSheet(
                             horizontalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
                             UploadArea(
-                                title = "Upload Photo",
+                                title = "Upload Foto",
                                 icon = Icons.Outlined.AccountCircle,
                                 onClick = { /* handle photo upload */ },
                                 modifier = Modifier.weight(1f)
@@ -107,10 +107,10 @@ fun UploadSongBottomSheet(
 
                         // title input
                         InputField(
-                            label = "Title",
+                            label = "Judul",
                             value = title,
                             onValueChange = { title = it },
-                            placeholder = "Title",
+                            placeholder = "Judul lagu",
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(bottom = 16.dp)
@@ -118,10 +118,10 @@ fun UploadSongBottomSheet(
 
                         // artist input
                         InputField(
-                            label = "Artist",
+                            label = "Artis",
                             value = artist,
                             onValueChange = { artist = it },
-                            placeholder = "Artist",
+                            placeholder = "Artis lagu",
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(bottom = 32.dp)

@@ -67,6 +67,7 @@ dependencies {
     implementation(libs.glide.compose)
     implementation(libs.jackson.databind)
     implementation(libs.jackson.module.kotlin)
+    implementation(libs.accompanist.system.ui.controller)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

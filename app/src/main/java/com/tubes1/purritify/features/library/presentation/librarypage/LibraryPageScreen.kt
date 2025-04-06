@@ -58,7 +58,7 @@ fun LibraryScreen() {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 16.dp),
+                    .padding(vertical = 8.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -113,10 +113,6 @@ fun LibraryScreen() {
                 }
             }
         }
-        BottomNavigation(
-            modifier = Modifier.align(Alignment.BottomCenter),
-            selectedIndex = 1
-        )
 
         if (showAddSongBottomSheet) {
             UploadSongBottomSheet(

@@ -129,11 +129,5 @@ fun ProfileScreen() {
                 StatItem(count = "50", label = "DIDENGARKAN", modifier = Modifier.weight(1f))
             }
         }
-
-        // bottom navbar
-        BottomNavigation(
-            modifier = Modifier.align(Alignment.BottomCenter),
-            selectedIndex = 2
-        )
     }
 }
