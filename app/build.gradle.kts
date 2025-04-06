@@ -64,6 +64,7 @@ dependencies {
     ksp(libs.room.compiler)
     implementation(libs.glide)
     ksp(libs.glide.compiler)
+    implementation(libs.glide.compose)
     implementation(libs.jackson.databind)
     implementation(libs.jackson.module.kotlin)
     testImplementation(libs.junit)
