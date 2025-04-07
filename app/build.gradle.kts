@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.jetbrains.kotlin.serialization)
 }
 
 android {
@@ -61,6 +62,7 @@ dependencies {
     implementation(libs.okhttp.logging.interceptor)
     implementation(libs.room.runtime)
     implementation(libs.androidx.ui.text.android)
+    implementation(libs.androidx.datastore.core.android)
     ksp(libs.room.compiler)
     implementation(libs.glide)
     ksp(libs.glide.compiler)
@@ -75,4 +77,6 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+    implementation(libs.androidx.datastore.preferences)
+    implementation(libs.kotlinx.serialization.json)
 }
