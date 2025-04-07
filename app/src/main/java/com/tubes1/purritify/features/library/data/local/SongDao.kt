@@ -1,0 +1,32 @@
+package com.tubes1.purritify.features.library.data.local
+
+import androidx.room.Dao
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
+import androidx.room.Query
+import com.tubes1.purritify.features.library.data.local.entity.SongEntity
+import kotlinx.coroutines.flow.Flow
+
+@Dao
+interface SongDao {
+    @Query("SELECT * FROM songs ORDER BY title ASC")
+    fun getAllSongs(): Flow<List<SongEntity>>
+
+    @Query("SELECT * FROM songs ORDER BY dateAdded DESC LIMIT :limit")
+    fun getNewlyAddedSongs(limit: Int): Flow<List<SongEntity>>
+
+    @Query("SELECT * FROM songs WHERE lastPlayed IS NOT NULL ORDER BY lastPlayed DESC LIMIT :limit")
+    fun getRecentlyPlayedSongs(limit: Int): Flow<List<SongEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertSong(song: SongEntity): Long
+
+    @Query("DELETE FROM songs WHERE id = :songId")
+    suspend fun deleteSong(songId: Long): Int
+
+    @Query("SELECT * FROM songs WHERE id = :songId")
+    suspend fun getSongById(songId: Long): SongEntity?
+
+    @Query("UPDATE songs SET lastPlayed = :timestamp WHERE id = :songId")
+    suspend fun updateLastPlayed(songId: Long, timestamp: Long = System.currentTimeMillis())
+}

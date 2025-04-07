@@ -6,7 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
+import com.tubes1.purritify.core.ui.MainScreen
 import com.tubes1.purritify.core.ui.theme.PurritifyTheme
 
 class MainActivity : ComponentActivity() {
@@ -16,7 +16,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             PurritifyTheme {
                 Surface(color = MaterialTheme.colorScheme.background) {
-                    Text(text = "Hello World!", style = MaterialTheme.typography.headlineSmall)
+                    MainScreen()
                 }
             }
         }
