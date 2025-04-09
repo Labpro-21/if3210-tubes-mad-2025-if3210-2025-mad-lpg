@@ -1,5 +1,6 @@
 package com.tubes1.purritify.features.library.presentation.uploadsong.components
 
+import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -26,14 +27,18 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.tubes1.purritify.R
+import com.tubes1.purritify.features.library.presentation.uploadsong.UploadSongState
 
 @Composable
 fun UploadArea(
-    title: String,
+    filePath: Uri?,
+    description: String,
     icon: ImageVector?,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val formattedTitle = filePath?.let { getFormattedFileName(it) } ?: description
+
     Box(
         modifier = modifier
             .aspectRatio(1f)
@@ -54,7 +59,7 @@ fun UploadArea(
             if (icon != null) {
                 Image(
                     painter = painterResource(id = R.drawable.image_icon),
-                    contentDescription = title,
+                    contentDescription = formattedTitle,
                     modifier = Modifier
                         .size(48.dp)
                         .padding(bottom = 8.dp)
@@ -62,7 +67,7 @@ fun UploadArea(
             } else {
                 Image(
                     painter = painterResource(id = R.drawable.waveform_icon),
-                    contentDescription = title,
+                    contentDescription = formattedTitle,
                     modifier = Modifier
                         .size(48.dp)
                         .padding(bottom = 8.dp)
@@ -70,7 +75,7 @@ fun UploadArea(
             }
 
             Text(
-                text = title,
+                text = formattedTitle.ifEmpty { description },
                 color = Color.Gray,
                 fontSize = 14.sp
             )
@@ -91,5 +96,19 @@ fun UploadArea(
                 )
             }
         }
+    }
+}
+
+
+fun getFormattedFileName(uri: Uri): String {
+    val filePath = uri.path ?: return ""
+
+    val fileName = filePath.substringAfterLast("/")
+    return if (fileName.length > 8) {
+        val nameWithoutExtension = fileName.substringBeforeLast(".")
+        val extension = fileName.substringAfterLast(".")
+        nameWithoutExtension.take(5) + "..." + extension
+    } else {
+        fileName
     }
 }

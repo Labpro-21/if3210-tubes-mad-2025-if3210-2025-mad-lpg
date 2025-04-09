@@ -22,43 +22,40 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import com.tubes1.purritify.core.ui.components.InputField
-import com.tubes1.purritify.features.library.presentation.uploadsong.AddSongState
+import com.tubes1.purritify.features.library.domain.usecase.AddSongUseCase
+import com.tubes1.purritify.features.library.presentation.uploadsong.UploadSongState
+import com.tubes1.purritify.features.library.presentation.uploadsong.UploadSongViewModel
 import com.tubes1.purritify.features.library.presentation.uploadsong.components.UploadArea
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 @Composable
 fun UploadSongBottomSheet(
     visible: Boolean,
     onDismiss: () -> Unit,
-    onSave: (String, String) -> Unit,
+    onSave: () -> Unit,
+    viewModel: UploadSongViewModel,
 ) {
-    var state by remember { mutableStateOf(AddSongState()) }
+    val state by viewModel.state.collectAsState()
     var internalVisible by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(visible) {
         if (visible) internalVisible = true
         else {
-            state = state.copy(title = "", artist = "")
+            viewModel.resetUploadSongState()
         }
     }
 
     val songPickerLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         uri?.let {
-            state = state.copy(songUri = it)
-            viewModel.extractSongMetadata(it) // ViewModel handles context internally
+            viewModel.handleSongFileSelected(it)
         }
     }
 
-    // Launcher for selecting a photo
     val photoPickerLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         uri?.let {
-            selectedPhotoUri = it
-            viewModel.handlePhotoUpload(it) // ViewModel handles context internally
+            viewModel.handleSongArtSelected(it)
         }
     }
 
@@ -113,16 +110,21 @@ fun UploadSongBottomSheet(
                             horizontalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
                             UploadArea(
-                                title = "Unggah Foto",
+                                filePath = state.songArtUri,
+                                description = "Unggah Foto",
                                 icon = Icons.Outlined.AccountCircle,
-                                onClick = { onSongArtClick() },
+                                onClick = { photoPickerLauncher.launch("image/*") },
                                 modifier = Modifier.weight(1f)
                             )
 
                             UploadArea(
-                                title = "Unggah File Lagu",
+                                filePath = state.songUri,
+                                description = "Unggah File Lagu",
                                 icon = null,
-                                onClick = { onSongFileClick() },
+                                onClick =
+                                {
+                                    songPickerLauncher.launch(arrayOf("audio/*"))
+                                },
                                 modifier = Modifier.weight(1f)
                             )
                         }
@@ -130,8 +132,8 @@ fun UploadSongBottomSheet(
                         // title input
                         InputField(
                             label = "Judul",
-                            value = title,
-                            onValueChange = { title = it },
+                            value = state.title,
+                            onValueChange = { viewModel.onTitleChanged(it) },
                             placeholder = "Judul lagu",
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -141,8 +143,8 @@ fun UploadSongBottomSheet(
                         // artist input
                         InputField(
                             label = "Artis",
-                            value = artist,
-                            onValueChange = { artist = it },
+                            value = state.artist,
+                            onValueChange = { viewModel.onArtistChanged(it) },
                             placeholder = "Artis lagu",
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -179,7 +181,7 @@ fun UploadSongBottomSheet(
 
                             // save button
                             Button(
-                                onClick = { onSave(title, artist) },
+                                onClick = { onSave() },
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = Color(0xFF005A66)
                                 ),

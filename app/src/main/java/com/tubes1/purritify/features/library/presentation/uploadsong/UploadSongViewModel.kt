@@ -5,7 +5,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tubes1.purritify.features.library.data.utils.MediaStoreHelper
-import com.tubes1.purritify.features.library.domain.repository.SongRepository
+import com.tubes1.purritify.features.library.domain.usecase.AddSongUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -14,39 +14,18 @@ import kotlinx.coroutines.launch
 
 class UploadSongViewModel(
     private val mediaStoreHelper: MediaStoreHelper,
-    private val songRepository: SongRepository
+    private val addSongUseCase: AddSongUseCase
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow(AddSongState())
-    val state: StateFlow<AddSongState> = _state.asStateFlow()
+    private val _state = MutableStateFlow(UploadSongState())
+    val state: StateFlow<UploadSongState> = _state.asStateFlow()
 
-    private val _isUploadSheetVisible = MutableStateFlow(false)
-    val isUploadSheetVisible: StateFlow<Boolean> = _isUploadSheetVisible.asStateFlow()
-
-    fun showUploadSheet() {
-        _isUploadSheetVisible.value = true
+    fun onTitleChanged(newTitle: String) {
+        _state.update { it.copy(title = newTitle) }
     }
 
-    fun hideUploadSheet() {
-        _isUploadSheetVisible.value = false
-        _state.value = AddSongState()
-    }
-
-    fun setTitle(title: String) {
-        _state.update { it.copy(title = title) }
-    }
-
-    fun setArtist(artist: String) {
-        _state.update { it.copy(artist = artist) }
-    }
-
-    fun updateTitleAndArtist(title: String, artist: String) {
-        _state.update {
-            it.copy(
-                title = title,
-                artist = artist
-            )
-        }
+    fun onArtistChanged(newArtist: String) {
+        _state.update { it.copy(artist = newArtist) }
     }
 
     fun handleSongFileSelected(uri: Uri) {
@@ -93,11 +72,24 @@ class UploadSongViewModel(
 
             try {
                 val song = mediaStoreHelper.createSongFromUserInput(currentState)
-                songRepository.addSong(song)
-                hideUploadSheet()
+                addSongUseCase(song)
+                _state.value = UploadSongState()
             } catch (e: Exception) {
                 _state.update { it.copy(isLoading = false, error = "Failed to upload song: ${e.message}") }
             }
+        }
+    }
+
+    fun resetUploadSongState() {
+        _state.update {
+            it.copy(
+                songUri = null,
+                title = "",
+                artist = "",
+                songArtUri = null,
+                isLoading = false,
+                error = null
+            )
         }
     }
 }
