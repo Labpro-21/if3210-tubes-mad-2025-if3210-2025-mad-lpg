@@ -60,6 +60,7 @@ dependencies {
     implementation(libs.okhttp)
     implementation(libs.okhttp.logging.interceptor)
     implementation(libs.room.runtime)
+    implementation(libs.room.ktx)
     implementation(libs.androidx.ui.text.android)
     ksp(libs.room.compiler)
     implementation(libs.glide)

@@ -3,6 +3,7 @@ package com.tubes1.purritify.features.library.data.utils
 import android.content.Context
 import android.media.MediaMetadataRetriever
 import android.net.Uri
+import android.util.Log
 import com.tubes1.purritify.features.library.domain.model.Song
 import com.tubes1.purritify.features.library.presentation.uploadsong.AddSongState
 import java.io.File
@@ -23,7 +24,7 @@ class MediaStoreHelper(
 
             val title = mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE) ?: ""
             val artist = mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST) ?: ""
-            val songArtUri = extractsongArtFromMetadata(mediaMetadataRetriever)
+            val songArtUri = extractSongArtFromMetadata(mediaMetadataRetriever)
 
             AddSongState(
                 songUri = uri,
@@ -32,6 +33,7 @@ class MediaStoreHelper(
                 songArtUri = songArtUri
             )
         } catch (e: Exception) {
+            Log.e("MediaStoreHelper", "Error extracting metadata: ${e.localizedMessage}")
             AddSongState(songUri = uri)
         } finally {
             mediaMetadataRetriever.release()
@@ -44,7 +46,7 @@ class MediaStoreHelper(
     suspend fun createSongFromUserInput(state: AddSongState): Song {
         val duration = getDurationFromUri(state.songUri!!)
         val songFilePath = saveSongToInternalStorage(state.songUri)
-        val songArtPath = state.songArtUri?.let { savesongArtToInternalStorage(it) }
+        val songArtPath = state.songArtUri?.let { saveSongArtToInternalStorage(it) }
 
         return Song(
             title = state.title,
@@ -66,6 +68,7 @@ class MediaStoreHelper(
             val durationStr = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
             durationStr?.toLongOrNull() ?: 0
         } catch (e: Exception) {
+            Log.e("MediaStoreHelper", "Error getting song duration: ${e.localizedMessage}")
             0
         } finally {
             mmr.release()
@@ -75,7 +78,7 @@ class MediaStoreHelper(
     /**
      * Extracts album art from the song metadata
      */
-    private fun extractsongArtFromMetadata(retriever: MediaMetadataRetriever): Uri? {
+    private fun extractSongArtFromMetadata(retriever: MediaMetadataRetriever): Uri? {
         return try {
             val songArtBytes = retriever.embeddedPicture
             if (songArtBytes != null) {
@@ -87,6 +90,7 @@ class MediaStoreHelper(
                 null
             }
         } catch (e: Exception) {
+            Log.e("MediaStoreHelper", "Error extracting song art: ${e.localizedMessage}")
             null
         }
     }
@@ -110,7 +114,7 @@ class MediaStoreHelper(
     /**
      * Saves the album art to internal storage and returns the file path
      */
-    private suspend fun savesongArtToInternalStorage(uri: Uri): String? {
+    private suspend fun saveSongArtToInternalStorage(uri: Uri): String? {
         return try {
             val fileName = "album_art_${UUID.randomUUID()}.jpg"
             val file = File(context.filesDir, fileName)
@@ -123,6 +127,7 @@ class MediaStoreHelper(
 
             file.absolutePath
         } catch (e: Exception) {
+            Log.e("MediaStoreHelper", "Error saving song: ${e.localizedMessage}")
             null
         }
     }

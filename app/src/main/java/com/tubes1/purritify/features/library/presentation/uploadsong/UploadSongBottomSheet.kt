@@ -1,3 +1,5 @@
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -20,24 +22,44 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import com.tubes1.purritify.core.ui.components.InputField
+import com.tubes1.purritify.features.library.presentation.uploadsong.AddSongState
 import com.tubes1.purritify.features.library.presentation.uploadsong.components.UploadArea
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-
 
 @Composable
 fun UploadSongBottomSheet(
     visible: Boolean,
     onDismiss: () -> Unit,
-    onSave: (String, String) -> Unit
+    onSave: (String, String) -> Unit,
 ) {
-    var title by remember { mutableStateOf("") }
-    var artist by remember { mutableStateOf("") }
+    var state by remember { mutableStateOf(AddSongState()) }
     var internalVisible by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(visible) {
         if (visible) internalVisible = true
+        else {
+            state = state.copy(title = "", artist = "")
+        }
+    }
+
+    val songPickerLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        uri?.let {
+            state = state.copy(songUri = it)
+            viewModel.extractSongMetadata(it) // ViewModel handles context internally
+        }
+    }
+
+    // Launcher for selecting a photo
+    val photoPickerLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        uri?.let {
+            selectedPhotoUri = it
+            viewModel.handlePhotoUpload(it) // ViewModel handles context internally
+        }
     }
 
     if (visible || internalVisible) {
@@ -76,7 +98,7 @@ fun UploadSongBottomSheet(
                     ) {
                         // header
                         Text(
-                            text = "Upload Lagu",
+                            text = "Unggah Lagu",
                             color = Color.White,
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
@@ -91,16 +113,16 @@ fun UploadSongBottomSheet(
                             horizontalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
                             UploadArea(
-                                title = "Upload Foto",
+                                title = "Unggah Foto",
                                 icon = Icons.Outlined.AccountCircle,
-                                onClick = { /* handle photo upload */ },
+                                onClick = { onSongArtClick() },
                                 modifier = Modifier.weight(1f)
                             )
 
                             UploadArea(
-                                title = "Upload File",
+                                title = "Unggah File Lagu",
                                 icon = null,
-                                onClick = { /* handle file upload */ },
+                                onClick = { onSongFileClick() },
                                 modifier = Modifier.weight(1f)
                             )
                         }

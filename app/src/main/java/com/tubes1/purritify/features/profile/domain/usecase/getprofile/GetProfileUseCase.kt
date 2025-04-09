@@ -1,5 +1,6 @@
 package com.tubes1.purritify.features.profile.domain.usecase.getprofile;
 
+import android.util.Log
 import com.tubes1.purritify.core.common.utils.Resource
 import com.tubes1.purritify.features.profile.data.remote.dto.toProfile
 import com.tubes1.purritify.features.profile.domain.model.Profile
@@ -19,9 +20,11 @@ class GetProfileUseCase (
             emit(Resource.Success<Profile>(profile))
         }
         catch (e: HttpException) {
+            Log.e("GetProfileUseCase", "Error fetching profile data: ${e.localizedMessage}")
             emit(Resource.Error(e.localizedMessage ?: "Terjadi kesalahan tidak terduga."))
         }
         catch (e: IOException) {
+            Log.e("GetProfileUseCase", "Error fetching profile data: ${e.localizedMessage}")
             emit(Resource.Error("Tidak dapat mencapai server. Mohon periksa koneksi internet Anda."))
         }
     }

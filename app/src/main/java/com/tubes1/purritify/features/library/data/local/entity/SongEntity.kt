@@ -14,7 +14,8 @@ data class SongEntity(
     val path: String,
     val songArtUri: String?,
     val dateAdded: Long,
-    val lastPlayed: Long?
+    val lastPlayed: Long?,
+    val isFavorited: Boolean = false
 )
 
 fun SongEntity.toSong(): Song {
@@ -26,7 +27,8 @@ fun SongEntity.toSong(): Song {
         path = path,
         songArtUri = songArtUri,
         dateAdded = dateAdded,
-        lastPlayed = lastPlayed
+        lastPlayed = lastPlayed,
+        isFavorited = isFavorited
     )
 }
 
@@ -39,6 +41,7 @@ fun Song.toSongEntity(): SongEntity {
         path = path,
         songArtUri = songArtUri,
         dateAdded = dateAdded,
-        lastPlayed = lastPlayed
+        lastPlayed = lastPlayed,
+        isFavorited = isFavorited
     )
 }
