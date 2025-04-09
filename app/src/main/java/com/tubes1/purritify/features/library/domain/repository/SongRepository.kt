@@ -11,6 +11,8 @@ interface SongRepository {
 
     fun getRecentlyPlayedSongs(limit: Int): Flow<List<Song>>
 
+    fun getAllFavoritedSongs(): Flow<List<Song>>
+
     suspend fun addSong(song: Song): Long
 
     suspend fun deleteSong(songId: Long): Boolean

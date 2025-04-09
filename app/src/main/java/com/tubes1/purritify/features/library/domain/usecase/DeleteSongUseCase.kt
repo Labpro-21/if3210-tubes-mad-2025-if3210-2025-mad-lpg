@@ -1,5 +1,6 @@
 package com.tubes1.purritify.features.library.domain.usecase
 
+import android.util.Log
 import com.tubes1.purritify.features.library.domain.repository.SongRepository
 
 class DeleteSongUseCase (
@@ -14,6 +15,7 @@ class DeleteSongUseCase (
                 Result.failure(Exception("Gagal menghapus lagu"))
             }
         } catch (e: Exception) {
+            Log.e("DeleteSongUseCase", "Error deleting song: ${e.localizedMessage}")
             Result.failure(e)
         }
     }

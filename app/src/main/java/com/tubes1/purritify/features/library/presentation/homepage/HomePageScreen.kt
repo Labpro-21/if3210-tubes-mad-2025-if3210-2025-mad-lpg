@@ -12,35 +12,30 @@ import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.tubes1.purritify.core.ui.components.BottomNavigation
+import androidx.navigation.NavController
 import com.tubes1.purritify.features.library.presentation.common.ui.components.SongListItem
 import com.tubes1.purritify.features.library.presentation.homepage.components.SongGridItem
+import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun HomeScreen() {
-    val newSongs = listOf(
-        Song("Starboy", "The Weeknd, Daft Punk", "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/2%20-%20Home-k6HCnVJI9PtbKZMI5exFhY8fz8rJen.png"),
-        Song("Here Comes The Sun", "The Beatles", "https://example.com/beatles.jpg"),
-        Song("Midnight Pretenders", "Tomoko Aran", "https://example.com/tomoko.jpg"),
-        Song("Violent Crimes", "Kanye West", "https://example.com/kanye.jpg")
-    )
+fun HomeScreen(
+    navController: NavController,
+    viewModel: HomePageViewModel = koinViewModel()
+) {
+    val state by viewModel.state.collectAsState()
 
-    val recentlyPlayed = listOf(
-        Song("Jazz is for ordinary people", "berlioz", "https://example.com/berlioz.jpg"),
-        Song("Loose", "Daniel Caesar", "https://example.com/daniel.jpg"),
-        Song("Nights", "Frank Ocean", "https://example.com/frank.jpg"),
-        Song("Kiss of Life", "Sade", "https://example.com/sade.jpg"),
-        Song("BEST INTEREST", "Tyler, The Creator", "https://example.com/tyler.jpg")
-    )
     val backgroundGradient = Brush.verticalGradient(
         colors = listOf(
             Color(0xFF04363D),
@@ -74,8 +69,20 @@ fun HomeScreen() {
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    items(newSongs) { song ->
-                        SongGridItem(song)
+                    if (state.newlyAddedSongs.isEmpty()) {
+                        item {
+                            Text(
+                                text = "Belum ada lagu baru",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = Color.White,
+                                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    } else {
+                        items(state.newlyAddedSongs) { song ->
+                            SongGridItem(song)
+                        }
                     }
                 }
             }
@@ -91,8 +98,20 @@ fun HomeScreen() {
                 )
             }
 
-            items(recentlyPlayed) { song ->
-                SongListItem(song)
+            if (state.recentlyPlayedSongs.isEmpty()) {
+                item {
+                    Text(
+                        text = "Belum ada lagu yang diputar",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = Color.White,
+                        modifier = Modifier.fillMaxWidth().padding(16.dp),
+                        textAlign = TextAlign.Left
+                    )
+                }
+            } else {
+                items(state.recentlyPlayedSongs) { song ->
+                    SongListItem(song)
+                }
             }
         }
     }

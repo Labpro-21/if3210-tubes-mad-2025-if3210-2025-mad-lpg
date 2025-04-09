@@ -1,5 +1,6 @@
 package com.tubes1.purritify.features.library.presentation.homepage
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tubes1.purritify.features.library.domain.usecase.GetNewlyAddedSongsUseCase
@@ -38,6 +39,7 @@ class HomePageViewModel(
                 }
             } catch (e: Exception) {
                 _state.update {
+                    Log.e("HomePageViewModel", "Error loading new songs: ${e.localizedMessage}")
                     it.copy(
                         isLoadingNewSongs = false,
                         error = "Gagal memuat lagu yang akhir-akhir ini ditambahkan: ${e.localizedMessage}"
@@ -62,6 +64,7 @@ class HomePageViewModel(
                 }
             } catch (e: Exception) {
                 _state.update {
+                    Log.e("HomePageViewModel", "Error loading recent songs: ${e.localizedMessage}")
                     it.copy(
                         isLoadingRecentSongs = false,
                         error = "Gagal memuat lagu yang akhir-akhir ini dimainkan: ${e.localizedMessage}"

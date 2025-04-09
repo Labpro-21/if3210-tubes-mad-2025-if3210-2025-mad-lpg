@@ -8,5 +8,6 @@ data class Song(
     val path: String,
     val songArtUri: String? = null,
     val dateAdded: Long = System.currentTimeMillis(),
-    val lastPlayed: Long? = null
+    val lastPlayed: Long? = null,
+    val isFavorited: Boolean = false
 )

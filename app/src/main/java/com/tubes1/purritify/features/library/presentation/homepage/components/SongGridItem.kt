@@ -17,7 +17,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import com.tubes1.purritify.R
-import com.tubes1.purritify.features.library.presentation.homepage.Song
+import com.tubes1.purritify.features.library.domain.model.Song
 
 @Composable
 fun SongGridItem(song: Song) {

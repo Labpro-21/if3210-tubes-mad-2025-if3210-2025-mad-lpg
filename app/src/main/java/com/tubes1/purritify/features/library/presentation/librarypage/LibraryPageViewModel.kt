@@ -1,6 +1,7 @@
 package com.tubes1.purritify.features.library.presentation.librarypage
 
 import android.net.Uri
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tubes1.purritify.features.library.data.utils.MediaStoreHelper
@@ -47,6 +48,7 @@ class LibraryPageViewModel (
                     }
                 }
             } catch (e: Exception) {
+                Log.e("LibraryPageViewModel", "Error fetching songs: ${e.localizedMessage}")
                 _state.update {
                     it.copy(
                         isLoading = false,
@@ -72,6 +74,7 @@ class LibraryPageViewModel (
                     showAddSongDialog = true
                 ) }
             } catch (e: Exception) {
+                Log.e("LibraryPageViewModel", "Error initializing add song form: ${e.localizedMessage}")
                 _state.update { it.copy(
                     isAddingSong = false,
                     error = "Gagal memproses lagu: ${e.localizedMessage}"
@@ -119,6 +122,7 @@ class LibraryPageViewModel (
                     }
                 )
             } catch (e: Exception) {
+                Log.e("LibraryPageViewModel", "Error adding song: ${e.localizedMessage}")
                 _addSongState.update {
                     it.copy(
                         isLoading = false,
@@ -153,6 +157,7 @@ class LibraryPageViewModel (
                     }
                 )
             } catch (e: Exception) {
+                Log.e("LibraryPageViewModel", "Error deleting song: ${e.localizedMessage}")
                 _state.update {
                     it.copy(
                         isDeletingSong = false,

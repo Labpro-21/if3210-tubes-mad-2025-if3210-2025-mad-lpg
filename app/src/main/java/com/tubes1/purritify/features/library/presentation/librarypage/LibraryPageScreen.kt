@@ -1,6 +1,9 @@
 package com.tubes1.purritify.features.library.presentation.librarypage
 
 import UploadSongBottomSheet
+import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -16,21 +19,20 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.tubes1.purritify.core.ui.components.BottomNavigation
 import com.tubes1.purritify.features.library.presentation.common.ui.components.SongListItem
-import com.tubes1.purritify.features.library.presentation.homepage.Song
 import com.tubes1.purritify.features.library.presentation.librarypage.components.FilterTab
+import com.tubes1.purritify.features.library.presentation.uploadsong.UploadSongViewModel
+import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun LibraryScreen() {
-    val librarySongs = listOf(
-        Song("Starboy", "The Weeknd, Daft Punk", "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/3-%20Library-ivPvJkXGd6Otcnb3KG3DeZGRMjZ6ET.png"),
-        Song("Here Comes The Sun - Remastered", "The Beatles", "https://example.com/beatles.jpg"),
-        Song("Midnight Pretenders", "Tomoko Aran", "https://example.com/tomoko.jpg"),
-        Song("Violent Crimes", "Kanye West", "https://example.com/kanye.jpg"),
-        Song("DENIAL IS A RIVER", "Doechii", "https://example.com/doechii.jpg"),
-        Song("Doomsday", "MF DOOM, Pebbles The Invisible Girl", "https://example.com/mfdoom.jpg")
-    )
+fun LibraryScreen(
+    navController: NavController,
+    libraryViewModel: LibraryPageViewModel = koinViewModel(),
+    uploadSongViewModel: UploadSongViewModel = koinViewModel()
+) {
+    val state by libraryViewModel.state.collectAsState()
 
     var selectedTab by remember { mutableStateOf("Semua") }
     val tabs = listOf("Semua", "Disukai")
@@ -41,7 +43,18 @@ fun LibraryScreen() {
             Color(0xFF04363D)
         )
     )
+
     var showAddSongBottomSheet by remember { mutableStateOf(false) }
+    val audioFilePicker = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        uri?.let { uploadSongViewModel.handleSongFileSelected(it) }
+    }
+    val imageFilePicker = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        uri?.let { uploadSongViewModel.handleSongArtSelected(it) }
+    }
 
     Box(
         modifier = Modifier
@@ -101,15 +114,26 @@ fun LibraryScreen() {
             }
 
             // song list
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                items(librarySongs) { song ->
-                    SongListItem(song)
-                }
+            if (state.songs.isEmpty()) {
+                Text(
+                    text = "Anda belum menambahkan lagu",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = Color.White,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .wrapContentSize(Alignment.Center)
+                )
+            } else {
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    items(state.songs) { song ->
+                        SongListItem(song)
+                    }
 
-                item {
-                    Spacer(modifier = Modifier.height(20.dp))
+                    item {
+                        Spacer(modifier = Modifier.height(20.dp))
+                    }
                 }
             }
         }
@@ -118,8 +142,9 @@ fun LibraryScreen() {
             UploadSongBottomSheet(
                 visible = showAddSongBottomSheet,
                 onDismiss = { showAddSongBottomSheet = false },
-                onSave = { title, artist ->
-                    // Handle save logic here
+                onSave = { title: String, artist: String ->
+                    uploadSongViewModel.updateTitleAndArtist(title, artist)
+                    uploadSongViewModel.uploadSong()
                     showAddSongBottomSheet = false
                 }
             )
