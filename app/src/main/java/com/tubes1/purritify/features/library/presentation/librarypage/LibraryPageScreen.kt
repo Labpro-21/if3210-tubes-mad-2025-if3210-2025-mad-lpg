@@ -46,17 +46,7 @@ fun LibraryScreen(
         )
     )
 
-    var showAddSongBottomSheet by remember { mutableStateOf(false) }
-    val audioFilePicker = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
-    ) { uri ->
-        uri?.let { uploadSongViewModel.handleSongFileSelected(it) }
-    }
-    val imageFilePicker = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
-    ) { uri ->
-        uri?.let { uploadSongViewModel.handleSongArtSelected(it) }
-    }
+    var showAddSongBottomSheet = remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
@@ -86,7 +76,7 @@ fun LibraryScreen(
                 )
 
                 IconButton(
-                    onClick = { showAddSongBottomSheet = true },
+                    onClick = { showAddSongBottomSheet.value = true },
                     modifier = Modifier.size(48.dp)
                 ) {
                     Icon(
@@ -140,14 +130,9 @@ fun LibraryScreen(
             }
         }
 
-        if (showAddSongBottomSheet) {
+        if (showAddSongBottomSheet.value) {
             UploadSongBottomSheet(
                 visible = showAddSongBottomSheet,
-                onDismiss = { showAddSongBottomSheet = false },
-                onSave = {
-                    uploadSongViewModel.uploadSong()
-                    showAddSongBottomSheet = false
-                },
                 viewModel = uploadSongViewModel
             )
         }

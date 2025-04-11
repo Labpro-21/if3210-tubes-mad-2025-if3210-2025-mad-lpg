@@ -16,9 +16,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
+import com.bumptech.glide.integration.compose.GlideImage
 import com.tubes1.purritify.R
 import com.tubes1.purritify.features.library.domain.model.Song
 
+@OptIn(ExperimentalGlideComposeApi::class)
 @Composable
 fun SongListItem(song: Song) {
     Row(
@@ -28,13 +30,12 @@ fun SongListItem(song: Song) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         // Album Thumbnail
-        Image(
-            painter = painterResource(id = R.drawable.dummy_song_art_medium),
+        GlideImage(
+            model = song.songArtUri ?: R.drawable.dummy_song_art,
             contentDescription = "${song.title} cover",
             modifier = Modifier
                 .size(48.dp)
-                .clip(RoundedCornerShape(4.dp)),
-            contentScale = ContentScale.Crop
+                .clip(RoundedCornerShape(4.dp))
         )
 
         // Song Info

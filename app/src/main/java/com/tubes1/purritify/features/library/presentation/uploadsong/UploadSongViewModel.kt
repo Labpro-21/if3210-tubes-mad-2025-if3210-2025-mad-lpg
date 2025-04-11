@@ -59,12 +59,12 @@ class UploadSongViewModel(
             val currentState = _state.value
 
             if (currentState.songUri == null) {
-                _state.update { it.copy(error = "Please select a song file") }
+                _state.update { it.copy(error = "Unggah file lagu terlebih dahulu") }
                 return@launch
             }
 
             if (currentState.title.isBlank()) {
-                _state.update { it.copy(error = "Please enter a title") }
+                _state.update { it.copy(error = "Judul lagu tidak boleh kosong") }
                 return@launch
             }
 
@@ -74,6 +74,7 @@ class UploadSongViewModel(
                 val song = mediaStoreHelper.createSongFromUserInput(currentState)
                 addSongUseCase(song)
                 _state.value = UploadSongState()
+                _state.value
             } catch (e: Exception) {
                 _state.update { it.copy(isLoading = false, error = "Failed to upload song: ${e.message}") }
             }
@@ -91,5 +92,9 @@ class UploadSongViewModel(
                 error = null
             )
         }
+    }
+
+    fun getSongDurationFromUri(uri: Uri): Long {
+        return mediaStoreHelper.getDurationFromUri(uri)
     }
 }

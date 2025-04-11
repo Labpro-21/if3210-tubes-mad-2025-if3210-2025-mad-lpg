@@ -21,9 +21,8 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.ui.text.style.TextAlign
 import com.tubes1.purritify.core.ui.components.InputField
-import com.tubes1.purritify.features.library.domain.usecase.AddSongUseCase
-import com.tubes1.purritify.features.library.presentation.uploadsong.UploadSongState
 import com.tubes1.purritify.features.library.presentation.uploadsong.UploadSongViewModel
 import com.tubes1.purritify.features.library.presentation.uploadsong.components.UploadArea
 import kotlinx.coroutines.delay
@@ -31,17 +30,32 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun UploadSongBottomSheet(
-    visible: Boolean,
-    onDismiss: () -> Unit,
-    onSave: () -> Unit,
+    visible: MutableState<Boolean>,
     viewModel: UploadSongViewModel,
 ) {
     val state by viewModel.state.collectAsState()
     var internalVisible by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
+    var isSubmit: Boolean = false
+    var duration by remember { mutableStateOf<Long?>(null) }
+
+    LaunchedEffect(state.error, isSubmit) {
+        if (isSubmit && state.error == null && internalVisible) {
+            visible.value = false
+            internalVisible = false
+        } else {
+            isSubmit = false
+        }
+    }
+
+    LaunchedEffect(state.songUri) {
+        state.songUri?.let { uri ->
+            duration = viewModel.getSongDurationFromUri(uri)
+        }
+    }
 
     LaunchedEffect(visible) {
-        if (visible) internalVisible = true
+        if (visible.value) internalVisible = true
         else {
             viewModel.resetUploadSongState()
         }
@@ -59,7 +73,7 @@ fun UploadSongBottomSheet(
         }
     }
 
-    if (visible || internalVisible) {
+    if (visible.value || internalVisible) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -68,7 +82,8 @@ fun UploadSongBottomSheet(
                     internalVisible = false
                     coroutineScope.launch {
                         delay(300)
-                        onDismiss()
+                        visible.value = false
+                        viewModel.resetUploadSongState()
                     }
                 }
                 .zIndex(10f)
@@ -129,6 +144,16 @@ fun UploadSongBottomSheet(
                             )
                         }
 
+                        duration?.let { ms ->
+                            val minutes = (ms / 1000) / 60
+                            val seconds = (ms / 1000) % 60
+                            Text(
+                                text = String.format("Durasi Lagu: %d:%02d", minutes, seconds),
+                                color = Color.White,
+                                fontSize = 14.sp
+                            )
+                        }
+
                         // title input
                         InputField(
                             label = "Judul",
@@ -151,6 +176,18 @@ fun UploadSongBottomSheet(
                                 .padding(bottom = 32.dp)
                         )
 
+                        if (state.error != null) {
+                            Text(
+                                text = state.error!!,
+                                color = Color.Red,
+                                fontSize = 14.sp,
+                                modifier = Modifier
+                                    .padding(bottom = 16.dp)
+                                    .fillMaxWidth(),
+                                textAlign = TextAlign.Center
+                            )
+                        }
+
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(16.dp)
@@ -161,7 +198,8 @@ fun UploadSongBottomSheet(
                                     internalVisible = false
                                     coroutineScope.launch {
                                         delay(300)
-                                        onDismiss()
+                                        visible.value = false
+                                        viewModel.resetUploadSongState()
                                     }
                                 },
                                 colors = ButtonDefaults.buttonColors(
@@ -181,7 +219,11 @@ fun UploadSongBottomSheet(
 
                             // save button
                             Button(
-                                onClick = { onSave() },
+                                onClick =
+                                {
+                                    viewModel.uploadSong()
+                                    isSubmit = true
+                                },
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = Color(0xFF005A66)
                                 ),

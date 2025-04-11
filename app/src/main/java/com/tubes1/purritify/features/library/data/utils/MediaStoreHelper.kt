@@ -37,14 +37,14 @@ class MediaStoreHelper(
         }
     }
 
-    suspend fun createSongFromUserInput(state: UploadSongState): Song {
+    fun createSongFromUserInput(state: UploadSongState): Song {
         val duration = getDurationFromUri(state.songUri!!)
         val songFilePath = saveSongToInternalStorage(state.songUri)
         val songArtPath = state.songArtUri?.let { saveSongArtToInternalStorage(it) }
 
         return Song(
             title = state.title,
-            artist = state.artist,
+            artist = state.artist.ifEmpty { "No Artist" },
             duration = duration,
             path = songFilePath,
             songArtUri = songArtPath,
@@ -52,7 +52,7 @@ class MediaStoreHelper(
         )
     }
 
-    private fun getDurationFromUri(uri: Uri): Long {
+    fun getDurationFromUri(uri: Uri): Long {
         val mmr = MediaMetadataRetriever()
         return try {
             mmr.setDataSource(context, uri)
@@ -86,7 +86,7 @@ class MediaStoreHelper(
     /**
      * Saves the song file to internal storage and returns the file path
      */
-    private suspend fun saveSongToInternalStorage(uri: Uri): String {
+    private fun saveSongToInternalStorage(uri: Uri): String {
         val fileName = "song_${UUID.randomUUID()}.mp3"
         val file = File(context.filesDir, fileName)
 
@@ -102,7 +102,7 @@ class MediaStoreHelper(
     /**
      * Saves the album art to internal storage and returns the file path
      */
-    private suspend fun saveSongArtToInternalStorage(uri: Uri): String? {
+    private fun saveSongArtToInternalStorage(uri: Uri): String? {
         return try {
             val fileName = "album_art_${UUID.randomUUID()}.jpg"
             val file = File(context.filesDir, fileName)
