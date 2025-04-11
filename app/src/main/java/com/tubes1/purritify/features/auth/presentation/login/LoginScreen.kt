@@ -1,6 +1,5 @@
 package com.tubes1.purritify.features.auth.presentation.login
 
-//import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -10,46 +9,38 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-//import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import org.koin.androidx.compose.koinViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LoginScreen() {
+fun LoginPage(
+    loginStateViewModel: LoginStateViewModel = koinViewModel()
+) {
     val email = remember { mutableStateOf("") }
     val password = remember { mutableStateOf("") }
+    val state = loginStateViewModel.state.collectAsState().value
 
-    Column(
+    Column (
         modifier = Modifier
             .fillMaxSize()
             .padding(horizontal = 32.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Logo/Header bisa diganti dengan Image jika ada asset
-        Text(
-            text = "Millions of Songs.",
-            style = MaterialTheme.typography.headlineMedium
-        )
-        Text(
-            text = "Only on Purritify.",
-            style = MaterialTheme.typography.headlineMedium
-        )
-
-        Spacer(modifier = Modifier.height(48.dp))
-
         OutlinedTextField(
             value = email.value,
             onValueChange = { email.value = it },
@@ -58,34 +49,42 @@ fun LoginScreen() {
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
         )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
+        Spacer(modifier = Modifier.height(8.dp))
         OutlinedTextField(
             value = password.value,
             onValueChange = { password.value = it },
             label = { Text("Password") },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
-            visualTransformation = PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+            visualTransformation = PasswordVisualTransformation()
         )
 
-        Spacer(modifier = Modifier.height(32.dp))
-
-        Button(
-            onClick = { /* Handle login */ },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(48.dp)
+        Spacer(modifier = Modifier.height(16.dp))
+        Button(onClick = {
+            loginStateViewModel.sendLogin(email.value, password.value)
+        },
+            enabled = !state.isLoading
         ) {
-            Text("Log In")
+            if (state.isLoading) {
+                CircularProgressIndicator(color = Color.White)
+            } else {
+                Text("Login")
+            }
+        }
+
+        if (state.error.isNotBlank()) {
+            Text(
+                text = state.error,
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.padding(top = 8.dp)
+            )
         }
     }
 }
 
 @Preview(showBackground = true)
 @Composable
-fun LoginScreenPreview() {
-    LoginScreen()
+fun LoginPagePreview() {
+    LoginPage()
 }
