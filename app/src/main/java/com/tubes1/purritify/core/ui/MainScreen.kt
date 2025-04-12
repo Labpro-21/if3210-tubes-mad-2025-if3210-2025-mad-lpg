@@ -62,7 +62,11 @@ fun MainScreen() {
                     navController = navController
                 )
             }
-            composable(Screen.Profile.route) { ProfileScreen() }
+            composable(Screen.Profile.route) {
+                ProfileScreen(
+                    navController = navController
+                )
+            }
             composable(Screen.MusicPlayer.route) { MusicPlayerScreen( { navController.navigateUp() } ) }
         }
     }

@@ -1,13 +1,16 @@
-package com.tubes1.purritify.features.auth.domain.usecase.auth
+package com.tubes1.purritify.core.common.utils
 
 import android.util.Log
-import com.tubes1.purritify.core.common.utils.Resource
+import com.tubes1.purritify.features.auth.domain.usecase.auth.GetAccessTokenUseCase
+import com.tubes1.purritify.features.auth.domain.usecase.auth.GetRefreshTokenUseCase
+import com.tubes1.purritify.features.auth.domain.usecase.auth.RefreshTokenUseCase
+import com.tubes1.purritify.features.auth.domain.usecase.auth.VerifyTokenUseCase
 
-class ReadTokenUseCase(
+class ReadToken(
     private val getAccessTokenUseCase: GetAccessTokenUseCase,
     private val getRefreshTokenUseCase: GetRefreshTokenUseCase,
     private val verifyTokenUseCase: VerifyTokenUseCase,
-    private val refreshTokenUseCase: RefreshTokenUseCase,
+    private val refreshTokenUseCase: RefreshTokenUseCase
 ) {
     suspend operator fun invoke(): String {
         var currentAccessToken = getAccessTokenUseCase()
@@ -23,10 +26,10 @@ class ReadTokenUseCase(
                 when(resource) {
                     is Resource.Success -> {
                         currentAccessToken = resource.data?.accessToken ?: ""
-                    } is Resource.Error -> {
-                        Log.e("TOKEN_REFRESH_ERROR", resource.message ?: "Unknown error")
-                    } else -> {
+                    } is Resource.Loading -> {
 
+                    } else -> {
+                        Log.e("TOKEN_REFRESH_ERROR", resource.message ?: "Unknown error")
                     }
                 }
             }

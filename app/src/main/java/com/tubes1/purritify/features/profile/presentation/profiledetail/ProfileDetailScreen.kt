@@ -18,12 +18,21 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -33,12 +42,59 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.tubes1.purritify.R
+import com.tubes1.purritify.core.common.navigation.Screen
 import com.tubes1.purritify.core.ui.components.BottomNavigation
 import com.tubes1.purritify.features.profile.presentation.profiledetail.components.StatItem
+import kotlinx.coroutines.delay
+import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun ProfileScreen() {
+fun ProfileScreen(
+    navController: NavController,
+    profileDetailViewModel: ProfileDetailViewModel = koinViewModel(),
+) {
+    val state = profileDetailViewModel.state.collectAsState().value
+    val showLogoutDialog = remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(state.tokenExpired) {
+        if (state.tokenExpired) {
+            snackbarHostState.showSnackbar(
+                message = "Your session has expired. Please relogin.",
+                duration = SnackbarDuration.Short,
+                actionLabel = "Login"
+            )
+            profileDetailViewModel.logout()
+            navController.navigate(Screen.Login.route)
+        }
+    }
+
+    if (showLogoutDialog.value) {
+        AlertDialog(
+            onDismissRequest = { showLogoutDialog.value = false },
+            title = { Text("You're logging out") },
+            text = { Text("Are you sure you want to logout?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    showLogoutDialog.value = false
+                    profileDetailViewModel.logout()
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(Screen.Home.route) { inclusive = true }
+                    }
+                }) {
+                    Text("Yes")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showLogoutDialog.value = false }) {
+                    Text("No")
+                }
+            }
+        )
+    }
+
     val backgroundGradient = Brush.verticalGradient(
         colors = listOf(
             Color(0xFF005A66),
@@ -58,6 +114,22 @@ fun ProfileScreen() {
                 .padding(top = 40.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            // Logout Button
+            Button(
+                onClick = { showLogoutDialog.value = true },
+                modifier = Modifier.padding(top = 16.dp)
+            ) {
+                Text("Logout")
+            }
+
+            // Tes ambil token
+            Button(
+                onClick = { profileDetailViewModel.takeToken() },
+                modifier = Modifier.padding(top = 16.dp)
+            ) {
+                Text("Ambil token")
+            }
+
             Box(
                 modifier = Modifier
                     .padding(top = 40.dp)
@@ -127,6 +199,15 @@ fun ProfileScreen() {
                 StatItem(count = "135", label = "LAGU", modifier = Modifier.weight(1f))
                 StatItem(count = "32", label = "DISUKAI", modifier = Modifier.weight(1f))
                 StatItem(count = "50", label = "DIDENGARKAN", modifier = Modifier.weight(1f))
+            }
+
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(bottom = 16.dp),
+                contentAlignment = Alignment.BottomCenter
+            ) {
+                SnackbarHost(hostState = snackbarHostState)
             }
         }
     }
