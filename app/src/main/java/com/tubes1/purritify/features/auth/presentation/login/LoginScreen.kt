@@ -25,7 +25,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.tubes1.purritify.core.common.navigation.Screen
@@ -39,6 +38,13 @@ fun LoginPage(
     val email = remember { mutableStateOf("") }
     val password = remember { mutableStateOf("") }
     val state = loginStateViewModel.state.collectAsState().value
+
+    androidx.compose.runtime.LaunchedEffect(state.isSuccess) {
+        if (state.isSuccess) {
+            navController.navigate(Screen.Home.route)
+            loginStateViewModel.resetSuccess()
+        }
+    }
 
     Column (
         modifier = Modifier
@@ -74,9 +80,6 @@ fun LoginPage(
         Spacer(modifier = Modifier.height(16.dp))
         Button(onClick = {
             loginStateViewModel.sendLogin(email.value, password.value)
-            if (state.isSuccess) {
-                navController.navigate(Screen.Home.route)
-            }
         },
             enabled = !state.isLoading,
             modifier = Modifier.semantics { contentDescription = "Login button" }
@@ -100,9 +103,3 @@ fun LoginPage(
         }
     }
 }
-//
-//@Preview(showBackground = true)
-//@Composable
-//fun LoginPagePreview() {
-//    LoginPage()
-//}

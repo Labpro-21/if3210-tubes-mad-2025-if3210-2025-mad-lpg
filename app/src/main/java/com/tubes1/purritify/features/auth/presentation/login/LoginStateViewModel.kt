@@ -3,6 +3,7 @@ package com.tubes1.purritify.features.auth.presentation.login
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tubes1.purritify.core.common.utils.Resource
+import com.tubes1.purritify.features.auth.domain.model.Token
 import com.tubes1.purritify.features.auth.domain.usecase.auth.RequestTokenUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -28,6 +29,15 @@ class LoginStateViewModel(
 ): ViewModel() {
     private val _state = MutableStateFlow(LoginState())
     val state: StateFlow<LoginState> = _state.asStateFlow()
+
+    fun resetSuccess() {
+        _state.value = _state.value.copy(
+            isLoading = false,
+            isSuccess = false,
+            token = null,
+            error = "",
+        )
+    }
 
     fun sendLogin(email: String, password: String) {
         if (email.isEmpty() || password.isEmpty()) {
