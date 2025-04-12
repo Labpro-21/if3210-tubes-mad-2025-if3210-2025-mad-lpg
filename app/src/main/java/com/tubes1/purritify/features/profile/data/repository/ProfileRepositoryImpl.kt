@@ -16,5 +16,4 @@ class ProfileRepositoryImpl (
     override suspend fun getProfilePhoto(profilePhotoPath: String): ResponseBody {
         return api.getProfilePhoto(profilePhotoPath)
     }
-
 }
