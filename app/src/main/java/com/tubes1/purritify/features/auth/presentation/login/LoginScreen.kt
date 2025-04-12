@@ -20,6 +20,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
@@ -45,7 +47,9 @@ fun LoginPage(
             value = email.value,
             onValueChange = { email.value = it },
             label = { Text("Email") },
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .semantics { contentDescription = "Email input" },
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
         )
@@ -54,7 +58,9 @@ fun LoginPage(
             value = password.value,
             onValueChange = { password.value = it },
             label = { Text("Password") },
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .semantics { contentDescription = "Password input" },
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
             visualTransformation = PasswordVisualTransformation()
@@ -64,10 +70,14 @@ fun LoginPage(
         Button(onClick = {
             loginStateViewModel.sendLogin(email.value, password.value)
         },
-            enabled = !state.isLoading
+            enabled = !state.isLoading,
+            modifier = Modifier.semantics { contentDescription = "Login button" }
         ) {
             if (state.isLoading) {
-                CircularProgressIndicator(color = Color.White)
+                CircularProgressIndicator(
+                    color = Color.White,
+                    modifier = Modifier.semantics { contentDescription = "Loading to login" }
+                )
             } else {
                 Text("Login")
             }

@@ -1,26 +1,26 @@
-package com.tubes1.purritify.features.auth.domain.usecase.login
+package com.tubes1.purritify.features.auth.domain.usecase.auth
 
 import android.content.Context
 import com.tubes1.purritify.core.common.utils.Resource
 import com.tubes1.purritify.core.data.local.userPreferencesDataStore
-import com.tubes1.purritify.features.auth.data.remote.dto.LoginRequest
+import com.tubes1.purritify.features.auth.data.remote.dto.RefreshRequest
 import com.tubes1.purritify.features.auth.data.remote.dto.toToken
 import com.tubes1.purritify.features.auth.domain.model.Token
-import com.tubes1.purritify.features.auth.domain.repository.LoginRepository
+import com.tubes1.purritify.features.auth.domain.repository.AuthRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
 import retrofit2.HttpException
 import java.io.IOException
 
-class GetTokenUseCase (
-    private val repository: LoginRepository,
+class RefreshTokenUseCase (
+    private val repository: AuthRepository,
     private val context: Context
 ) {
-    operator fun invoke(email: String, password: String): Flow<Resource<Token>> =
+    operator fun invoke(refresh: String): Flow<Resource<Token>> =
         flow {
             emit(Resource.Loading())
-            val token = repository.login(LoginRequest(email, password)).toToken()
+            val token = repository.refresh(RefreshRequest(refresh)).toToken()
             val dataStore = context.userPreferencesDataStore
             dataStore.updateData { token }
             emit(Resource.Success(token))

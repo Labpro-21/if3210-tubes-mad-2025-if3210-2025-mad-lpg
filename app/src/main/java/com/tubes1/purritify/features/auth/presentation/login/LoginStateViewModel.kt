@@ -3,7 +3,7 @@ package com.tubes1.purritify.features.auth.presentation.login
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tubes1.purritify.core.common.utils.Resource
-import com.tubes1.purritify.features.auth.domain.usecase.login.GetTokenUseCase
+import com.tubes1.purritify.features.auth.domain.usecase.auth.RequestTokenUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -24,7 +24,7 @@ fun isEmailValid(email: String): Boolean {
 }
 
 class LoginStateViewModel(
-    private val getTokenUseCase: GetTokenUseCase,
+    private val requestTokenUseCase: RequestTokenUseCase,
 ): ViewModel() {
     private val _state = MutableStateFlow(LoginState())
     val state: StateFlow<LoginState> = _state.asStateFlow()
@@ -49,7 +49,7 @@ class LoginStateViewModel(
 
         viewModelScope.launch {
             try {
-                getTokenUseCase(email, password)
+                requestTokenUseCase(email, password)
                     .collect { resource ->
                         when(resource) {
                             is Resource.Success -> {
