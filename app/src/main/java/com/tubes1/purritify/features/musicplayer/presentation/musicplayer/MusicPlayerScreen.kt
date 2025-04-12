@@ -205,12 +205,12 @@ fun MusicPlayerScreen(
                     Slider(
                         value = sliderPosition,
                         onValueChange = { newValue ->
-                            val newPosition = (newValue * state.duration).toLong()
-                            playerViewModel.seekTo(newPosition)
+                            isDragging = true
+                            sliderPosition = newValue
                         },
                         onValueChangeFinished = {
                             isDragging = false
-                            playerViewModel.seekTo(sliderPosition.toLong())
+                            playerViewModel.seekTo((sliderPosition).toLong())
                         },
                         valueRange = 0f..state.duration.toFloat().coerceAtLeast(1f),
                         colors = SliderDefaults.colors(

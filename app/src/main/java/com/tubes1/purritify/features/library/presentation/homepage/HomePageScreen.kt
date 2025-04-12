@@ -28,6 +28,7 @@ import androidx.navigation.NavController
 import com.tubes1.purritify.core.common.navigation.Screen
 import com.tubes1.purritify.features.library.presentation.common.ui.components.SongListItem
 import com.tubes1.purritify.features.library.presentation.homepage.components.SongGridItem
+import com.tubes1.purritify.features.musicplayer.presentation.musicplayer.MusicPlayerViewModel
 import com.tubes1.purritify.features.musicplayer.presentation.musicplayer.SharedPlayerViewModel
 import com.tubes1.purritify.features.musicplayer.presentation.musicplayer.component.MiniPlayer
 import org.koin.androidx.compose.koinViewModel
@@ -36,7 +37,8 @@ import org.koin.androidx.compose.koinViewModel
 fun HomeScreen(
     navController: NavController,
     viewModel: HomePageViewModel = koinViewModel(),
-    sharedPlayerViewModel: SharedPlayerViewModel = koinViewModel()
+    sharedPlayerViewModel: SharedPlayerViewModel = koinViewModel(),
+    musicPlayerViewModel: MusicPlayerViewModel = koinViewModel()
 ) {
     val state by viewModel.state.collectAsState()
 
@@ -85,7 +87,14 @@ fun HomeScreen(
                         }
                     } else {
                         items(state.newlyAddedSongs) { song ->
-                            SongGridItem(song)
+                            SongGridItem(
+                                song = song,
+                                onClick = {
+                                    sharedPlayerViewModel.setSongAndQueue(song, state.newlyAddedSongs)
+                                    navController.navigate(Screen.MusicPlayer.route)
+                                    musicPlayerViewModel.playSong(song, state.newlyAddedSongs)
+                                }
+                            )
                         }
                     }
                 }
@@ -117,8 +126,9 @@ fun HomeScreen(
                     SongListItem(
                         song = song,
                         onClick = {
-                            viewModel.onSongClick(song, state.recentlyPlayedSongs)
+                            sharedPlayerViewModel.setSongAndQueue(song, state.recentlyPlayedSongs)
                             navController.navigate(Screen.MusicPlayer.route)
+                            musicPlayerViewModel.playSong(song, state.recentlyPlayedSongs)
                         }
                     )
                 }

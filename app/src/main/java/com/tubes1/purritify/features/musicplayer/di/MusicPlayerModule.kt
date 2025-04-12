@@ -26,6 +26,6 @@ val musicPlayerModule = module {
     factory { SeekToUseCase(get()) }
     factory { StopPlaybackUseCase(get()) }
 
-    viewModel { MusicPlayerViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
+    viewModel { MusicPlayerViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
     viewModel { SharedPlayerViewModel() }
 }
