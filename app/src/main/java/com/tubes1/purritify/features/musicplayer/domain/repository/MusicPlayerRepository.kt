@@ -21,4 +21,6 @@ interface MusicPlayerRepository {
     suspend fun seekTo(position: Long)
 
     suspend fun updatePosition(position: Long)
+
+    suspend fun stopPlayback()
 }

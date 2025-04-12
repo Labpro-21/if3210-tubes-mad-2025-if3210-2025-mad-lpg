@@ -27,6 +27,7 @@ import com.tubes1.purritify.features.library.domain.usecase.AddSongUseCase
 import com.tubes1.purritify.features.library.presentation.common.ui.components.SongListItem
 import com.tubes1.purritify.features.library.presentation.librarypage.components.FilterTab
 import com.tubes1.purritify.features.library.presentation.uploadsong.UploadSongViewModel
+import com.tubes1.purritify.features.musicplayer.presentation.musicplayer.MusicPlayerViewModel
 import com.tubes1.purritify.features.musicplayer.presentation.musicplayer.SharedPlayerViewModel
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
@@ -36,7 +37,8 @@ fun LibraryScreen(
     navController: NavController,
     libraryViewModel: LibraryPageViewModel = koinViewModel(),
     uploadSongViewModel: UploadSongViewModel = koinViewModel(),
-    sharedPlayerViewModel: SharedPlayerViewModel = koinViewModel()
+    sharedPlayerViewModel: SharedPlayerViewModel = koinViewModel(),
+    musicPlayerViewModel: MusicPlayerViewModel = koinViewModel()
 ) {
     val state by libraryViewModel.state.collectAsState()
 
@@ -110,9 +112,15 @@ fun LibraryScreen(
             }
 
             // song list
-            if (state.songs.isEmpty()) {
+            val displayedSongs = if (selectedTab == "Disukai") {
+                state.songs.filter { it.isFavorited }
+            } else {
+                state.songs
+            }
+
+            if (displayedSongs.isEmpty()) {
                 Text(
-                    text = "Anda belum menambahkan lagu",
+                    text = if (selectedTab == "Semua") "Tidak ada lagu yang ditambahkan" else "Tidak ada lagu yang disukai",
                     style = MaterialTheme.typography.bodyLarge,
                     color = Color.White,
                     modifier = Modifier
@@ -123,12 +131,13 @@ fun LibraryScreen(
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    items(state.songs) { song ->
+                    items(displayedSongs) { song ->
                         SongListItem(
                             song = song,
                             onClick = {
-                                sharedPlayerViewModel.setSongAndQueue(song, state.songs)
+                                sharedPlayerViewModel.setSongAndQueue(song, displayedSongs)
                                 navController.navigate(Screen.MusicPlayer.route)
+                                musicPlayerViewModel.playSong(song, displayedSongs)
                             }
                         )
                     }
@@ -138,6 +147,7 @@ fun LibraryScreen(
                     }
                 }
             }
+
         }
 
         if (showAddSongBottomSheet.value) {

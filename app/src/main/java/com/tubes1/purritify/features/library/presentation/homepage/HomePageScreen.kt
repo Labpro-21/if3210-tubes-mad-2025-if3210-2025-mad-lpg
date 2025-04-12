@@ -29,6 +29,7 @@ import com.tubes1.purritify.core.common.navigation.Screen
 import com.tubes1.purritify.features.library.presentation.common.ui.components.SongListItem
 import com.tubes1.purritify.features.library.presentation.homepage.components.SongGridItem
 import com.tubes1.purritify.features.musicplayer.presentation.musicplayer.SharedPlayerViewModel
+import com.tubes1.purritify.features.musicplayer.presentation.musicplayer.component.MiniPlayer
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -123,5 +124,6 @@ fun HomeScreen(
                 }
             }
         }
+
     }
 }

@@ -8,6 +8,7 @@ import com.tubes1.purritify.features.musicplayer.domain.usecase.PlaySongUseCase
 import com.tubes1.purritify.features.musicplayer.domain.usecase.TogglePlayPauseUseCase
 import com.tubes1.purritify.features.musicplayer.domain.usecase.SeekToUseCase
 import com.tubes1.purritify.features.musicplayer.domain.usecase.PlayPreviousUseCase
+import com.tubes1.purritify.features.musicplayer.domain.usecase.StopPlaybackUseCase
 import com.tubes1.purritify.features.musicplayer.presentation.musicplayer.MusicPlayerViewModel
 import com.tubes1.purritify.features.musicplayer.presentation.musicplayer.SharedPlayerViewModel
 import org.koin.android.ext.koin.androidContext
@@ -23,7 +24,8 @@ val musicPlayerModule = module {
     factory { PlayNextUseCase(get()) }
     factory { PlayPreviousUseCase(get()) }
     factory { SeekToUseCase(get()) }
+    factory { StopPlaybackUseCase(get()) }
 
-    viewModel { MusicPlayerViewModel(get(), get(), get(), get(), get(), get()) }
+    viewModel { MusicPlayerViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
     viewModel { SharedPlayerViewModel() }
 }

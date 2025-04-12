@@ -32,4 +32,14 @@ interface SongDao {
 
     @Query("UPDATE songs SET lastPlayed = :timestamp WHERE id = :songId")
     suspend fun updateLastPlayed(songId: Long, timestamp: Long = System.currentTimeMillis())
+
+    @Query("""
+        UPDATE songs 
+        SET isFavorited = CASE 
+            WHEN isFavorited = 1 THEN 0 
+            ELSE 1 
+        END 
+        WHERE id = :songId
+    """)
+    suspend fun toggleFavorite(songId: Long): Int
 }

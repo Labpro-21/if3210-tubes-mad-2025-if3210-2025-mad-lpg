@@ -31,6 +31,7 @@ import com.tubes1.purritify.core.common.navigation.Screen
 
 @Composable
 fun BottomNavigation(
+    onClick: () -> Unit,
     navController: NavController,
     currentRoute: String?,
     modifier: Modifier = Modifier

@@ -70,6 +70,7 @@ dependencies {
     implementation(libs.jackson.module.kotlin)
     implementation(libs.accompanist.system.ui.controller)
     implementation(libs.material.icons.extended)
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

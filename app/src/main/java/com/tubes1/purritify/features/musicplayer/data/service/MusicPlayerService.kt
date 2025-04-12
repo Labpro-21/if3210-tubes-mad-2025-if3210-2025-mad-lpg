@@ -65,7 +65,7 @@ class MusicPlayerService : Service() {
     }
 
     fun playSong(song: Song, queue: List<Song> = listOf(song)) {
-        releaseMediaPlayer()
+        stopPlayback()
 
         currentQueue = queue
         currentSongIndex = queue.indexOf(song).takeIf { it >= 0 } ?: 0
@@ -148,6 +148,25 @@ class MusicPlayerService : Service() {
         updateJob?.cancel()
         updateJob = null
     }
+
+    fun stopPlayback() {
+        mediaPlayer?.apply {
+            if (isPlaying) {
+                stop()
+            }
+            reset()
+        }
+
+        stopPositionUpdates()
+
+        _isPlaying.value = false
+        _currentPosition.value = 0L
+        _duration.value = 0L
+        _currentSong.value = null
+        currentSongIndex = -1
+        currentQueue = emptyList()
+    }
+
 
     private fun releaseMediaPlayer() {
         stopPositionUpdates()

@@ -86,4 +86,8 @@ class PlayerRepositoryImpl(private val context: Context) : MusicPlayerRepository
     override suspend fun updatePosition(position: Long) {
         musicService?.seekTo(position)
     }
+
+    override suspend fun stopPlayback() {
+        musicService?.stopPlayback()
+    }
 }

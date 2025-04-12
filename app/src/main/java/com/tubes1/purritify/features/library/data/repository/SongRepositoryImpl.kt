@@ -52,4 +52,8 @@ class SongRepositoryImpl(
     override suspend fun updateLastPlayed(songId: Long) {
         songDao.updateLastPlayed(songId)
     }
+
+    override suspend fun toggleFavorite(songId: Long): Boolean {
+        return songDao.toggleFavorite(songId) > 0
+    }
 }

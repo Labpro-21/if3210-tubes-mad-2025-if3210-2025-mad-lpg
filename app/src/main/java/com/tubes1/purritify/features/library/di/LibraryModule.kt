@@ -9,6 +9,9 @@ import com.tubes1.purritify.features.library.domain.usecase.DeleteSongUseCase
 import com.tubes1.purritify.features.library.domain.usecase.GetAllSongsUseCase
 import com.tubes1.purritify.features.library.domain.usecase.GetNewlyAddedSongsUseCase
 import com.tubes1.purritify.features.library.domain.usecase.GetRecentlyPlayedSongsUseCase
+import com.tubes1.purritify.features.library.domain.usecase.GetSongUseCase
+import com.tubes1.purritify.features.library.domain.usecase.ToggleFavoritedUseCase
+import com.tubes1.purritify.features.library.domain.usecase.UpdateLastPlayedUseCase
 import com.tubes1.purritify.features.library.presentation.homepage.HomePageViewModel
 import com.tubes1.purritify.features.library.presentation.librarypage.LibraryPageViewModel
 import com.tubes1.purritify.features.library.presentation.uploadsong.UploadSongViewModel
@@ -29,6 +32,9 @@ val libraryModule = module {
     single { GetAllSongsUseCase(get()) }
     single { GetNewlyAddedSongsUseCase(get()) }
     single { GetRecentlyPlayedSongsUseCase(get()) }
+    single { UpdateLastPlayedUseCase(get()) }
+    single { ToggleFavoritedUseCase(get()) }
+    single { GetSongUseCase(get()) }
 
     single { MediaStoreHelper(get()) }
 

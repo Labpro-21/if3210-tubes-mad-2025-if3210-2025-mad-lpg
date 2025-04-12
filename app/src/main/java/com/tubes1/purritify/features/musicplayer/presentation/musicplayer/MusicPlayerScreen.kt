@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
+import com.tubes1.purritify.R
 import org.koin.androidx.compose.koinViewModel
 import java.io.File
 import java.util.concurrent.TimeUnit
@@ -121,7 +122,7 @@ fun MusicPlayerScreen(
                 ) {
                     if (state.currentSong != null) {
                         GlideImage(
-                            model = File(state.currentSong?.songArtUri ?: ""),
+                            model = state.currentSong?.songArtUri ?: R.drawable.dummy_song_art,
                             contentDescription = "Album art",
                             contentScale = ContentScale.Crop,
                             modifier = Modifier.fillMaxSize()
@@ -162,12 +163,21 @@ fun MusicPlayerScreen(
                     )
 
                     // favorite button
-                    IconButton(onClick = { isFavorite = !isFavorite }) {
-                        Icon(
-                            imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                            contentDescription = "Favorite",
-                            tint = Color.White
-                        )
+                    state.currentSong?.let { song ->
+                        IconButton(onClick = {
+                            state.currentSong?.id?.let { songId ->
+                                playerViewModel.toggleFavorite(songId)
+                            }
+                        }) {
+                            Icon(
+                                imageVector = if (state.currentSong?.isFavorited == true)
+                                    Icons.Default.Favorite
+                                else
+                                    Icons.Default.FavoriteBorder,
+                                contentDescription = "Favorite",
+                                tint = Color.White
+                            )
+                        }
                     }
                 }
 
