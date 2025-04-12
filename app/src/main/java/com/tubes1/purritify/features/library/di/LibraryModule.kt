@@ -31,9 +31,8 @@ val libraryModule = module {
     single { GetRecentlyPlayedSongsUseCase(get()) }
 
     single { MediaStoreHelper(get()) }
-    single {  }
 
-    viewModel { HomePageViewModel(get(), get()) }
+    viewModel { HomePageViewModel(get(), get(), get()) }
     viewModel { LibraryPageViewModel(get(), get()) }
     viewModel { UploadSongViewModel(get(), get()) }
 }

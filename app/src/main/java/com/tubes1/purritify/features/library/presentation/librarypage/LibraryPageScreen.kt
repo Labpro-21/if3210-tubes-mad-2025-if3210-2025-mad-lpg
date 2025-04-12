@@ -20,11 +20,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.tubes1.purritify.core.common.navigation.Screen
 import com.tubes1.purritify.core.ui.components.BottomNavigation
+import com.tubes1.purritify.features.library.domain.model.Song
 import com.tubes1.purritify.features.library.domain.usecase.AddSongUseCase
 import com.tubes1.purritify.features.library.presentation.common.ui.components.SongListItem
 import com.tubes1.purritify.features.library.presentation.librarypage.components.FilterTab
 import com.tubes1.purritify.features.library.presentation.uploadsong.UploadSongViewModel
+import com.tubes1.purritify.features.musicplayer.presentation.musicplayer.SharedPlayerViewModel
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 
@@ -33,6 +36,7 @@ fun LibraryScreen(
     navController: NavController,
     libraryViewModel: LibraryPageViewModel = koinViewModel(),
     uploadSongViewModel: UploadSongViewModel = koinViewModel(),
+    sharedPlayerViewModel: SharedPlayerViewModel = koinViewModel()
 ) {
     val state by libraryViewModel.state.collectAsState()
 
@@ -120,7 +124,13 @@ fun LibraryScreen(
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     items(state.songs) { song ->
-                        SongListItem(song)
+                        SongListItem(
+                            song = song,
+                            onClick = {
+                                sharedPlayerViewModel.setSongAndQueue(song, state.songs)
+                                navController.navigate(Screen.MusicPlayer.route)
+                            }
+                        )
                     }
 
                     item {

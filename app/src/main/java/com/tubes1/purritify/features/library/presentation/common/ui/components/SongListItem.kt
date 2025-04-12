@@ -1,6 +1,7 @@
 package com.tubes1.purritify.features.library.presentation.common.ui.components
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -22,10 +23,11 @@ import com.tubes1.purritify.features.library.domain.model.Song
 
 @OptIn(ExperimentalGlideComposeApi::class)
 @Composable
-fun SongListItem(song: Song) {
+fun SongListItem(song: Song, onClick: (Song) -> Unit,) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable { onClick(song) }
             .padding(vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
