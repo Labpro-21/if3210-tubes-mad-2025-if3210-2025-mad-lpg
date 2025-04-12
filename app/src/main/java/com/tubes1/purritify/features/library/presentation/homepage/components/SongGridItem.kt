@@ -16,17 +16,20 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
+import com.bumptech.glide.integration.compose.GlideImage
 import com.tubes1.purritify.R
 import com.tubes1.purritify.features.library.domain.model.Song
 
+@OptIn(ExperimentalGlideComposeApi::class)
 @Composable
 fun SongGridItem(song: Song) {
     Column(
         modifier = Modifier.width(120.dp)
     ) {
         // song art
-        Image(
-            painter = painterResource(id = R.drawable.dummy_song_art_medium),
+        GlideImage(
+            model = song.songArtUri ?: R.drawable.dummy_song_art,
             contentDescription = "${song.title} cover",
             modifier = Modifier
                 .size(120.dp)

@@ -20,17 +20,23 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.tubes1.purritify.core.common.navigation.Screen
 import com.tubes1.purritify.core.ui.components.BottomNavigation
+import com.tubes1.purritify.features.library.domain.model.Song
+import com.tubes1.purritify.features.library.domain.usecase.AddSongUseCase
 import com.tubes1.purritify.features.library.presentation.common.ui.components.SongListItem
 import com.tubes1.purritify.features.library.presentation.librarypage.components.FilterTab
 import com.tubes1.purritify.features.library.presentation.uploadsong.UploadSongViewModel
+import com.tubes1.purritify.features.musicplayer.presentation.musicplayer.SharedPlayerViewModel
 import org.koin.androidx.compose.koinViewModel
+import org.koin.compose.koinInject
 
 @Composable
 fun LibraryScreen(
     navController: NavController,
     libraryViewModel: LibraryPageViewModel = koinViewModel(),
-    uploadSongViewModel: UploadSongViewModel = koinViewModel()
+    uploadSongViewModel: UploadSongViewModel = koinViewModel(),
+    sharedPlayerViewModel: SharedPlayerViewModel = koinViewModel()
 ) {
     val state by libraryViewModel.state.collectAsState()
 
@@ -44,17 +50,7 @@ fun LibraryScreen(
         )
     )
 
-    var showAddSongBottomSheet by remember { mutableStateOf(false) }
-    val audioFilePicker = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
-    ) { uri ->
-        uri?.let { uploadSongViewModel.handleSongFileSelected(it) }
-    }
-    val imageFilePicker = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
-    ) { uri ->
-        uri?.let { uploadSongViewModel.handleSongArtSelected(it) }
-    }
+    var showAddSongBottomSheet = remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
@@ -84,7 +80,7 @@ fun LibraryScreen(
                 )
 
                 IconButton(
-                    onClick = { showAddSongBottomSheet = true },
+                    onClick = { showAddSongBottomSheet.value = true },
                     modifier = Modifier.size(48.dp)
                 ) {
                     Icon(
@@ -128,7 +124,13 @@ fun LibraryScreen(
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     items(state.songs) { song ->
-                        SongListItem(song)
+                        SongListItem(
+                            song = song,
+                            onClick = {
+                                sharedPlayerViewModel.setSongAndQueue(song, state.songs)
+                                navController.navigate(Screen.MusicPlayer.route)
+                            }
+                        )
                     }
 
                     item {
@@ -138,15 +140,10 @@ fun LibraryScreen(
             }
         }
 
-        if (showAddSongBottomSheet) {
+        if (showAddSongBottomSheet.value) {
             UploadSongBottomSheet(
                 visible = showAddSongBottomSheet,
-                onDismiss = { showAddSongBottomSheet = false },
-                onSave = { title: String, artist: String ->
-                    uploadSongViewModel.updateTitleAndArtist(title, artist)
-                    uploadSongViewModel.uploadSong()
-                    showAddSongBottomSheet = false
-                }
+                viewModel = uploadSongViewModel
             )
         }
     }

@@ -5,7 +5,7 @@ import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.util.Log
 import com.tubes1.purritify.features.library.domain.model.Song
-import com.tubes1.purritify.features.library.presentation.uploadsong.AddSongState
+import com.tubes1.purritify.features.library.presentation.uploadsong.UploadSongState
 import java.io.File
 import java.io.FileOutputStream
 import java.util.UUID
@@ -13,10 +13,7 @@ import java.util.UUID
 class MediaStoreHelper(
     private val context: Context
 ) {
-    /**
-     * Extracts metadata from a song URI
-     */
-    fun extractMetadataFromUri(uri: Uri): AddSongState {
+    fun extractMetadataFromUri(uri: Uri): UploadSongState {
         val mediaMetadataRetriever = MediaMetadataRetriever()
 
         return try {
@@ -26,7 +23,7 @@ class MediaStoreHelper(
             val artist = mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST) ?: ""
             val songArtUri = extractSongArtFromMetadata(mediaMetadataRetriever)
 
-            AddSongState(
+            UploadSongState(
                 songUri = uri,
                 title = title,
                 artist = artist,
@@ -34,23 +31,20 @@ class MediaStoreHelper(
             )
         } catch (e: Exception) {
             Log.e("MediaStoreHelper", "Error extracting metadata: ${e.localizedMessage}")
-            AddSongState(songUri = uri)
+            UploadSongState(songUri = uri)
         } finally {
             mediaMetadataRetriever.release()
         }
     }
 
-    /**
-     * Creates a Song object from user input metadata
-     */
-    suspend fun createSongFromUserInput(state: AddSongState): Song {
+    fun createSongFromUserInput(state: UploadSongState): Song {
         val duration = getDurationFromUri(state.songUri!!)
         val songFilePath = saveSongToInternalStorage(state.songUri)
         val songArtPath = state.songArtUri?.let { saveSongArtToInternalStorage(it) }
 
         return Song(
             title = state.title,
-            artist = state.artist,
+            artist = state.artist.ifEmpty { "No Artist" },
             duration = duration,
             path = songFilePath,
             songArtUri = songArtPath,
@@ -58,10 +52,7 @@ class MediaStoreHelper(
         )
     }
 
-    /**
-     * Retrieves song duration from a URI
-     */
-    private fun getDurationFromUri(uri: Uri): Long {
+    fun getDurationFromUri(uri: Uri): Long {
         val mmr = MediaMetadataRetriever()
         return try {
             mmr.setDataSource(context, uri)
@@ -75,9 +66,6 @@ class MediaStoreHelper(
         }
     }
 
-    /**
-     * Extracts album art from the song metadata
-     */
     private fun extractSongArtFromMetadata(retriever: MediaMetadataRetriever): Uri? {
         return try {
             val songArtBytes = retriever.embeddedPicture
@@ -98,7 +86,7 @@ class MediaStoreHelper(
     /**
      * Saves the song file to internal storage and returns the file path
      */
-    private suspend fun saveSongToInternalStorage(uri: Uri): String {
+    private fun saveSongToInternalStorage(uri: Uri): String {
         val fileName = "song_${UUID.randomUUID()}.mp3"
         val file = File(context.filesDir, fileName)
 
@@ -114,7 +102,7 @@ class MediaStoreHelper(
     /**
      * Saves the album art to internal storage and returns the file path
      */
-    private suspend fun saveSongArtToInternalStorage(uri: Uri): String? {
+    private fun saveSongArtToInternalStorage(uri: Uri): String? {
         return try {
             val fileName = "album_art_${UUID.randomUUID()}.jpg"
             val file = File(context.filesDir, fileName)

@@ -16,6 +16,7 @@ import com.tubes1.purritify.features.library.presentation.librarypage.LibraryScr
 import com.tubes1.purritify.features.profile.presentation.profiledetail.ProfileScreen
 import androidx.compose.runtime.getValue
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
+import com.tubes1.purritify.features.musicplayer.presentation.musicplayer.MusicPlayerScreen
 
 @Composable
 fun MainScreen() {
@@ -43,9 +44,18 @@ fun MainScreen() {
             startDestination = Screen.Home.route,
             modifier = Modifier.padding(padding)
         ) {
-            composable(Screen.Home.route) { HomeScreen(navController) }
-            composable(Screen.Library.route) { LibraryScreen(navController) }
+            composable(Screen.Home.route) {
+                HomeScreen(
+                    navController = navController
+                )
+            }
+            composable(Screen.Library.route) {
+                LibraryScreen(
+                    navController = navController
+                )
+            }
             composable(Screen.Profile.route) { ProfileScreen() }
+            composable(Screen.MusicPlayer.route) { MusicPlayerScreen( { navController.navigateUp() } ) }
         }
     }
 }

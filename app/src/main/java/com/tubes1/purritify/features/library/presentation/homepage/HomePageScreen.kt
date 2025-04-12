@@ -25,14 +25,17 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.tubes1.purritify.core.common.navigation.Screen
 import com.tubes1.purritify.features.library.presentation.common.ui.components.SongListItem
 import com.tubes1.purritify.features.library.presentation.homepage.components.SongGridItem
+import com.tubes1.purritify.features.musicplayer.presentation.musicplayer.SharedPlayerViewModel
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun HomeScreen(
     navController: NavController,
-    viewModel: HomePageViewModel = koinViewModel()
+    viewModel: HomePageViewModel = koinViewModel(),
+    sharedPlayerViewModel: SharedPlayerViewModel = koinViewModel()
 ) {
     val state by viewModel.state.collectAsState()
 
@@ -110,7 +113,13 @@ fun HomeScreen(
                 }
             } else {
                 items(state.recentlyPlayedSongs) { song ->
-                    SongListItem(song)
+                    SongListItem(
+                        song = song,
+                        onClick = {
+                            viewModel.onSongClick(song, state.recentlyPlayedSongs)
+                            navController.navigate(Screen.MusicPlayer.route)
+                        }
+                    )
                 }
             }
         }

@@ -5,10 +5,12 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tubes1.purritify.features.library.data.utils.MediaStoreHelper
+import com.tubes1.purritify.features.library.domain.model.Song
 import com.tubes1.purritify.features.library.domain.usecase.AddSongUseCase
 import com.tubes1.purritify.features.library.domain.usecase.DeleteSongUseCase
 import com.tubes1.purritify.features.library.domain.usecase.GetAllSongsUseCase
-import com.tubes1.purritify.features.library.presentation.uploadsong.AddSongState
+import com.tubes1.purritify.features.library.presentation.uploadsong.UploadSongState
+import com.tubes1.purritify.features.musicplayer.domain.usecase.PlaySongUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -18,16 +20,11 @@ import kotlinx.coroutines.launch
 
 class LibraryPageViewModel (
     private val getAllSongsUseCase: GetAllSongsUseCase,
-    private val addSongUseCase: AddSongUseCase,
-    private val deleteSongUseCase: DeleteSongUseCase,
-    private val mediaStoreHelper: MediaStoreHelper
+    private val deleteSongUseCase: DeleteSongUseCase
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(LibraryPageState())
     val state: StateFlow<LibraryPageState> = _state.asStateFlow()
-
-    private val _addSongState = MutableStateFlow(AddSongState())
-    val addSongState: StateFlow<AddSongState> = _addSongState.asStateFlow()
 
     init {
         loadSongs()
@@ -53,80 +50,6 @@ class LibraryPageViewModel (
                     it.copy(
                         isLoading = false,
                         error = "Gagal memuat lagu: ${e.localizedMessage}"
-                    )
-                }
-            }
-        }
-    }
-
-    fun onAddSongStateChange(newState: AddSongState) {
-        _addSongState.update { newState }
-    }
-
-    fun initializeAddSongForm(uri: Uri) {
-        viewModelScope.launch {
-            _state.update { it.copy(isAddingSong = true) }
-            try {
-                val initialState = mediaStoreHelper.extractMetadataFromUri(uri)
-                _addSongState.update { initialState }
-                _state.update { it.copy(
-                    isAddingSong = false,
-                    showAddSongDialog = true
-                ) }
-            } catch (e: Exception) {
-                Log.e("LibraryPageViewModel", "Error initializing add song form: ${e.localizedMessage}")
-                _state.update { it.copy(
-                    isAddingSong = false,
-                    error = "Gagal memproses lagu: ${e.localizedMessage}"
-                ) }
-            }
-        }
-    }
-
-    fun hideAddSongDialog() {
-        _state.update { it.copy(showAddSongDialog = false) }
-        _addSongState.update { AddSongState() }
-    }
-
-    fun saveSong() {
-        viewModelScope.launch {
-            val currentState = _addSongState.value
-
-            if (currentState.songUri == null || currentState.title.isBlank() || currentState.artist.isBlank()) {
-                _addSongState.update { it.copy(error = "Semua kolom pada form wajib diisi") }
-                return@launch
-            }
-
-            _addSongState.update { it.copy(isLoading = true) }
-
-            try {
-                val song = mediaStoreHelper.createSongFromUserInput(currentState)
-
-                addSongUseCase(song).fold(
-                    onSuccess = {
-                        _state.update {
-                            it.copy(
-                                showAddSongDialog = false,
-                                operationSuccessMessage = "Lagu berhasil ditambahkan"
-                            )
-                        }
-                        _addSongState.update { AddSongState() }
-                    },
-                    onFailure = { error ->
-                        _addSongState.update {
-                            it.copy(
-                                isLoading = false,
-                                error = "Gagal menambahkan lagu: ${error.localizedMessage}"
-                            )
-                        }
-                    }
-                )
-            } catch (e: Exception) {
-                Log.e("LibraryPageViewModel", "Error adding song: ${e.localizedMessage}")
-                _addSongState.update {
-                    it.copy(
-                        isLoading = false,
-                        error = "Gagal menambahkan lagu: ${e.localizedMessage}"
                     )
                 }
             }
@@ -165,19 +88,6 @@ class LibraryPageViewModel (
                     )
                 }
             }
-        }
-    }
-
-    fun clearMessages() {
-        _state.update {
-            it.copy(
-                error = null,
-                operationSuccessMessage = null
-            )
-        }
-
-        _addSongState.update {
-            it.copy(error = null)
         }
     }
 }

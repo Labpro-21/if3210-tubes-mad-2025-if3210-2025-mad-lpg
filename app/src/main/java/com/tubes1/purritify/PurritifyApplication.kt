@@ -4,6 +4,7 @@ import android.app.Application
 import com.tubes1.purritify.core.di.databaseModule
 import com.tubes1.purritify.core.di.networkModule
 import com.tubes1.purritify.features.library.di.libraryModule
+import com.tubes1.purritify.features.musicplayer.di.musicPlayerModule
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
 
@@ -15,7 +16,8 @@ class PurritifyApplication : Application() {
             modules(
                 networkModule,
                 databaseModule,
-                libraryModule
+                libraryModule,
+                musicPlayerModule
             )
         }
     }

@@ -1,6 +1,7 @@
 package com.tubes1.purritify.features.library.presentation.common.ui.components
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -16,25 +17,27 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
+import com.bumptech.glide.integration.compose.GlideImage
 import com.tubes1.purritify.R
 import com.tubes1.purritify.features.library.domain.model.Song
 
+@OptIn(ExperimentalGlideComposeApi::class)
 @Composable
-fun SongListItem(song: Song) {
+fun SongListItem(song: Song, onClick: (Song) -> Unit,) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable { onClick(song) }
             .padding(vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         // Album Thumbnail
-        Image(
-            painter = painterResource(id = R.drawable.dummy_song_art_medium),
+        GlideImage(
+            model = song.songArtUri ?: R.drawable.dummy_song_art,
             contentDescription = "${song.title} cover",
             modifier = Modifier
                 .size(48.dp)
-                .clip(RoundedCornerShape(4.dp)),
-            contentScale = ContentScale.Crop
+                .clip(RoundedCornerShape(4.dp))
         )
 
         // Song Info
