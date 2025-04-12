@@ -1,5 +1,6 @@
 package com.tubes1.purritify.features.profile.presentation.profiledetail
 
+import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import androidx.compose.foundation.Image
@@ -43,13 +44,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.tubes1.purritify.R
 import com.tubes1.purritify.core.common.navigation.Screen
+import com.tubes1.purritify.core.common.network.Connectivity
 import com.tubes1.purritify.core.ui.components.BottomNavigation
 import com.tubes1.purritify.features.profile.presentation.profiledetail.components.StatItem
 import org.koin.androidx.compose.koinViewModel
@@ -58,12 +62,14 @@ import org.koin.androidx.compose.koinViewModel
 fun ProfileScreen(
     navController: NavController,
     profileDetailViewModel: ProfileDetailViewModel = koinViewModel(),
+    context: Context = LocalContext.current,
 ) {
     val state = profileDetailViewModel.state.collectAsState().value
     val profilePhotoState = profileDetailViewModel.profilePhoto.collectAsState()
     val showLogoutDialog = remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
     var bitmap = remember { mutableStateOf<Bitmap?>(null) }
+    val isConnected = Connectivity.isConnected(context)
 
     LaunchedEffect(state.tokenExpired) {
         if (state.tokenExpired) {
@@ -119,112 +125,127 @@ fun ProfileScreen(
             Color(0xFF001A20)
         )
     )
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(brush = backgroundGradient)
-            .padding(WindowInsets.statusBars.asPaddingValues())
-    ) {
-        Column(
+    if (!isConnected) {
+        Box(
+            modifier = Modifier.fillMaxSize().background(brush = backgroundGradient),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "Tidak ada koneksi internet. Mohon coba lagi lain waktu.",
+                color = Color.White,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(horizontal = 24.dp)
+            )
+        }
+    } else {
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(top = 40.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .background(brush = backgroundGradient)
+                .padding(WindowInsets.statusBars.asPaddingValues())
         ) {
-            Box(
+            Column(
                 modifier = Modifier
-                    .padding(top = 40.dp)
+                    .fillMaxSize()
+                    .padding(top = 40.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                if (profilePhotoState.value.isLoading) {
-                    CircularProgressIndicator()
-                } else {
-                    bitmap.value?.let { bmp ->
-                        Image(
-                            bitmap = bmp.asImageBitmap(),
-                            contentDescription = "Profile Photo",
-                            modifier = Modifier
-                                .size(120.dp)
-                                .clip(CircleShape)
-                                .border(2.dp, Color.Gray, CircleShape)
+                Box(
+                    modifier = Modifier
+                        .padding(top = 40.dp)
+                ) {
+                    if (profilePhotoState.value.isLoading) {
+                        CircularProgressIndicator()
+                    } else {
+                        bitmap.value?.let { bmp ->
+                            Image(
+                                bitmap = bmp.asImageBitmap(),
+                                contentDescription = "Profile Photo",
+                                modifier = Modifier
+                                    .size(120.dp)
+                                    .clip(CircleShape)
+                                    .border(2.dp, Color.Gray, CircleShape)
+                            )
+                        }
+                    }
+
+                    // edit button
+                    IconButton(
+                        onClick = { /* coming soon */ },
+                        modifier = Modifier
+                            .size(32.dp)
+                            .align(Alignment.BottomEnd)
+                            .background(Color.White, CircleShape)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = "Edit Profil",
+                            tint = Color.Black,
+                            modifier = Modifier.size(16.dp)
                         )
                     }
                 }
 
-                // edit button
-                IconButton(
+                // username and location
+                Text(
+                    text = state.profile?.username ?: "13522xxx",
+                    color = Color.White,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(top = 16.dp)
+                )
+
+                Text(
+                    text = state.profile?.location ?: "Tidak diketahui",
+                    color = Color.White.copy(alpha = 0.7f),
+                    fontSize = 14.sp,
+                    modifier = Modifier.padding(top = 4.dp)
+                )
+
+                // edit profile button
+                Button(
                     onClick = { /* coming soon */ },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.DarkGray.copy(alpha = 0.5f)
+                    ),
                     modifier = Modifier
-                        .size(32.dp)
-                        .align(Alignment.BottomEnd)
-                        .background(Color.White, CircleShape)
+                        .padding(top = 16.dp)
+                        .width(120.dp)
+                        .height(40.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Edit,
-                        contentDescription = "Edit Profil",
-                        tint = Color.Black,
-                        modifier = Modifier.size(16.dp)
-                    )
+                    Text("Edit Profil", color = Color.White)
                 }
-            }
 
-            // username and location
-            Text(
-                text = state.profile?.username ?: "13522xxx",
-                color = Color.White,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(top = 16.dp)
-            )
+                // stats
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 32.dp, start = 10.dp, end = 10.dp),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    StatItem(count = profileDetailViewModel.getNumberOfSongs(), label = "LAGU", modifier = Modifier.weight(1f))
+                    StatItem(count = profileDetailViewModel.getNumberOfFavoritedSongs(), label = "DISUKAI", modifier = Modifier.weight(1f))
+                    StatItem(count = profileDetailViewModel.getNumberOfListenedSongs(), label = "DIDENGARKAN", modifier = Modifier.weight(1f))
+                }
 
-            Text(
-                text = state.profile?.location ?: "Tidak diketahui",
-                color = Color.White.copy(alpha = 0.7f),
-                fontSize = 14.sp,
-                modifier = Modifier.padding(top = 4.dp)
-            )
+                // Logout Button
+                Button(
+                    onClick = { showLogoutDialog.value = true },
+                    modifier = Modifier.padding(top = 16.dp)
+                ) {
+                    Text("Keluar")
+                }
 
-            // edit profile button
-            Button(
-                onClick = { /* coming soon */ },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.DarkGray.copy(alpha = 0.5f)
-                ),
-                modifier = Modifier
-                    .padding(top = 16.dp)
-                    .width(120.dp)
-                    .height(40.dp)
-            ) {
-                Text("Edit Profil", color = Color.White)
-            }
-
-            // stats
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 32.dp, start = 10.dp, end = 10.dp),
-                horizontalArrangement = Arrangement.Center
-            ) {
-                StatItem(count = profileDetailViewModel.getNumberOfSongs(), label = "LAGU", modifier = Modifier.weight(1f))
-                StatItem(count = profileDetailViewModel.getNumberOfFavoritedSongs(), label = "DISUKAI", modifier = Modifier.weight(1f))
-                StatItem(count = profileDetailViewModel.getNumberOfListenedSongs(), label = "DIDENGARKAN", modifier = Modifier.weight(1f))
-            }
-
-            // Logout Button
-            Button(
-                onClick = { showLogoutDialog.value = true },
-                modifier = Modifier.padding(top = 16.dp)
-            ) {
-                Text("Keluar")
-            }
-
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(bottom = 16.dp),
-                contentAlignment = Alignment.BottomCenter
-            ) {
-                SnackbarHost(hostState = snackbarHostState)
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(bottom = 16.dp),
+                    contentAlignment = Alignment.BottomCenter
+                ) {
+                    SnackbarHost(hostState = snackbarHostState)
+                }
             }
         }
     }
+
 }

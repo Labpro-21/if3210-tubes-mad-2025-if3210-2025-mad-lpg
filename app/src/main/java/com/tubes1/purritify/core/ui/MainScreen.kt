@@ -26,14 +26,19 @@ import com.tubes1.purritify.features.library.presentation.homepage.HomeScreen
 import com.tubes1.purritify.features.library.presentation.librarypage.LibraryScreen
 import com.tubes1.purritify.features.profile.presentation.profiledetail.ProfileScreen
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
+import com.tubes1.purritify.core.common.network.Connectivity
+import com.tubes1.purritify.core.common.network.ConnectivityObserver
+import com.tubes1.purritify.core.common.network.ConnectivityStatusSnackbar
 import com.tubes1.purritify.features.auth.presentation.login.LoginPage
 import com.tubes1.purritify.features.musicplayer.di.musicPlayerModule
 import com.tubes1.purritify.features.musicplayer.presentation.musicplayer.MusicPlayerScreen
@@ -43,14 +48,12 @@ import com.tubes1.purritify.features.musicplayer.presentation.musicplayer.compon
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun MainScreen(
-    playerViewModel: MusicPlayerViewModel = koinViewModel(),
-    sharedViewModel: SharedPlayerViewModel = koinViewModel()
-) {
+fun MainScreen() {
     val navController = rememberNavController()
     val currentBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = currentBackStackEntry?.destination?.route
 
+    val context = LocalContext.current
     val systemUiController = rememberSystemUiController()
     systemUiController.setSystemBarsColor(
         color = Color.Black,
@@ -66,6 +69,11 @@ fun MainScreen(
     val shouldShowMiniPlayer = remember(currentRoute, showMiniPlayer) {
         showMiniPlayer && currentRoute != Screen.MusicPlayer.route
     }
+
+    val observer = remember { ConnectivityObserver(context) }
+    val isConnected by observer.isConnected.observeAsState(initial = Connectivity.isConnected(context))
+
+    val startDestination = if (isConnected) Screen.Login.route else Screen.Home.route
 
     Scaffold(
         bottomBar = {
@@ -84,9 +92,10 @@ fun MainScreen(
                 .fillMaxSize()
                 .padding(padding)
         ) {
+            ConnectivityStatusSnackbar()
             NavHost(
                 navController = navController,
-                startDestination = Screen.Login.route,
+                startDestination = startDestination,
                 modifier = Modifier.fillMaxSize()
             ) {
                 composable(Screen.Home.route) {
