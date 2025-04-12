@@ -19,11 +19,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.navigation.NavController
+import androidx.recyclerview.widget.DividerItemDecoration
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.tubes1.purritify.core.common.navigation.Screen
 import com.tubes1.purritify.core.ui.components.BottomNavigation
 import com.tubes1.purritify.features.library.domain.model.Song
 import com.tubes1.purritify.features.library.domain.usecase.AddSongUseCase
+import com.tubes1.purritify.features.library.presentation.common.ui.components.SongListAdapter
 import com.tubes1.purritify.features.library.presentation.common.ui.components.SongListItem
 import com.tubes1.purritify.features.library.presentation.librarypage.components.FilterTab
 import com.tubes1.purritify.features.library.presentation.uploadsong.UploadSongViewModel
@@ -128,24 +133,26 @@ fun LibraryScreen(
                         .wrapContentSize(Alignment.Center)
                 )
             } else {
-                LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    items(displayedSongs) { song ->
-                        SongListItem(
-                            song = song,
-                            onClick = {
-                                sharedPlayerViewModel.setSongAndQueue(song, displayedSongs)
-                                navController.navigate(Screen.MusicPlayer.route)
-                                musicPlayerViewModel.playSong(song, displayedSongs)
-                            }
-                        )
-                    }
-
-                    item {
-                        Spacer(modifier = Modifier.height(20.dp))
-                    }
-                }
+                AndroidView(
+                    factory = { ctx ->
+                        RecyclerView(ctx).apply {
+                            layoutManager = LinearLayoutManager(ctx)
+                            adapter = SongListAdapter(
+                                onItemClick = { song ->
+                                    sharedPlayerViewModel.setSongAndQueue(song, displayedSongs)
+                                    navController.navigate(Screen.MusicPlayer.route)
+                                    musicPlayerViewModel.playSong(song, displayedSongs)
+                                }
+                            )
+                            addItemDecoration(DividerItemDecoration(ctx, DividerItemDecoration.VERTICAL))
+                        }
+                    },
+                    update = { recyclerView ->
+                        (recyclerView.adapter as? SongListAdapter)?.submitList(displayedSongs)
+                    },
+                    modifier = Modifier.fillMaxSize()
+                )
+                Spacer(modifier = Modifier.height(20.dp))
             }
 
         }
