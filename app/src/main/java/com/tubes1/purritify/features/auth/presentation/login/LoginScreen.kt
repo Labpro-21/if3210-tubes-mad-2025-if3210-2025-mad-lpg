@@ -1,5 +1,6 @@
 package com.tubes1.purritify.features.auth.presentation.login
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -26,10 +27,13 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import com.tubes1.purritify.core.common.navigation.Screen
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun LoginPage(
+    navController: NavController,
     loginStateViewModel: LoginStateViewModel = koinViewModel()
 ) {
     val email = remember { mutableStateOf("") }
@@ -39,7 +43,8 @@ fun LoginPage(
     Column (
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = 32.dp),
+            .padding(horizontal = 32.dp)
+            .background(Color.White),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -69,6 +74,9 @@ fun LoginPage(
         Spacer(modifier = Modifier.height(16.dp))
         Button(onClick = {
             loginStateViewModel.sendLogin(email.value, password.value)
+            if (state.isSuccess) {
+                navController.navigate(Screen.Home.route)
+            }
         },
             enabled = !state.isLoading,
             modifier = Modifier.semantics { contentDescription = "Login button" }
@@ -92,9 +100,9 @@ fun LoginPage(
         }
     }
 }
-
-@Preview(showBackground = true)
-@Composable
-fun LoginPagePreview() {
-    LoginPage()
-}
+//
+//@Preview(showBackground = true)
+//@Composable
+//fun LoginPagePreview() {
+//    LoginPage()
+//}

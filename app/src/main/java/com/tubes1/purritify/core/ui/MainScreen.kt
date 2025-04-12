@@ -16,6 +16,7 @@ import com.tubes1.purritify.features.library.presentation.librarypage.LibraryScr
 import com.tubes1.purritify.features.profile.presentation.profiledetail.ProfileScreen
 import androidx.compose.runtime.getValue
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
+import com.tubes1.purritify.features.auth.presentation.login.LoginPage
 import com.tubes1.purritify.features.musicplayer.presentation.musicplayer.MusicPlayerScreen
 
 @Composable
@@ -32,18 +33,25 @@ fun MainScreen() {
 
     Scaffold(
         bottomBar = {
-            BottomNavigation(
-                navController = navController,
-                currentRoute = currentRoute
-            )
+            if (currentRoute != Screen.Login.route) {
+                BottomNavigation(
+                    navController = navController,
+                    currentRoute = currentRoute
+                )
+            }
         },
         containerColor = Color.Black
     ) { padding ->
         NavHost(
             navController = navController,
-            startDestination = Screen.Home.route,
+            startDestination = Screen.Login.route,
             modifier = Modifier.padding(padding)
         ) {
+            composable(Screen.Login.route) {
+                LoginPage(
+                    navController = navController
+                )
+            }
             composable(Screen.Home.route) {
                 HomeScreen(
                     navController = navController

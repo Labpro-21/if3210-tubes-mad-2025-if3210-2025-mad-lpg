@@ -3,6 +3,7 @@ package com.tubes1.purritify
 import android.app.Application
 import com.tubes1.purritify.core.di.databaseModule
 import com.tubes1.purritify.core.di.networkModule
+import com.tubes1.purritify.features.auth.di.authModule
 import com.tubes1.purritify.features.library.di.libraryModule
 import com.tubes1.purritify.features.musicplayer.di.musicPlayerModule
 import org.koin.android.ext.koin.androidContext
@@ -17,7 +18,8 @@ class PurritifyApplication : Application() {
                 networkModule,
                 databaseModule,
                 libraryModule,
-                musicPlayerModule
+                musicPlayerModule,
+                authModule
             )
         }
     }

@@ -72,6 +72,7 @@ dependencies {
     implementation(libs.jackson.module.kotlin)
     implementation(libs.accompanist.system.ui.controller)
     implementation(libs.material.icons.extended)
+    implementation(libs.datastore.preferences)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
