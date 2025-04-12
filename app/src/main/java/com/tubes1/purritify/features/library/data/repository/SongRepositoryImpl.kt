@@ -37,6 +37,12 @@ class SongRepositoryImpl(
         }
     }
 
+    override fun getAllListenedSongs(): Flow<List<Song>> {
+        return songDao.getAllListenedSongs().map { entities ->
+            entities.map { it.toSong() }
+        }
+    }
+
     override suspend fun addSong(song: Song): Long {
         return songDao.insertSong(song.toSongEntity())
     }

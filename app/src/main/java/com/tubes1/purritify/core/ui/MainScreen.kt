@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
+import com.tubes1.purritify.features.auth.presentation.login.LoginPage
 import com.tubes1.purritify.features.musicplayer.di.musicPlayerModule
 import com.tubes1.purritify.features.musicplayer.presentation.musicplayer.MusicPlayerScreen
 import com.tubes1.purritify.features.musicplayer.presentation.musicplayer.MusicPlayerViewModel
@@ -68,14 +69,11 @@ fun MainScreen(
 
     Scaffold(
         bottomBar = {
-            Box(modifier = Modifier.fillMaxWidth()) {
-                // Bottom Navigation bar (always at the bottom)
+            if (currentRoute != Screen.Login.route) {
                 BottomNavigation(
                     onClick = { showMiniPlayer = playerState.currentSong != null },
                     navController = navController,
                     currentRoute = currentRoute,
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
                 )
             }
         },
@@ -88,7 +86,7 @@ fun MainScreen(
         ) {
             NavHost(
                 navController = navController,
-                startDestination = Screen.Home.route,
+                startDestination = Screen.Login.route,
                 modifier = Modifier.fillMaxSize()
             ) {
                 composable(Screen.Home.route) {
@@ -101,7 +99,11 @@ fun MainScreen(
                         navController = navController
                     )
                 }
-                composable(Screen.Profile.route) { ProfileScreen() }
+                composable(Screen.Profile.route) {
+                    ProfileScreen(
+                        navController = navController
+                    )
+                }
                 composable(Screen.MusicPlayer.route) { navBackStackEntry ->
                     MusicPlayerScreen(
                         onBackPressed = {
@@ -109,6 +111,11 @@ fun MainScreen(
                             showMiniPlayer = true
                         },
                         playerViewModel = playerViewModel
+                    )
+                }
+                composable(Screen.Login.route) { navBackStackEntry ->
+                    LoginPage(
+                        navController = navController
                     )
                 }
             }

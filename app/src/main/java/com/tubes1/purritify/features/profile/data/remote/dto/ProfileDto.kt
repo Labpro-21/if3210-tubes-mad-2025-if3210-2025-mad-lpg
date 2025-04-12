@@ -10,10 +10,8 @@ data class ProfileDto(
     val email: String,
     val profilePhoto: String,
     val location: String,
-    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
-    val createdAt: LocalDateTime,
-    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
-    val updatedAt: LocalDateTime
+    val createdAt: String,
+    val updatedAt: String
 )
 
 fun ProfileDto.toProfile(): Profile {

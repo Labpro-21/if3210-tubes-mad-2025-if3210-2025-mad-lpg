@@ -13,6 +13,8 @@ interface SongRepository {
 
     fun getAllFavoritedSongs(): Flow<List<Song>>
 
+    fun getAllListenedSongs(): Flow<List<Song>>
+
     suspend fun addSong(song: Song): Long
 
     suspend fun deleteSong(songId: Long): Boolean
