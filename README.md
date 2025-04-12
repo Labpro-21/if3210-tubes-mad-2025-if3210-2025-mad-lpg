@@ -21,21 +21,28 @@ pengguna juga dapat menambah lagu dan menyukai lagu. Aplikasi pun memiliki fitur
 - Utility: RecyclerView, Accompanist, Coroutines
 
 ## Dokumentasi Aplikasi
-1. Navbar
-   ![navbar.png](assets%2Fnavbar.png)
-2. Login Page
-   ![login_page.png](assets%2Flogin_page.png)
-3. Home Page
-   ![home_page.jpg](assets%2Fhome_page.jpg)
-4. Library
-   ![library.jpg](assets%2Flibrary.jpg)
-5. Profile Page
-   ![profile_page.png](assets%2Fprofile_page.png)
-6. Liked songs
-   ![liked_songs.jpg](assets%2Fliked_songs.jpg)
-7. Music player
-   ![music_player.jpg](assets%2Fmusic_player.jpg)
-   ![music_player2.jpg](assets%2Fmusic_player2.jpg)
+1. Navbar  
+   ![navbar.png](assets/navbar.png)
+
+2. Login Page  
+   ![login_page.png](assets/login_page.png)
+
+3. Home Page  
+   ![home_page.jpg](assets/home_page.jpg)
+
+4. Library  
+   ![library.jpg](assets/library.jpg)
+
+5. Profile Page  
+   ![profile_page.png](assets/profile_page.png)
+
+6. Liked songs  
+   ![liked_songs.jpg](assets/liked_songs.jpg)
+
+7. Music player  
+   ![music_player.jpg](assets/music_player.jpg)  
+   ![music_player2.jpg](assets/music_player2.jpg)
+
 
 ## Pembagian Tugas
 | NIM      | Nama                      | Tugas                                                                        |
