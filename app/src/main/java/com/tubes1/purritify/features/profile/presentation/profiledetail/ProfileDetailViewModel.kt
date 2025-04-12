@@ -1,4 +1,4 @@
-package com.tubes1.purritify.features.profile.presentation.profiledetail;
+package com.tubes1.purritify.features.profile.presentation.profiledetail
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-public class ProfileDetailViewModel(
+class ProfileDetailViewModel(
     private val readToken: ReadToken,
     private val deleteToken: DeleteToken
 ): ViewModel() {
@@ -31,7 +31,9 @@ public class ProfileDetailViewModel(
                 _state.value = _state.value.copy(
                     tokenExpired = true
                 )
+                return@launch
             }
+            // another process
         }
     }
 //    fun printToken() { // Contoh lain

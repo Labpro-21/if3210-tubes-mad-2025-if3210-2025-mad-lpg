@@ -47,7 +47,6 @@ import com.tubes1.purritify.R
 import com.tubes1.purritify.core.common.navigation.Screen
 import com.tubes1.purritify.core.ui.components.BottomNavigation
 import com.tubes1.purritify.features.profile.presentation.profiledetail.components.StatItem
-import kotlinx.coroutines.delay
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
