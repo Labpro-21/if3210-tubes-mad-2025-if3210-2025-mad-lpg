@@ -129,7 +129,8 @@ fun UploadSongBottomSheet(
                                 description = "Unggah Foto",
                                 icon = Icons.Outlined.AccountCircle,
                                 onClick = { photoPickerLauncher.launch("image/*") },
-                                modifier = Modifier.weight(1f)
+                                modifier = Modifier.weight(1f),
+                                imagePreview = true
                             )
 
                             UploadArea(
@@ -137,20 +138,9 @@ fun UploadSongBottomSheet(
                                 description = "Unggah File Lagu",
                                 icon = null,
                                 onClick =
-                                {
-                                    songPickerLauncher.launch(arrayOf("audio/*"))
-                                },
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-
-                        duration?.let { ms ->
-                            val minutes = (ms / 1000) / 60
-                            val seconds = (ms / 1000) % 60
-                            Text(
-                                text = String.format("Durasi Lagu: %d:%02d", minutes, seconds),
-                                color = Color.White,
-                                fontSize = 14.sp
+                                { songPickerLauncher.launch(arrayOf("audio/*")) },
+                                modifier = Modifier.weight(1f),
+                                songDuration = duration
                             )
                         }
 
