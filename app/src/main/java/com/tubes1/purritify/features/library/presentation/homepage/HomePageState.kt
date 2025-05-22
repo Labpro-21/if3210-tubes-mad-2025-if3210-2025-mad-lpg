@@ -1,6 +1,6 @@
 package com.tubes1.purritify.features.library.presentation.homepage
 
-import com.tubes1.purritify.features.library.domain.model.Song
+import com.tubes1.purritify.core.data.model.Song
 
 data class HomePageState(
     val newlyAddedSongs: List<Song> = emptyList(),

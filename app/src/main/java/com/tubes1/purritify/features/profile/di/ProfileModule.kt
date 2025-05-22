@@ -1,7 +1,5 @@
 package com.tubes1.purritify.features.profile.di
 
-import com.tubes1.purritify.features.musicplayer.domain.usecase.GetPlayerStateUseCase
-import com.tubes1.purritify.features.musicplayer.domain.usecase.PlaySongUseCase
 import com.tubes1.purritify.features.profile.data.remote.ProfileApi
 import com.tubes1.purritify.features.profile.data.repository.ProfileRepositoryImpl
 import com.tubes1.purritify.features.profile.domain.repository.ProfileRepository

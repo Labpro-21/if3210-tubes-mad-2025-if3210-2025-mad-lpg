@@ -5,7 +5,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tubes1.purritify.features.library.data.utils.MediaStoreHelper
-import com.tubes1.purritify.features.library.domain.usecase.AddSongUseCase
+import com.tubes1.purritify.features.library.domain.usecase.uploadsong.AddSongUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

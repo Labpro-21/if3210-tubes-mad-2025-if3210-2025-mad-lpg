@@ -1,6 +1,6 @@
 package com.tubes1.purritify.features.musicplayer.presentation.musicplayer
 
-import com.tubes1.purritify.features.library.domain.model.Song
+import com.tubes1.purritify.core.data.model.Song
 
 data class PlayerUiState(
     val currentSong: Song? = null,

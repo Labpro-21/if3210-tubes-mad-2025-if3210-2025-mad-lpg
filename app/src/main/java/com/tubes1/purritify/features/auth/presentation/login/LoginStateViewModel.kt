@@ -3,8 +3,7 @@ package com.tubes1.purritify.features.auth.presentation.login
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tubes1.purritify.core.common.utils.Resource
-import com.tubes1.purritify.features.auth.domain.model.Token
-import com.tubes1.purritify.features.auth.domain.usecase.auth.RequestTokenUseCase
+import com.tubes1.purritify.features.auth.domain.usecase.token.RequestTokenUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

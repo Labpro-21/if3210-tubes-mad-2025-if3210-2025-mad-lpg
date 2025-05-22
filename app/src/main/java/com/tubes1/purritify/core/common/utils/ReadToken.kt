@@ -1,10 +1,10 @@
 package com.tubes1.purritify.core.common.utils
 
 import android.util.Log
-import com.tubes1.purritify.features.auth.domain.usecase.auth.GetAccessTokenUseCase
-import com.tubes1.purritify.features.auth.domain.usecase.auth.GetRefreshTokenUseCase
-import com.tubes1.purritify.features.auth.domain.usecase.auth.RefreshTokenUseCase
-import com.tubes1.purritify.features.auth.domain.usecase.auth.VerifyTokenUseCase
+import com.tubes1.purritify.features.auth.domain.usecase.token.GetAccessTokenUseCase
+import com.tubes1.purritify.features.auth.domain.usecase.token.GetRefreshTokenUseCase
+import com.tubes1.purritify.features.auth.domain.usecase.token.RefreshTokenUseCase
+import com.tubes1.purritify.features.auth.domain.usecase.token.VerifyTokenUseCase
 
 class ReadToken(
     private val getAccessTokenUseCase: GetAccessTokenUseCase,

@@ -3,10 +3,10 @@ package com.tubes1.purritify.features.library.presentation.homepage
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.tubes1.purritify.features.library.domain.model.Song
-import com.tubes1.purritify.features.library.domain.usecase.GetNewlyAddedSongsUseCase
-import com.tubes1.purritify.features.library.domain.usecase.GetRecentlyPlayedSongsUseCase
-import com.tubes1.purritify.features.musicplayer.domain.usecase.PlaySongUseCase
+import com.tubes1.purritify.core.data.model.Song
+import com.tubes1.purritify.features.library.domain.usecase.getsongs.GetNewlyAddedSongsUseCase
+import com.tubes1.purritify.features.library.domain.usecase.getsongs.GetRecentlyPlayedSongsUseCase
+import com.tubes1.purritify.features.musicplayer.domain.usecase.playback.PlaySongUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

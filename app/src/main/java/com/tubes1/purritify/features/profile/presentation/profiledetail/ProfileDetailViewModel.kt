@@ -6,10 +6,9 @@ import androidx.lifecycle.viewModelScope
 import com.tubes1.purritify.core.common.utils.DeleteToken
 import com.tubes1.purritify.core.common.utils.ReadToken
 import com.tubes1.purritify.core.common.utils.Resource
-import com.tubes1.purritify.features.auth.presentation.login.LoginState
-import com.tubes1.purritify.features.library.domain.usecase.GetAllFavoritedSongsUseCase
-import com.tubes1.purritify.features.library.domain.usecase.GetAllListenedSongsUseCase
-import com.tubes1.purritify.features.library.domain.usecase.GetAllSongsUseCase
+import com.tubes1.purritify.core.domain.usecase.GetAllFavoritedSongsUseCase
+import com.tubes1.purritify.features.profile.domain.usecase.getsongs.GetAllListenedSongsUseCase
+import com.tubes1.purritify.core.domain.usecase.song.GetAllSongsUseCase
 import com.tubes1.purritify.features.profile.domain.model.Stats
 import com.tubes1.purritify.features.profile.domain.usecase.getprofile.GetProfilePhotoUseCase
 import com.tubes1.purritify.features.profile.domain.usecase.getprofile.GetProfileUseCase
