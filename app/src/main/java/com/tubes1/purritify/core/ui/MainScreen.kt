@@ -4,9 +4,7 @@ import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -24,7 +22,7 @@ import com.tubes1.purritify.core.common.navigation.Screen
 import com.tubes1.purritify.core.ui.components.BottomNavigation
 import com.tubes1.purritify.features.library.presentation.homepage.HomeScreen
 import com.tubes1.purritify.features.library.presentation.librarypage.LibraryScreen
-import com.tubes1.purritify.features.profile.presentation.profiledetail.ProfileScreen
+import com.tubes1.purritify.features.profile.presentation.profile.ProfileScreen
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
@@ -34,16 +32,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.tubes1.purritify.core.common.network.Connectivity
 import com.tubes1.purritify.core.common.network.ConnectivityObserver
 import com.tubes1.purritify.core.common.network.ConnectivityStatusSnackbar
 import com.tubes1.purritify.features.auth.presentation.login.LoginPage
-import com.tubes1.purritify.features.musicplayer.di.musicPlayerModule
 import com.tubes1.purritify.features.musicplayer.presentation.musicplayer.MusicPlayerScreen
 import com.tubes1.purritify.features.musicplayer.presentation.musicplayer.MusicPlayerViewModel
-import com.tubes1.purritify.features.musicplayer.presentation.musicplayer.SharedPlayerViewModel
 import com.tubes1.purritify.features.musicplayer.presentation.musicplayer.component.MiniPlayer
 import org.koin.androidx.compose.koinViewModel
 

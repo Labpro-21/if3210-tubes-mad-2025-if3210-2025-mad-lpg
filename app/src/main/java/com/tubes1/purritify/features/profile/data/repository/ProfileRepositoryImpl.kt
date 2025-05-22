@@ -3,6 +3,7 @@ package com.tubes1.purritify.features.profile.data.repository
 import com.tubes1.purritify.features.profile.data.remote.ProfileApi
 import com.tubes1.purritify.features.profile.data.remote.dto.ProfileDto
 import com.tubes1.purritify.features.profile.domain.repository.ProfileRepository
+import okhttp3.MultipartBody
 import okhttp3.ResponseBody
 
 class ProfileRepositoryImpl (
@@ -15,5 +16,9 @@ class ProfileRepositoryImpl (
 
     override suspend fun getProfilePhoto(profilePhotoPath: String): ResponseBody {
         return api.getProfilePhoto(profilePhotoPath)
+    }
+
+    override suspend fun editProfile(authorization: String, location: String?, profilePhoto: MultipartBody.Part?): ResponseBody {
+        return api.editProfile("Bearer $authorization", location, profilePhoto)
     }
 }
