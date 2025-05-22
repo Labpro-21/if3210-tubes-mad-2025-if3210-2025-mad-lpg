@@ -1,6 +1,6 @@
 package com.tubes1.purritify.core.domain.usecase.song
 
-import com.tubes1.purritify.core.data.model.Song
+import com.tubes1.purritify.core.domain.model.Song
 import com.tubes1.purritify.core.domain.repository.SongRepository
 
 class GetSongUseCase(

@@ -4,7 +4,7 @@ import android.content.Context
 import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.util.Log
-import com.tubes1.purritify.core.data.model.Song
+import com.tubes1.purritify.core.domain.model.Song
 import com.tubes1.purritify.features.library.presentation.uploadsong.UploadSongState
 import java.io.File
 import java.io.FileOutputStream

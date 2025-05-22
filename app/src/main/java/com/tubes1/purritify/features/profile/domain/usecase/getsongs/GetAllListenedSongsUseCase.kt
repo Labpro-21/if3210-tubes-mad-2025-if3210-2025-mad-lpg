@@ -1,6 +1,6 @@
 package com.tubes1.purritify.features.profile.domain.usecase.getsongs
 
-import com.tubes1.purritify.core.data.model.Song
+import com.tubes1.purritify.core.domain.model.Song
 import com.tubes1.purritify.core.domain.repository.SongRepository
 import kotlinx.coroutines.flow.Flow
 

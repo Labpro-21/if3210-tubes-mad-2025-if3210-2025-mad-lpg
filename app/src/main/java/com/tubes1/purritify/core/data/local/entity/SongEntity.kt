@@ -2,9 +2,9 @@ package com.tubes1.purritify.core.data.local.entity
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import com.tubes1.purritify.core.data.model.Song
+import com.tubes1.purritify.core.domain.model.Song
 
-@Entity(tableName = "songs")
+@Entity(tableName = "song")
 data class SongEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long? = null,
@@ -15,7 +15,8 @@ data class SongEntity(
     val songArtUri: String?,
     val dateAdded: Long,
     val lastPlayed: Long?,
-    val isFavorited: Boolean = false
+    val isFavorited: Boolean = false,
+    val isFromServer: Boolean = false
 )
 
 fun SongEntity.toSong(): Song {
@@ -28,7 +29,8 @@ fun SongEntity.toSong(): Song {
         songArtUri = songArtUri,
         dateAdded = dateAdded,
         lastPlayed = lastPlayed,
-        isFavorited = isFavorited
+        isFavorited = isFavorited,
+        isFromServer = isFromServer
     )
 }
 
@@ -42,6 +44,7 @@ fun Song.toSongEntity(): SongEntity {
         songArtUri = songArtUri,
         dateAdded = dateAdded,
         lastPlayed = lastPlayed,
-        isFavorited = isFavorited
+        isFavorited = isFavorited,
+        isFromServer = isFromServer
     )
 }

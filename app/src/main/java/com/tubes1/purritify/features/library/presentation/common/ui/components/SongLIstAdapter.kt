@@ -10,7 +10,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.tubes1.purritify.R
-import com.tubes1.purritify.core.data.model.Song
+import com.tubes1.purritify.core.domain.model.Song
 
 class SongListAdapter(
     private val onItemClick: (Song) -> Unit

@@ -3,7 +3,7 @@ package com.tubes1.purritify.features.musicplayer.presentation.musicplayer
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.tubes1.purritify.core.data.model.Song
+import com.tubes1.purritify.core.domain.model.Song
 import com.tubes1.purritify.features.musicplayer.domain.usecase.songdata.ToggleFavoritedUseCase
 import com.tubes1.purritify.features.musicplayer.domain.usecase.songdata.UpdateLastPlayedUseCase
 import com.tubes1.purritify.features.musicplayer.domain.usecase.playback.GetPlayerStateUseCase

@@ -18,7 +18,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.tubes1.purritify.R
-import com.tubes1.purritify.core.data.model.Song
+import com.tubes1.purritify.core.domain.model.Song
 
 @OptIn(ExperimentalGlideComposeApi::class)
 @Composable
