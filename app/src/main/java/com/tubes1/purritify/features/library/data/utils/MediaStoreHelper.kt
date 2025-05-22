@@ -48,7 +48,8 @@ class MediaStoreHelper(
             duration = duration,
             path = songFilePath,
             songArtUri = songArtPath,
-            dateAdded = System.currentTimeMillis()
+            dateAdded = System.currentTimeMillis(),
+            lastPlayed = null
         )
     }
 

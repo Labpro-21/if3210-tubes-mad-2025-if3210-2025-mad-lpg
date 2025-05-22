@@ -1,4 +1,4 @@
-package com.tubes1.purritify.core.domain.usecase.song
+package com.tubes1.purritify.core.domain.usecase.getsongs
 
 import com.tubes1.purritify.core.domain.model.Song
 import com.tubes1.purritify.core.domain.repository.SongRepository
