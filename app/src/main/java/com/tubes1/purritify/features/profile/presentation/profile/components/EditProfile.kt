@@ -1,6 +1,7 @@
 package com.tubes1.purritify.features.profile.presentation.profile.components
 
 import android.content.pm.PackageManager
+import android.location.Geocoder
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -15,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
@@ -45,8 +47,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import coil.compose.rememberAsyncImagePainter
+import com.google.android.gms.location.LocationServices
 import com.tubes1.purritify.R
 import com.tubes1.purritify.features.profile.presentation.profile.EditProfileViewModel
 import kotlinx.coroutines.CoroutineScope
@@ -58,6 +62,7 @@ import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import org.koin.androidx.compose.koinViewModel
 import java.io.File
+import java.util.Locale
 
 @Composable
 fun EditProfile(
@@ -66,7 +71,6 @@ fun EditProfile(
     location: String?,
     editProfileViewModel: EditProfileViewModel = koinViewModel()
 ) {
-    editProfileViewModel.resetState()
     val state = editProfileViewModel.state.collectAsState().value
     val context = LocalContext.current
 
@@ -130,31 +134,8 @@ fun EditProfile(
         }
     }
 
-    var showImagePickerDialog by remember { mutableStateOf(false) }
-
-    // Save edit profile function
-    fun save() {
-        val file = cachedImageFile.value
-        val requestBody = file?.asRequestBody("image/*".toMediaTypeOrNull())
-        val multipart = file?.let {
-            MultipartBody.Part.createFormData(
-                name = "profilePhoto",
-                filename = it.name,
-                body = requestBody!!
-            )
-        }
-
-
-        editProfileViewModel.sendNewProfile(profilePhoto = multipart)
-//        editProfileViewModel.sendNewProfile(profilePhoto = multipart, location = null)
-        CoroutineScope(Dispatchers.Main).launch {
-            delay(1500)
-            editProfileViewModel.resetState()
-            onSave()
-        }
-    }
-
     // Image picker
+    var showImagePickerDialog by remember { mutableStateOf(false) }
     if (showImagePickerDialog) {
         AlertDialog(
             onDismissRequest = { showImagePickerDialog = false },
@@ -183,6 +164,110 @@ fun EditProfile(
                 }
             }
         )
+    }
+
+    // Location function and variable
+    var country by remember { mutableStateOf(location) }
+    var isGettingLocation by remember { mutableStateOf(false) }
+
+    fun getCurrentCountryCode() {
+        isGettingLocation = true
+        val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
+
+        if (ContextCompat.checkSelfPermission(
+                context,
+                android.Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+            fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+                if (location != null) {
+                    val geocoder = Geocoder(context, Locale.getDefault())
+                    try {
+                        val addresses = geocoder.getFromLocation(location.latitude, location.longitude, 1)
+                        country = addresses?.firstOrNull()?.countryCode
+                    } catch (e: Exception) {
+                        country = null
+                    }
+                } else {
+                    country = null
+                }
+                isGettingLocation = false
+            }
+        } else {
+            country = null
+            isGettingLocation = false
+        }
+    }
+
+    val locationPermission = android.Manifest.permission.ACCESS_FINE_LOCATION
+    val locationPermissionGranted = remember {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(context, locationPermission) == PackageManager.PERMISSION_GRANTED
+        )
+    }
+
+    val locationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        locationPermissionGranted.value = isGranted
+        if (isGranted) {
+            getCurrentCountryCode()
+        }
+    }
+
+    // Location picker
+    var showLocationPickerDialog by remember { mutableStateOf(false) }
+    if (showLocationPickerDialog) {
+        AlertDialog(
+            onDismissRequest = { showLocationPickerDialog = false },
+            title = { Text("Pilih Lokasi") },
+            text = { Text("Lokasi saat ini atau link gmaps?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    showLocationPickerDialog = false
+                    if (locationPermissionGranted.value) {
+                        getCurrentCountryCode()
+                    } else {
+                        locationPermissionLauncher.launch(android.Manifest.permission.ACCESS_FINE_LOCATION)
+                    }
+                }) {
+                    Text("Lokasi Saat Ini")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    showLocationPickerDialog = false
+                    // TODO
+                }) {
+                    Text("Pilih di peta")
+                }
+            }
+        )
+    }
+
+    // Save edit profile function
+    fun save() {
+        val file = cachedImageFile.value
+        val requestBody = file?.asRequestBody("image/*".toMediaTypeOrNull())
+        val multipart = file?.let {
+            MultipartBody.Part.createFormData(
+                name = "profilePhoto",
+                filename = it.name,
+                body = requestBody!!
+            )
+        }
+
+        if (country == location) {
+            editProfileViewModel.sendNewProfile(profilePhoto = multipart)
+        } else {
+            editProfileViewModel.sendNewProfile(profilePhoto = multipart, location = country)
+        }
+
+        CoroutineScope(Dispatchers.Main).launch {
+            delay(1500)
+            editProfileViewModel.resetState()
+            onSave()
+        }
     }
 
     Dialog(onDismissRequest = onDismiss) {
@@ -242,14 +327,26 @@ fun EditProfile(
                     ) {
                         Column {
                             Text("Lokasi:", color = Color.Gray)
-                            Text(
-                                text = location ?: "",
-                                color = Color.White,
-                                fontWeight = FontWeight.Bold
-                            )
+                            if (isGettingLocation) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    CircularProgressIndicator(
+                                        color = Color.White,
+                                        strokeWidth = 2.dp,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text("Mendapatkan lokasi...", color = Color.White, fontWeight = FontWeight.Bold)
+                                }
+                            } else {
+                                Text(
+                                    text = country ?: "",
+                                    color = Color.White,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
                         }
                         IconButton(
-                            onClick = { /* TODO */ },
+                            onClick = { showLocationPickerDialog = true },
                             modifier = Modifier
                                 .background(Color.White, shape = RoundedCornerShape(5.dp))
                                 .size(24.dp)
