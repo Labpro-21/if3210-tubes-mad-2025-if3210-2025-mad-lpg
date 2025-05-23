@@ -1,5 +1,7 @@
 package com.tubes1.purritify.features.profile.presentation.profile.components
 
+import android.app.Activity
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.ImageDecoder
@@ -241,6 +243,19 @@ fun EditProfile(
     }
 
     // Location picker
+    val mapLocationLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val lat = result.data?.getDoubleExtra("lat", 0.0)
+            val lng = result.data?.getDoubleExtra("lng", 0.0)
+
+            if (lat != null && lng != null) {
+                val geocoder = Geocoder(context, Locale.getDefault())
+                val addresses = geocoder.getFromLocation(lat, lng, 1)
+                country = addresses?.firstOrNull()?.countryCode
+            }
+        }
+    }
+
     var showLocationPickerDialog by remember { mutableStateOf(false) }
     if (showLocationPickerDialog) {
         AlertDialog(
@@ -262,7 +277,8 @@ fun EditProfile(
             dismissButton = {
                 TextButton(onClick = {
                     showLocationPickerDialog = false
-                    // TODO
+                    val intent = Intent(context, MapsActivity::class.java)
+                    mapLocationLauncher.launch(intent)
                 }) {
                     Text("Pilih di peta")
                 }
