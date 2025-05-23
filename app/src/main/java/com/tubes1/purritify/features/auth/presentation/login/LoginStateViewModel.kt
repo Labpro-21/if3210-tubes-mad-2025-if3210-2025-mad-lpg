@@ -49,11 +49,6 @@ class LoginStateViewModel(
                 error = "Format email salah."
             )
             return
-        } else if (password.length < 8) {
-            _state.value = _state.value.copy(
-                error = "Email atau password salah."
-            )
-            return
         }
 
         viewModelScope.launch {
