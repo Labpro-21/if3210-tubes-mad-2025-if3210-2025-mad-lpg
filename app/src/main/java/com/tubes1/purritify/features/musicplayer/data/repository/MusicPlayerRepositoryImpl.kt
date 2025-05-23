@@ -12,7 +12,7 @@ import com.tubes1.purritify.features.musicplayer.domain.repository.MusicPlayerRe
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 
-class PlayerRepositoryImpl(private val context: Context) : MusicPlayerRepository {
+class MusicPlayerRepositoryImpl(private val context: Context) : MusicPlayerRepository {
     private var musicService: MusicPlayerService? = null
     private var bound = false
     private val queue = mutableListOf<Song>()
@@ -88,6 +88,6 @@ class PlayerRepositoryImpl(private val context: Context) : MusicPlayerRepository
     }
 
     override suspend fun stopPlayback() {
-        musicService?.stopPlayback()
+        musicService?.stopPlaybackAndNotification()
     }
 }
