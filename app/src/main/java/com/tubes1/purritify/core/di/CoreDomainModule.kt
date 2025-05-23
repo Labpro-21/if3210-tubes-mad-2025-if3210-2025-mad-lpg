@@ -1,8 +1,8 @@
 package com.tubes1.purritify.core.di
 
-import com.tubes1.purritify.core.domain.usecase.GetAllFavoritedSongsUseCase
-import com.tubes1.purritify.core.domain.usecase.song.GetAllSongsUseCase
-import com.tubes1.purritify.core.domain.usecase.song.GetSongUseCase
+import com.tubes1.purritify.core.domain.usecase.getsongs.GetAllFavoritedSongsUseCase
+import com.tubes1.purritify.core.domain.usecase.getsongs.GetAllSongsUseCase
+import com.tubes1.purritify.core.domain.usecase.getsongs.GetSongUseCase
 import com.tubes1.purritify.features.profile.domain.usecase.getsongs.GetAllListenedSongsUseCase
 import org.koin.dsl.module
 

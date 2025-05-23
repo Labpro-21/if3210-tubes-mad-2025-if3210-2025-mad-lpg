@@ -1,6 +1,6 @@
 package com.tubes1.purritify.features.musicplayer.domain.model
 
-import com.tubes1.purritify.core.data.model.Song
+import com.tubes1.purritify.core.domain.model.Song
 
 data class MusicPlayerState(
     val currentSong: Song? = null,

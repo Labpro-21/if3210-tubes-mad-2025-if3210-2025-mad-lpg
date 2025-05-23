@@ -1,7 +1,7 @@
 package com.tubes1.purritify.features.library.domain.usecase.uploadsong
 
 import android.util.Log
-import com.tubes1.purritify.core.data.model.Song
+import com.tubes1.purritify.core.domain.model.Song
 import com.tubes1.purritify.core.domain.repository.SongRepository
 
 class AddSongUseCase (

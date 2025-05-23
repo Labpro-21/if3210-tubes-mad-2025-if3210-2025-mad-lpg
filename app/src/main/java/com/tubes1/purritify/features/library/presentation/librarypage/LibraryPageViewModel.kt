@@ -4,7 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tubes1.purritify.features.library.domain.usecase.uploadsong.DeleteSongUseCase
-import com.tubes1.purritify.core.domain.usecase.song.GetAllSongsUseCase
+import com.tubes1.purritify.core.domain.usecase.getsongs.GetAllSongsUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

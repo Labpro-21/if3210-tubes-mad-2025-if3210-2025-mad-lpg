@@ -1,6 +1,6 @@
 package com.tubes1.purritify.core.domain.repository
 
-import com.tubes1.purritify.core.data.model.Song
+import com.tubes1.purritify.core.domain.model.Song
 import kotlinx.coroutines.flow.Flow
 
 interface SongRepository {
