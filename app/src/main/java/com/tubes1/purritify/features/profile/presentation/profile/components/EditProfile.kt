@@ -1,8 +1,12 @@
 package com.tubes1.purritify.features.profile.presentation.profile.components
 
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.ImageDecoder
 import android.location.Geocoder
 import android.net.Uri
+import android.os.Build
+import android.provider.MediaStore
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -62,6 +66,7 @@ import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import org.koin.androidx.compose.koinViewModel
 import java.io.File
+import java.io.FileOutputStream
 import java.util.Locale
 
 @Composable
@@ -78,17 +83,37 @@ fun EditProfile(
     val imageUri = remember { mutableStateOf<Uri?>(null) }
     val cachedImageFile = remember { mutableStateOf<File?>(null) }
 
+    fun cropToSquare(bitmap: Bitmap): Bitmap {
+        val size = minOf(bitmap.width, bitmap.height)
+        val xOffset = (bitmap.width - size) / 2
+        val yOffset = (bitmap.height - size) / 2
+        return Bitmap.createBitmap(bitmap, xOffset, yOffset, size, size)
+    }
+
     fun cacheImage(uri: Uri?) {
         uri?.let {
-            val tempFile = File.createTempFile("IMG_", ".jpg", context.cacheDir)
-            context.contentResolver.openInputStream(uri)?.use { inputStream ->
-                tempFile.outputStream().use { outputStream ->
-                    inputStream.copyTo(outputStream)
+            try {
+                val bitmap = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                    val source = ImageDecoder.createSource(context.contentResolver, it)
+                    ImageDecoder.decodeBitmap(source)
+                } else {
+                    MediaStore.Images.Media.getBitmap(context.contentResolver, it)
                 }
+
+                val croppedBitmap = cropToSquare(bitmap)
+
+                val tempFile = File.createTempFile("IMG_", ".jpg", context.cacheDir)
+                FileOutputStream(tempFile).use { output ->
+                    croppedBitmap.compress(Bitmap.CompressFormat.JPEG, 90, output)
+                }
+
+                cachedImageFile.value = tempFile
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
-            cachedImageFile.value = tempFile
         }
     }
+
 
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
