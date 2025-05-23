@@ -1,4 +1,4 @@
-package com.tubes1.purritify.features.profile.presentation.profiledetail
+package com.tubes1.purritify.features.profile.presentation.profile
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
@@ -18,7 +18,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
-class ProfileDetailViewModel(
+class ProfileViewModel(
     private val readToken: ReadToken,
     private val deleteToken: DeleteToken,
     private val getProfileUseCase: GetProfileUseCase,
@@ -27,8 +27,8 @@ class ProfileDetailViewModel(
     private val getAllFavoritedSongsUseCase: GetAllFavoritedSongsUseCase,
     private val getAllListenedSongsUseCase: GetAllListenedSongsUseCase
 ): ViewModel() {
-    private val _state = MutableStateFlow(ProfileDetailState())
-    val state: StateFlow<ProfileDetailState> = _state.asStateFlow()
+    private val _state = MutableStateFlow(ProfileState())
+    val state: StateFlow<ProfileState> = _state.asStateFlow()
 
     private val _profilePhoto = MutableStateFlow(ProfilePhotoState())
     val profilePhoto: StateFlow<ProfilePhotoState> = _profilePhoto.asStateFlow()
@@ -63,7 +63,7 @@ class ProfileDetailViewModel(
                     .collect { resource ->
                         when(resource) {
                             is Resource.Success -> {
-                                _state.value = ProfileDetailState(
+                                _state.value = ProfileState(
                                     isLoading = false,
                                     profile = resource.data,
                                     error = ""

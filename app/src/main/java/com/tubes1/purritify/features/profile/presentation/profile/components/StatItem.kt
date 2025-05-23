@@ -1,4 +1,4 @@
-package com.tubes1.purritify.features.profile.presentation.profiledetail.components
+package com.tubes1.purritify.features.profile.presentation.profile.components
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.Text

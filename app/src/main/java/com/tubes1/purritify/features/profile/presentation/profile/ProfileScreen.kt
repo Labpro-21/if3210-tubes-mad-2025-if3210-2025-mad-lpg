@@ -1,4 +1,4 @@
-package com.tubes1.purritify.features.profile.presentation.profiledetail
+package com.tubes1.purritify.features.profile.presentation.profile
 
 import android.content.Context
 import android.graphics.Bitmap
@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,21 +15,14 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -54,22 +48,32 @@ import androidx.navigation.NavController
 import com.tubes1.purritify.R
 import com.tubes1.purritify.core.common.navigation.Screen
 import com.tubes1.purritify.core.common.network.Connectivity
-import com.tubes1.purritify.core.ui.components.BottomNavigation
-import com.tubes1.purritify.features.profile.presentation.profiledetail.components.StatItem
+import com.tubes1.purritify.features.profile.presentation.profile.components.EditProfile
+import com.tubes1.purritify.features.profile.presentation.profile.components.StatItem
 import org.koin.androidx.compose.koinViewModel
+import java.util.Locale
+
+fun getFlagEmoji(countryCode: String): String {
+    if (countryCode.length != 2) return ""
+    val upper = countryCode.uppercase()
+    val first = Character.codePointAt(upper, 0) - 0x41 + 0x1F1E6
+    val second = Character.codePointAt(upper, 1) - 0x41 + 0x1F1E6
+    return String(Character.toChars(first)) + String(Character.toChars(second))
+}
 
 @Composable
 fun ProfileScreen(
     navController: NavController,
-    profileDetailViewModel: ProfileDetailViewModel = koinViewModel(),
+    profileViewModel: ProfileViewModel = koinViewModel(),
     context: Context = LocalContext.current,
 ) {
-    val state = profileDetailViewModel.state.collectAsState().value
-    val profilePhotoState = profileDetailViewModel.profilePhoto.collectAsState()
+    val state = profileViewModel.state.collectAsState().value
+    val profilePhotoState = profileViewModel.profilePhoto.collectAsState()
     val showLogoutDialog = remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
     var bitmap = remember { mutableStateOf<Bitmap?>(null) }
     val isConnected = Connectivity.isConnected(context)
+    val showEditDialog = remember { mutableStateOf(false) }
 
     LaunchedEffect(state.tokenExpired) {
         if (state.tokenExpired) {
@@ -78,7 +82,7 @@ fun ProfileScreen(
                 duration = SnackbarDuration.Short,
                 actionLabel = "Login"
             )
-            profileDetailViewModel.logout()
+            profileViewModel.logout()
             navController.navigate(Screen.Login.route)
         }
     }
@@ -91,30 +95,41 @@ fun ProfileScreen(
     }
 
     LaunchedEffect(Unit) {
-        profileDetailViewModel.onScreenOpened()
+        profileViewModel.onScreenOpened()
     }
 
     if (showLogoutDialog.value) {
         AlertDialog(
             onDismissRequest = { showLogoutDialog.value = false },
-            title = { Text("You're logging out") },
-            text = { Text("Are you sure you want to logout?") },
+            title = { Text("Anda keluar dari akun Anda") },
+            text = { Text("Apakah Anda yakin ingin keluar dari akun Anda?") },
             confirmButton = {
                 TextButton(onClick = {
                     showLogoutDialog.value = false
-                    profileDetailViewModel.logout()
+                    profileViewModel.logout()
                     navController.navigate(Screen.Login.route) {
                         popUpTo(Screen.Home.route) { inclusive = true }
                     }
                 }) {
-                    Text("Yes")
+                    Text("Ya")
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showLogoutDialog.value = false }) {
-                    Text("No")
+                    Text("Tidak")
                 }
             }
+        )
+    }
+
+    if (showEditDialog.value) {
+        EditProfile(
+            onDismiss = { showEditDialog.value = false },
+            onSave = {
+                profileViewModel.getProfile()
+                showEditDialog.value = false
+            },
+            location = state.profile?.location
         )
     }
 
@@ -125,6 +140,7 @@ fun ProfileScreen(
             Color(0xFF001A20)
         )
     )
+
     if (!isConnected) {
         Box(
             modifier = Modifier.fillMaxSize().background(brush = backgroundGradient),
@@ -168,22 +184,6 @@ fun ProfileScreen(
                             )
                         }
                     }
-
-                    // edit button
-                    IconButton(
-                        onClick = { /* coming soon */ },
-                        modifier = Modifier
-                            .size(32.dp)
-                            .align(Alignment.BottomEnd)
-                            .background(Color.White, CircleShape)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Edit,
-                            contentDescription = "Edit Profil",
-                            tint = Color.Black,
-                            modifier = Modifier.size(16.dp)
-                        )
-                    }
                 }
 
                 // username and location
@@ -196,25 +196,13 @@ fun ProfileScreen(
                 )
 
                 Text(
-                    text = state.profile?.location ?: "Tidak diketahui",
+                    text = state.profile?.location?.let {
+                        "${getFlagEmoji(it)} ${Locale("", it).displayCountry}"
+                    } ?: "",
                     color = Color.White.copy(alpha = 0.7f),
                     fontSize = 14.sp,
                     modifier = Modifier.padding(top = 4.dp)
                 )
-
-                // edit profile button
-                Button(
-                    onClick = { /* coming soon */ },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.DarkGray.copy(alpha = 0.5f)
-                    ),
-                    modifier = Modifier
-                        .padding(top = 16.dp)
-                        .width(120.dp)
-                        .height(40.dp)
-                ) {
-                    Text("Edit Profil", color = Color.White)
-                }
 
                 // stats
                 Row(
@@ -223,17 +211,68 @@ fun ProfileScreen(
                         .padding(top = 32.dp, start = 10.dp, end = 10.dp),
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    StatItem(count = profileDetailViewModel.getNumberOfSongs(), label = "LAGU", modifier = Modifier.weight(1f))
-                    StatItem(count = profileDetailViewModel.getNumberOfFavoritedSongs(), label = "DISUKAI", modifier = Modifier.weight(1f))
-                    StatItem(count = profileDetailViewModel.getNumberOfListenedSongs(), label = "DIDENGARKAN", modifier = Modifier.weight(1f))
+                    StatItem(count = profileViewModel.getNumberOfSongs(), label = "LAGU", modifier = Modifier.weight(1f))
+                    StatItem(count = profileViewModel.getNumberOfFavoritedSongs(), label = "DISUKAI", modifier = Modifier.weight(1f))
+                    StatItem(count = profileViewModel.getNumberOfListenedSongs(), label = "DIDENGARKAN", modifier = Modifier.weight(1f))
                 }
 
-                // Logout Button
-                Button(
-                    onClick = { showLogoutDialog.value = true },
-                    modifier = Modifier.padding(top = 16.dp)
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 24.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    Text("Keluar")
+                    // Edit Profile Row
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { showEditDialog.value = true }
+                            .padding(vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.edit_icon),
+                            tint = Color.White,
+                            contentDescription = "Edit Profil",
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Column(modifier = Modifier.padding(start = 12.dp)) {
+                            Text(
+                                text = "Edit Profil",
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 16.sp
+                            )
+                            Text(
+                                text = "Ubah lokasi dan foto profil Anda",
+                                color = Color.Gray,
+                                fontSize = 14.sp
+                            )
+                        }
+                    }
+
+                    // Logout Row
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { showLogoutDialog.value = true }
+                            .padding(vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.logout_icon),
+                            tint = Color(0xFFEF5350),
+                            contentDescription = "Keluar",
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Text(
+                            text = "Keluar",
+                            color = Color(0xFFEF5350),
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp,
+                            modifier = Modifier.padding(start = 12.dp)
+                        )
+                    }
                 }
 
                 Box(
