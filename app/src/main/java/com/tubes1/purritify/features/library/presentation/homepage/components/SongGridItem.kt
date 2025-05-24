@@ -71,6 +71,7 @@ fun TopChartItem(
     title: String,
     subtitle: String,
     modifier: Modifier = Modifier,
+    isImageOnly: Boolean = false,
     onClick: () -> Unit = {}
 ) {
     Column(
@@ -107,12 +108,14 @@ fun TopChartItem(
             }
         }
 
-        Text(
-            text = "Chart lagu terpopuler harian - $subtitle",
-            color = Color.White.copy(alpha = 0.7f),
-            fontSize = 12.sp,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
+        if (!isImageOnly) {
+            Text(
+                text = "Chart lagu terpopuler harian - $subtitle",
+                color = Color.White.copy(alpha = 0.7f),
+                fontSize = 12.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
     }
 }
