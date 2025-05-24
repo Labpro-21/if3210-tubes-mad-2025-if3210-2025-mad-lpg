@@ -1,4 +1,6 @@
 package com.tubes1.purritify.features.audiorouting.domain.model
 
-class AudioDeviceSource {
+enum class AudioDeviceSource {
+    SYSTEM_API,
+    BLUETOOTH_DISCOVERY
 }

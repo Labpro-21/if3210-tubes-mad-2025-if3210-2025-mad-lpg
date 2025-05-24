@@ -6,6 +6,7 @@ import com.tubes1.purritify.core.di.coreDataModule
 import com.tubes1.purritify.core.di.coreDomainModule
 import com.tubes1.purritify.core.di.databaseModule
 import com.tubes1.purritify.core.di.networkModule
+import com.tubes1.purritify.features.audiorouting.di.audioDeviceModule
 import com.tubes1.purritify.features.auth.di.authModule
 import com.tubes1.purritify.features.library.di.libraryModule
 import com.tubes1.purritify.features.musicplayer.data.service.MusicPlayerService
@@ -27,7 +28,8 @@ class PurritifyApplication : Application() {
                 libraryModule,
                 musicPlayerModule,
                 authModule,
-                profileModule
+                profileModule,
+                audioDeviceModule
             )
         }
     }

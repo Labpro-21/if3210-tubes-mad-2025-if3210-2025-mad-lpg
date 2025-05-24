@@ -1,8 +1,8 @@
-package com.tubes1.purritify.features.profile.presentation.profiledetail;
+package com.tubes1.purritify.features.profile.presentation.profile;
 
 import com.tubes1.purritify.features.profile.domain.model.Profile
 
-data class ProfileDetailState(
+data class ProfileState(
     val isLoading: Boolean = false,
     val profile: Profile? = null,
     val tokenExpired: Boolean = false,

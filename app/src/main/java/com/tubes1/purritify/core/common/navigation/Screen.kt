@@ -6,4 +6,6 @@ sealed class Screen(val route: String) {
     object Profile : Screen("profil")
     object MusicPlayer : Screen("music-player")
     object Login : Screen("login")
+    object Settings : Screen("settings")
+    object AudioDeviceSelection : Screen("audio-device-selection")
 }

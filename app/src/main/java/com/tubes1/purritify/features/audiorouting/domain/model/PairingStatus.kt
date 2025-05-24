@@ -1,4 +1,8 @@
 package com.tubes1.purritify.features.audiorouting.domain.model
 
-class PairingStatus {
+enum class PairingStatus {
+    NONE,
+    PAIRING,
+    PAIRED,
+    FAILED
 }

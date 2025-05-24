@@ -7,9 +7,11 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.media.AudioAttributes
+import android.media.AudioManager
 import android.media.MediaPlayer
 import android.net.Uri
 import android.os.Binder
@@ -20,11 +22,16 @@ import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
 import androidx.media.session.MediaButtonReceiver
 import com.bumptech.glide.Glide
 import com.tubes1.purritify.MainActivity
+import android.Manifest
+import android.media.AudioDeviceInfo
 import com.tubes1.purritify.R
 import com.tubes1.purritify.core.domain.model.Song
+import com.tubes1.purritify.features.audiorouting.domain.model.AudioDevice
+import com.tubes1.purritify.features.audiorouting.domain.model.DeviceType
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -35,13 +42,18 @@ import java.io.IOException
 class MusicPlayerService : Service() {
     private val binder = MusicPlayerBinder()
     private var mediaPlayer: MediaPlayer? = null
-    private var currentQueue: List<Song> = emptyList()
+    public var currentQueue: List<Song> = emptyList()
     private var currentSongIndex: Int = -1
     private var updateJob: Job? = null
     private val serviceScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
 
     private lateinit var mediaSession: MediaSessionCompat
     private lateinit var notificationManager: NotificationManager
+
+    private val _preferredAudioDevice = MutableStateFlow<AudioDevice?>(null)
+    val preferredAudioDevice: StateFlow<AudioDevice?> = _preferredAudioDevice.asStateFlow()
+
+    private lateinit var audioManager: AudioManager
 
     private val _isPlaying = MutableStateFlow(false)
     val isPlaying: StateFlow<Boolean> = _isPlaying.asStateFlow()
@@ -67,6 +79,8 @@ class MusicPlayerService : Service() {
 
         private const val NOTIFICATION_ART_SIZE = 256 // px
         private const val METADATA_ART_SIZE = 512 // px
+
+        private const val TAG = "MusicPlayerService"
     }
 
     override fun onBind(intent: Intent): IBinder {
@@ -78,6 +92,8 @@ class MusicPlayerService : Service() {
         notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         createNotificationChannel()
 
+        audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+
         mediaSession = MediaSessionCompat(this, "PurritifyMediaSession").apply {
             setCallback(mediaSessionCallback)
             setFlags(MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS or MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS)
@@ -85,6 +101,12 @@ class MusicPlayerService : Service() {
 
         initializeMediaPlayer()
         observePlayerStateForNotification()
+    }
+
+    fun updatePreferredAudioDevice(device: AudioDevice?) {
+        Log.i(TAG, "Service updating preferred audio device to: ${device?.name ?: "None"}")
+        _preferredAudioDevice.value = device
+        applyAudioRouting()
     }
 
     private fun initializeMediaPlayer() {
@@ -99,6 +121,7 @@ class MusicPlayerService : Service() {
             setOnCompletionListener { playNext() }
             setOnPreparedListener { mp ->
                 _duration.value = mp.duration.toLong()
+                applyAudioRouting()
                 mp.start()
                 _isPlaying.value = true
                 startPositionUpdates()
@@ -128,6 +151,82 @@ class MusicPlayerService : Service() {
                 updateMediaSessionStateAndNotification()
                 true
             }
+        }
+    }
+
+    private fun applyAudioRouting() {
+        val player = mediaPlayer ?: return
+        val preferredDev = _preferredAudioDevice.value // User's *preference* (This is your app's AudioDevice model)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) { // setPreferredDevice API level
+            val targetSystemDevice: AudioDeviceInfo? = if (preferredDev != null) {
+                Log.d(TAG, "Applying routing based on user preference: ${preferredDev.name}, " +
+                        "SystemAPI ID: ${preferredDev.systemApiId}, Address: ${preferredDev.address}, " +
+                        "AppType: ${preferredDev.type}, SystemType: ${preferredDev.systemDeviceType}")
+
+                val systemDevices = audioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS)
+
+                systemDevices.find { systemAudioDeviceInfo ->
+                    var match = false
+
+                    if (preferredDev.systemApiId != null && systemAudioDeviceInfo.id == preferredDev.systemApiId) {
+                        Log.d(TAG, "Match found by systemApiId: ${systemAudioDeviceInfo.id}")
+                        match = true
+                    }
+
+
+                    if (!match && preferredDev.address != null &&
+                        (systemAudioDeviceInfo.type == AudioDeviceInfo.TYPE_BLUETOOTH_A2DP ||
+                                systemAudioDeviceInfo.type == AudioDeviceInfo.TYPE_BLUETOOTH_SCO ||
+                                systemAudioDeviceInfo.type == AudioDeviceInfo.TYPE_HEARING_AID) &&
+                        systemAudioDeviceInfo.address == preferredDev.address) {
+                        Log.d(TAG, "Match found by address: ${systemAudioDeviceInfo.address} for type ${systemAudioDeviceInfo.type}")
+                        match = true
+                    }
+
+
+
+                    if (!match && systemAudioDeviceInfo.type == preferredDev.systemDeviceType &&
+                        systemAudioDeviceInfo.productName == preferredDev.name) {
+                        Log.d(TAG, "Match found by systemDeviceType and name: ${systemAudioDeviceInfo.productName}")
+                        match = true
+                    }
+                    match
+                }
+            } else {
+                Log.d(TAG, "No user preference. Using system default routing (setPreferredDevice(null)).")
+                null // Setting null tells MediaPlayer to use default
+            }
+
+            if (preferredDev != null && targetSystemDevice == null) {
+                Log.w(TAG, "Preferred device '${preferredDev.name}' (Addr: ${preferredDev.address}, SysID: ${preferredDev.systemApiId}) " +
+                        "not found or not currently connectable in system devices. Routing to default.")
+
+            }
+
+            try {
+                if (ContextCompat.checkSelfPermission(this, Manifest.permission.MODIFY_AUDIO_SETTINGS)
+                    == PackageManager.PERMISSION_GRANTED) {
+
+                    val success = player.setPreferredDevice(targetSystemDevice) // targetSystemDevice can be null here
+                    Log.i(TAG, "MediaPlayer.setPreferredDevice(${targetSystemDevice?.productName ?: "DEFAULT (null)"}, " +
+                            "ID: ${targetSystemDevice?.id}, Type: ${targetSystemDevice?.type ?: "N/A"}) success: $success")
+                    if (!success && targetSystemDevice != null) { // Log warning only if we tried to set a specific device and failed
+                        Log.w(TAG, "Failed to set preferred device '${targetSystemDevice.productName}'. System default routing will likely be used.")
+                    } else if (!success && targetSystemDevice == null) {
+                        Log.i(TAG, "Attempted to set to default routing, which is a valid operation (success=$success).")
+                    }
+                } else {
+                    Log.w(TAG, "MODIFY_AUDIO_SETTINGS permission not granted. Cannot set preferred device. Using system default.")
+
+                }
+            } catch (e: Exception) { // Catching generic Exception as various issues can occur
+                Log.e(TAG, "Error setting audio device info: ${e.message}", e)
+
+            }
+        } else {
+            Log.d(TAG, "Audio routing via setPreferredDevice not available on API < 28. System default will be used.")
+
         }
     }
 
@@ -497,7 +596,7 @@ class MusicPlayerService : Service() {
             .setContentText(song.artist)
             .setContentIntent(contentPendingIntent)
             .setDeleteIntent(deletePendingIntent)
-//            .setCategory(NotificationCompat.CATEGORY_TRANSPORT)
+
             .setAutoCancel(false)
             .setOngoing(isOngoing)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)

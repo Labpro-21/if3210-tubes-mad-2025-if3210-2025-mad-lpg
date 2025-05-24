@@ -18,7 +18,7 @@ import org.koin.dsl.module
 import org.koin.core.module.dsl.viewModel
 
 val musicPlayerModule = module {
-    single<MusicPlayerRepository>(createdAtStart = true) { MusicPlayerRepositoryImpl(androidContext()) }
+    single<MusicPlayerRepository>(createdAtStart = true) { MusicPlayerRepositoryImpl(androidContext(), get()) }
 
     factory { GetPlayerStateUseCase(get()) }
     factory { PlaySongUseCase(get()) }
