@@ -1,12 +1,14 @@
 package com.tubes1.purritify
 
 import android.app.Application
+import android.content.Intent
 import com.tubes1.purritify.core.di.coreDataModule
 import com.tubes1.purritify.core.di.coreDomainModule
 import com.tubes1.purritify.core.di.databaseModule
 import com.tubes1.purritify.core.di.networkModule
 import com.tubes1.purritify.features.auth.di.authModule
 import com.tubes1.purritify.features.library.di.libraryModule
+import com.tubes1.purritify.features.musicplayer.data.service.MusicPlayerService
 import com.tubes1.purritify.features.musicplayer.di.musicPlayerModule
 import com.tubes1.purritify.features.profile.di.profileModule
 import org.koin.android.ext.koin.androidContext

@@ -63,8 +63,8 @@ class MusicPlayerService : Service() {
         const val ACTION_NEXT = "com.tubes1.purritify.ACTION_NEXT"
         const val ACTION_PREVIOUS = "com.tubes1.purritify.ACTION_PREVIOUS"
         const val ACTION_STOP_FOREGROUND = "com.tubes1.purritify.ACTION_STOP_FOREGROUND"
+        const val ACTION_OPEN_PLAYER = "com.tubes1.purritify.ACTION_OPEN_PLAYER"
 
-        // For Glide image loading dimensions
         private const val NOTIFICATION_ART_SIZE = 256 // px
         private const val METADATA_ART_SIZE = 512 // px
     }
@@ -102,17 +102,31 @@ class MusicPlayerService : Service() {
                 mp.start()
                 _isPlaying.value = true
                 startPositionUpdates()
-                updateMediaSessionStateAndNotification()
                 mediaSession.isActive = true
+
+                val currentSong = _currentSong.value
+                val albumArtBitmap = currentSong?.songArtUri?.let { uri ->
+                    loadAndProcessBitmapBlocking(applicationContext, uri, NOTIFICATION_ART_SIZE, NOTIFICATION_ART_SIZE)
+                }
+
+                updateMediaSessionPlaybackState(currentSong, 0L, true)
+                updateMediaSessionMetadataInternal(currentSong, albumArtBitmap, mp.duration.toLong())
+
+                val notification = buildNotificationInternal(
+                    currentSong!!,
+                    isPlaying = true,
+                    albumArt = albumArtBitmap,
+                    isOngoing = true
+                )
+
+                startForeground(NOTIFICATION_ID, notification)
             }
             setOnErrorListener { _, what, extra ->
                 Log.e("MusicPlayerService", "MediaPlayer Error: What: $what, Extra: $extra")
                 stopPositionUpdates()
                 _isPlaying.value = false
-                // Attempt to reset or re-prepare if appropriate, or notify UI of error
-                // For now, just update state
                 updateMediaSessionStateAndNotification()
-                true // Indicates the error was handled
+                true
             }
         }
     }
@@ -128,27 +142,31 @@ class MusicPlayerService : Service() {
                 updateMediaSessionStateAndNotification()
             }
         }
-        // Optionally observe _duration and _currentPosition if they should also trigger full notification updates
-        // For now, _currentPosition updates PlaybackStateCompat, which is good enough for seek bar.
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.d("MusicPlayerService", "onStartCommand received action: ${intent?.action}")
-        when (intent?.action) {
+        val action = intent?.action
+        if (action.isNullOrEmpty() && currentSong.value == null && intent?.extras == null) {
+            Log.d("MusicPlayerService", "Service restarted sticky, no current song, stopping self.")
+            stopSelf()
+            return START_NOT_STICKY
+        }
+
+        when (action) {
             ACTION_PLAY -> playPause()
-            ACTION_PAUSE -> playPause() // MediaSessionCompat often sends PLAY for toggle
+            ACTION_PAUSE -> playPause()
             ACTION_NEXT -> playNext()
             ACTION_PREVIOUS -> playPrevious()
             ACTION_STOP_FOREGROUND -> {
+                Log.i("MusicPlayerService", "ACTION_STOP_FOREGROUND received from onStartCommand.")
                 stopPlaybackAndNotification()
-                stopSelf() // Important to stop the service if it's meant to be fully stopped
             }
             else -> {
-                // Let MediaButtonReceiver handle other media button events
                 MediaButtonReceiver.handleIntent(mediaSession, intent)
             }
         }
-        return START_STICKY // Or START_NOT_STICKY if you don't want it to auto-restart
+        return START_STICKY
     }
 
     private fun createNotificationChannel() {
@@ -156,10 +174,10 @@ class MusicPlayerService : Service() {
             val channel = NotificationChannel(
                 NOTIFICATION_CHANNEL_ID,
                 "Music Playback",
-                NotificationManager.IMPORTANCE_LOW // Use LOW to avoid sound, can be DEFAULT if heads-up is desired
+                NotificationManager.IMPORTANCE_LOW
             ).apply {
                 description = "Controls for music playback"
-                setSound(null, null) // Ensure no sound for LOW importance
+                setSound(null, null)
                 enableLights(false)
                 enableVibration(false)
             }
@@ -190,13 +208,12 @@ class MusicPlayerService : Service() {
 
         override fun onStop() {
             Log.d("MediaSessionCallback", "onStop")
-            stopPlaybackAndNotification() // This stops playback and removes notification
+            stopPlaybackAndNotification()
         }
 
         override fun onSeekTo(pos: Long) {
             Log.d("MediaSessionCallback", "onSeekTo: $pos")
             seekTo(pos)
-            // PlaybackState is updated by startPositionUpdates or immediately by seekTo if needed
         }
     }
 
@@ -205,18 +222,16 @@ class MusicPlayerService : Service() {
         currentQueue = queue
         currentSongIndex = queue.indexOf(song).takeIf { it >= 0 } ?: 0
 
-        initializeMediaPlayer() // Creates a new MediaPlayer instance
+        initializeMediaPlayer()
 
         mediaPlayer?.apply {
             try {
-                // MediaPlayer can handle http/https URLs directly
                 setDataSource(applicationContext, Uri.parse(song.path))
-                prepareAsync() // Triggers onPreparedListener when ready
-                // _isPlaying will be set to true in onPrepared
+                prepareAsync()
             } catch (e: IOException) {
                 Log.e("MusicPlayerService", "Error setting data source for ${song.path}", e)
                 _isPlaying.value = false
-                _currentSong.value = null // Or handle error state appropriately
+                _currentSong.value = null
                 updateMediaSessionStateAndNotification()
             } catch (e: IllegalStateException) {
                 Log.e("MusicPlayerService", "IllegalState setting data source for ${song.path}", e)
@@ -229,29 +244,23 @@ class MusicPlayerService : Service() {
 
     fun playPause() {
         mediaPlayer?.let {
-            if (_isPlaying.value) { // Use StateFlow value as source of truth
+            if (_isPlaying.value) {
                 it.pause()
                 _isPlaying.value = false
                 stopPositionUpdates()
             } else {
-                // Ensure player is prepared or can be started.
-                // If player was simply paused, it.start() is fine.
-                // If player is in IDLE or INITIALIZED state (e.g., after error or new song),
-                // it needs prepareAsync() again. playSong() handles this.
                 try {
                     it.start()
                     _isPlaying.value = true
                     startPositionUpdates()
                 } catch (e: IllegalStateException) {
                     Log.e("MusicPlayerService", "MediaPlayer not ready to start, attempting to replay current song.", e)
-                    // This might happen if player is not prepared. Try to play the current song again.
                     currentSong.value?.let { current -> playSong(current, currentQueue) }
                         ?: Log.e("MusicPlayerService", "No current song to replay.")
                 }
             }
             updateMediaSessionStateAndNotification()
         } ?: run {
-            // No media player, try to play if there's a song in queue
             if (currentQueue.isNotEmpty() && currentSongIndex != -1) {
                 playSong(currentQueue[currentSongIndex], currentQueue)
             } else {
@@ -269,10 +278,9 @@ class MusicPlayerService : Service() {
     fun playPrevious() {
         if (currentQueue.isEmpty()) return
 
-        // If song played for more than 3 seconds, restart it. Otherwise, play previous.
         if ((mediaPlayer?.currentPosition ?: 0) > 3000 && _isPlaying.value) {
             seekTo(0)
-            if (!_isPlaying.value) { // If it was paused and we seek to 0, start playing
+            if (!_isPlaying.value) {
                 mediaPlayer?.start()
                 _isPlaying.value = true
                 startPositionUpdates()
@@ -282,7 +290,7 @@ class MusicPlayerService : Service() {
         }
 
         currentSongIndex = if (currentSongIndex > 0) currentSongIndex - 1 else currentQueue.size - 1
-        if (currentSongIndex < 0 && currentQueue.isNotEmpty()) currentSongIndex = 0 // Ensure valid index
+        if (currentSongIndex < 0 && currentQueue.isNotEmpty()) currentSongIndex = 0
 
         if (currentSongIndex in currentQueue.indices) {
             playSong(currentQueue[currentSongIndex], currentQueue)
@@ -293,28 +301,25 @@ class MusicPlayerService : Service() {
     fun seekTo(position: Long) {
         mediaPlayer?.seekTo(position.toInt())
         _currentPosition.value = position
-        // Update playback state immediately after seek
         updateMediaSessionPlaybackState(_currentSong.value, position, _isPlaying.value)
     }
 
     private fun startPositionUpdates() {
         updateJob?.cancel()
         updateJob = serviceScope.launch {
-            while (isActive) { // Use isActive to ensure coroutine stops when scope is cancelled
+            while (isActive) {
                 if (_isPlaying.value && mediaPlayer != null) {
                     try {
                         val currentPos = mediaPlayer!!.currentPosition.toLong()
                         _currentPosition.value = currentPos
-                        // Update PlaybackState frequently for smooth seekbar progression
                         updateMediaSessionPlaybackState(_currentSong.value, currentPos, _isPlaying.value)
                     } catch (e: IllegalStateException) {
                         Log.w("MusicPlayerService", "Error getting current position: ${e.message}")
-                        // MediaPlayer might have been released or in an error state
-                        stopPositionUpdates() // Stop updates if player is not valid
+                        stopPositionUpdates()
                         break
                     }
                 }
-                delay(1000) // Update every second
+                delay(1000)
             }
         }
     }
@@ -327,23 +332,28 @@ class MusicPlayerService : Service() {
     fun stopPlaybackAndNotification() {
         Log.d("MusicPlayerService", "stopPlaybackAndNotification called")
         mediaPlayer?.apply {
-            if (isPlaying) {
-                stop()
+            if (this.isPlaying) {
+                try {
+                    stop()
+                } catch (e: IllegalStateException) {
+                    Log.w("MusicPlayerService", "MediaPlayer.stop() failed: ${e.message}")
+                }
             }
-            reset() // Reset to uninitialized state
+            try {
+                reset()
+            } catch (e: IllegalStateException) {
+                Log.w("MusicPlayerService", "MediaPlayer.reset() failed: ${e.message}")
+            }
         }
-        // Do not release mediaPlayer here, initializeMediaPlayer will handle it or onDestroy
 
         stopPositionUpdates()
         _isPlaying.value = false
         _currentPosition.value = 0L
         _duration.value = 0L
-        _currentSong.value = null // This will trigger observers to clear UI
-        currentSongIndex = -1
-        currentQueue = emptyList()
 
         mediaSession.isActive = false
-        stopForegroundAndRemoveNotification()
+        updateMediaSessionStateAndNotification()
+
         Log.d("MusicPlayerService", "Service playback stopped and notification removed.")
     }
 
@@ -354,95 +364,63 @@ class MusicPlayerService : Service() {
             @Suppress("DEPRECATION")
             stopForeground(true)
         }
-        notificationManager.cancel(NOTIFICATION_ID) // Ensure notification is removed
+        notificationManager.cancel(NOTIFICATION_ID)
     }
-
-
-    // Resets player state but keeps service alive and queue intact
-    fun resetPlayerState() {
-        mediaPlayer?.apply {
-            if (isPlaying) {
-                stop()
-            }
-            reset()
-        }
-        // Re-initialize for next playback if needed, or rely on playSong
-        initializeMediaPlayer() // Get it ready for a new song.
-
-        stopPositionUpdates()
-        _isPlaying.value = false
-        _currentPosition.value = 0L
-        _duration.value = 0L
-        // Don't clear _currentSong here, as it might be needed to replay or show info
-        // If current song should be cleared, call stopPlaybackAndNotification
-
-        updateMediaSessionStateAndNotification() // Update UI to reflect reset state
-    }
-
 
     private fun releaseMediaPlayer() {
         stopPositionUpdates()
         mediaPlayer?.release()
         mediaPlayer = null
 
-        _isPlaying.value = false // Reset states
+        _isPlaying.value = false
         _currentPosition.value = 0L
         _duration.value = 0L
     }
 
     override fun onDestroy() {
         Log.d("MusicPlayerService", "onDestroy called")
+        stopPlaybackAndNotification()
         releaseMediaPlayer()
         mediaSession.release()
-        serviceScope.cancel() // Cancel all coroutines started in this scope
+        serviceScope.cancel()
+        notificationManager.cancel(NOTIFICATION_ID)
         super.onDestroy()
     }
 
     private fun updateMediaSessionStateAndNotification() {
-        val songToUpdateWith = _currentSong.value // Capture current state at call time
+        val songToUpdateWith = _currentSong.value
         val isPlayingUpdate = _isPlaying.value
         val currentPosUpdate = _currentPosition.value
         val durationUpdate = _duration.value
 
-        // Update PlaybackState immediately (fast operation)
         updateMediaSessionPlaybackState(songToUpdateWith, currentPosUpdate, isPlayingUpdate)
 
-        // Launch a coroutine for operations that might involve IO (like fetching album art)
         serviceScope.launch {
             val albumArtBitmap = songToUpdateWith?.songArtUri?.let { uri ->
                 loadAndProcessBitmap(applicationContext, uri, NOTIFICATION_ART_SIZE, NOTIFICATION_ART_SIZE)
             }
-            // It's possible songToUpdateWith is null if currentSong was cleared rapidly.
-            // The functions below handle null song.
 
-            // Update metadata (includes album art)
             updateMediaSessionMetadataInternal(songToUpdateWith, albumArtBitmap, durationUpdate)
 
-            if (songToUpdateWith != null) {
+            if (songToUpdateWith != null && mediaSession.isActive) {
                 val notification = buildNotificationInternal(
                     songToUpdateWith,
                     isPlayingUpdate,
                     albumArtBitmap,
-                    isOngoing = true // Media notifications are typically ongoing
+                    isOngoing = true
                 )
-                if (isPlayingUpdate) {
-                    startForeground(NOTIFICATION_ID, notification)
-                } else if (mediaSession.isActive) {
-                    // Paused, but session is active (e.g., ready to resume)
-                    // Update the notification, keeping it dismissable=false (ongoing)
-                    // If service was already foreground, this updates it.
-                    // If not yet foreground, this posts a sticky notification.
-                    // To ensure it becomes foreground even if paused initially:
-                    // startForeground(NOTIFICATION_ID, notification)
-                    // However, original logic was to use notify:
-                    notificationManager.notify(NOTIFICATION_ID, notification)
-                } else {
-                    // Not playing and media session not active, or no song.
-                    stopForegroundAndRemoveNotification()
-                }
+                startForeground(NOTIFICATION_ID, notification)
             } else {
-                // No song, remove notification and stop foreground state.
+                Log.d("MusicPlayerService", "Stopping foreground. Song: ${songToUpdateWith?.title}, Active: ${mediaSession.isActive}, isPlaying: $isPlayingUpdate")
                 stopForegroundAndRemoveNotification()
+
+                if (!mediaSession.isActive) {
+                    Log.d("MusicPlayerService", "MediaSession not active, clearing current song from service state.")
+                    _currentSong.value = null
+                    currentSongIndex = -1
+                    currentQueue = emptyList()
+                    _duration.value = 0L
+                }
             }
         }
     }
@@ -461,7 +439,7 @@ class MusicPlayerService : Service() {
             .setState(
                 if (isPlaying) PlaybackStateCompat.STATE_PLAYING else PlaybackStateCompat.STATE_PAUSED,
                 position,
-                1.0f // Playback speed
+                1.0f
             )
         mediaSession.setPlaybackState(stateBuilder.build())
     }
@@ -473,9 +451,9 @@ class MusicPlayerService : Service() {
         }
 
         val durationToUse = if (actualMediaPlayerDuration > 0 && song.id == _currentSong.value?.id) {
-            actualMediaPlayerDuration // Prefer actual duration from MediaPlayer if current song
+            actualMediaPlayerDuration
         } else {
-            song.duration // Fallback to song's stored duration
+            song.duration
         }
 
         val metadataBuilder = MediaMetadataCompat.Builder()
@@ -483,17 +461,9 @@ class MusicPlayerService : Service() {
             .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, song.artist)
             .putLong(MediaMetadataCompat.METADATA_KEY_DURATION, durationToUse)
 
-        // For metadata, we might want a higher resolution image if available
-        // This example uses the same bitmap as notification, but you could load a different one.
-        // For simplicity, reusing the one loaded for notification or loading a new one for metadata.
-        // The current `albumArt` is sized for notification. If you need a different one for metadata:
-        // val metadataArtBitmap = serviceScope.async(Dispatchers.IO) { loadAndProcessBitmap(...) }.await()
-        // For this example, we'll use the provided albumArt (sized for notification).
         albumArt?.let {
             metadataBuilder.putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, it)
         }
-        // Optionally, load a separate, higher-res bitmap for metadata here if needed
-        // and if albumArt was specifically for notification.
 
         mediaSession.setMetadata(metadataBuilder.build())
     }
@@ -504,54 +474,54 @@ class MusicPlayerService : Service() {
         albumArt: Bitmap?,
         isOngoing: Boolean = true
     ): Notification {
-        val activityIntent = Intent(this, MainActivity::class.java).apply { // Replace MainActivity
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK // Or your preferred flags
+        val activityIntent = Intent(this, MainActivity::class.java).apply {
+            action = ACTION_OPEN_PLAYER
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
         }
         val contentPendingIntent = PendingIntent.getActivity(
             this, 0, activityIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0)
         )
 
-        // Intent for when notification is dismissed by swipe (if not ongoing, or for deleteIntent)
         val stopServiceIntent = Intent(this, MusicPlayerService::class.java).apply {
             action = ACTION_STOP_FOREGROUND
         }
         val deletePendingIntent = PendingIntent.getService(
-            this, 0, stopServiceIntent,
+            this, 1, stopServiceIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0)
         )
 
         val builder = NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
-            .setSmallIcon(R.drawable.logo) // YOUR SMALL ICON (often monochrome)
+            .setSmallIcon(R.drawable.logo)
             .setContentTitle(song.title)
             .setContentText(song.artist)
             .setContentIntent(contentPendingIntent)
-            .setDeleteIntent(deletePendingIntent) // Called when notification is dismissed
-            .setOngoing(isOngoing) // Makes it non-swipeable if true
-            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC) // Show on lock screen
+            .setDeleteIntent(deletePendingIntent)
+//            .setCategory(NotificationCompat.CATEGORY_TRANSPORT)
+            .setAutoCancel(false)
+            .setOngoing(isOngoing)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
 
         val largeIconBitmap = albumArt ?: BitmapFactory.decodeResource(resources, R.drawable.dummy_song_art)
         builder.setLargeIcon(largeIconBitmap)
 
-        // Previous Action
         val prevIntent = MediaButtonReceiver.buildMediaButtonPendingIntent(this, PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS)
         builder.addAction(R.drawable.ic_skip_previous_white, "Previous", prevIntent)
 
-        // Play/Pause Action
         val playPauseIcon = if (isPlaying) R.drawable.ic_pause_white else R.drawable.ic_play_arrow_white
         val playPauseActionText = if (isPlaying) "Pause" else "Play"
         val playPauseAction = if (isPlaying) PlaybackStateCompat.ACTION_PAUSE else PlaybackStateCompat.ACTION_PLAY
         val playPauseIntent = MediaButtonReceiver.buildMediaButtonPendingIntent(this, playPauseAction)
         builder.addAction(playPauseIcon, playPauseActionText, playPauseIntent)
 
-        // Next Action
         val nextIntent = MediaButtonReceiver.buildMediaButtonPendingIntent(this, PlaybackStateCompat.ACTION_SKIP_TO_NEXT)
         builder.addAction(R.drawable.ic_skip_next_white, "Next", nextIntent)
 
-        // Apply MediaStyle
         val mediaStyle = androidx.media.app.NotificationCompat.MediaStyle()
             .setMediaSession(mediaSession.sessionToken)
             .setShowActionsInCompactView(0, 1, 2)
+//            .setShowCancelButton(true)
+//            .setCancelButtonIntent(stopMediaIntent)
 
         builder.setStyle(mediaStyle)
 
@@ -574,6 +544,29 @@ class MusicPlayerService : Service() {
                 null
             }
         }
+    }
+
+    private fun loadAndProcessBitmapBlocking(context: Context, uriString: String, reqWidth: Int, reqHeight: Int): Bitmap? {
+        return try {
+            Glide.with(context)
+                .asBitmap()
+                .load(uriString)
+                .override(reqWidth, reqHeight)
+                .centerCrop()
+                .error(R.drawable.dummy_song_art)
+                .submit()
+                .get()
+        } catch (e: Exception) {
+            Log.e("MusicPlayerService", "Error loading bitmap from URI: $uriString", e)
+            null
+        }
+    }
+
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        Log.i("MusicPlayerService", "onTaskRemoved called. App swiped from recents.")
+        super.onTaskRemoved(rootIntent)
+        stopPlaybackAndNotification()
+        stopSelf()
     }
 
     inner class MusicPlayerBinder : Binder() {

@@ -36,7 +36,7 @@ import org.koin.androidx.compose.koinViewModel
 import java.io.File
 import java.util.concurrent.TimeUnit
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalGlideComposeApi::class)
+@OptIn(ExperimentalGlideComposeApi::class)
 @Composable
 fun MusicPlayerScreen(
     onBackPressed: () -> Unit,

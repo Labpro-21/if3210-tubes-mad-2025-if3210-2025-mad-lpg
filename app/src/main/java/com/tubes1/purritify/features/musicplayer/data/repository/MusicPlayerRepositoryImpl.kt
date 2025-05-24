@@ -36,8 +36,8 @@ class MusicPlayerRepositoryImpl(private val context: Context) : MusicPlayerRepos
 
     private fun bindService() {
         val intent = Intent(context, MusicPlayerService::class.java)
-        context.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
         context.startService(intent)
+        context.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
     }
 
     override fun getPlayerState(): Flow<MusicPlayerState> {
