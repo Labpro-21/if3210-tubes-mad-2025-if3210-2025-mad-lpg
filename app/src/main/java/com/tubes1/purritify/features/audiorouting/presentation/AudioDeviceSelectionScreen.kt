@@ -146,7 +146,7 @@ fun DeviceListView(
             }
         }
         if (devices.isEmpty() && !isDiscoveringBluetooth) { // Show empty state only if not discovering
-            EmptyStateView(onRefresh = { /* Call ViewModel's refresh/rediscover method */ })
+            EmptyStateView(onRefresh = {  })
         } else if (devices.isEmpty() && isDiscoveringBluetooth) {
             // Optionally show a different message like "Scanning... no devices found yet."
             // For now, the global "Mencari perangkat Bluetooth..." above might suffice.

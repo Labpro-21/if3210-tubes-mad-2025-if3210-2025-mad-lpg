@@ -22,10 +22,10 @@ val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "pu
 internal data class StoredAudioDevicePreference(
     val systemApiId: Int?,
     val name: String?,
-    val typeName: String?,         // Stores DeviceType.name
-    val systemDeviceType: Int?,    // Stores the raw system int type
+    val typeName: String?,
+    val systemDeviceType: Int?,
     val address: String?,
-    val sourceName: String?        // Stores AudioDeviceSource.name
+    val sourceName: String?
 )
 
 class UserPreferencesRepository(private val context: Context) {
@@ -53,11 +53,11 @@ class UserPreferencesRepository(private val context: Context) {
 
             if (name != null && typeName != null && systemDeviceType != null && sourceName != null && (systemApiId != null || address != null)) {
                 val storedPrefs = StoredAudioDevicePreference(
-                    systemApiId = systemApiId, // Can be null
+                    systemApiId = systemApiId,
                     name = name,
                     typeName = typeName,
                     systemDeviceType = systemDeviceType,
-                    address = address,         // Can be null
+                    address = address,
                     sourceName = sourceName
                 )
                 mapStoredPrefsToAudioDevice(storedPrefs)
@@ -106,7 +106,7 @@ class UserPreferencesRepository(private val context: Context) {
         if (prefs.name == null || prefs.typeName == null || prefs.systemDeviceType == null || prefs.sourceName == null) {
             return null
         }
-        if (prefs.systemApiId == null && prefs.address == null) { // Must have at least one primary identifier
+        if (prefs.systemApiId == null && prefs.address == null) {
             return null
         }
 
@@ -120,22 +120,22 @@ class UserPreferencesRepository(private val context: Context) {
                 appDeviceType == DeviceType.HEARING_AID) {
                 PairingStatus.PAIRED
             } else {
-                PairingStatus.NONE // Or PAIRED if you consider wired "implicitly paired"
+                PairingStatus.NONE
             }
 
             AudioDevice(
-                systemApiId = prefs.systemApiId, // Can be null
+                systemApiId = prefs.systemApiId,
                 name = prefs.name,
                 type = appDeviceType,
                 systemDeviceType = prefs.systemDeviceType,
-                address = prefs.address,         // Can be null
+                address = prefs.address,
                 source = appDeviceSource,
-                pairingStatus = pairingStatus,   // Reconstructed based on type
+                pairingStatus = pairingStatus,
 
-                isCurrentlySelectedOutput = false, // This will be updated by ViewModel/Service logic
-                isConnectable = true,              // Assume preferred device is connectable
-                underlyingSystemApiDevice = null,  // Not stored
-                underlyingBluetoothDevice = null   // Not stored
+                isCurrentlySelectedOutput = false,
+                isConnectable = true,
+                underlyingSystemApiDevice = null,
+                underlyingBluetoothDevice = null
             )
         } catch (e: IllegalArgumentException) {
 

@@ -3,7 +3,7 @@ package com.tubes1.purritify.core.data.local.entity
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
-import com.tubes1.purritify.core.domain.model.PlayHistory // Import the domain model
+import com.tubes1.purritify.core.domain.model.PlayHistory
 
 @Entity(
     tableName = "play_history",

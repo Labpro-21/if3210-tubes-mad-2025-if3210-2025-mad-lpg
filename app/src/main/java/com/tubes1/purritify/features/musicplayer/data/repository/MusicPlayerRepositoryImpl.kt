@@ -34,8 +34,8 @@ class MusicPlayerRepositoryImpl(
 ) : MusicPlayerRepository {
 
     private var musicService: MusicPlayerService? = null
-    private val _serviceBoundFlow = MutableStateFlow(false) // Backing property for bound state
-    val serviceBoundFlow: StateFlow<Boolean> = _serviceBoundFlow.asStateFlow() // Expose as StateFlow
+    private val _serviceBoundFlow = MutableStateFlow(false)
+    val serviceBoundFlow: StateFlow<Boolean> = _serviceBoundFlow.asStateFlow()
 
     private val repositoryScope = CoroutineScope(Dispatchers.Main.immediate + SupervisorJob())
 

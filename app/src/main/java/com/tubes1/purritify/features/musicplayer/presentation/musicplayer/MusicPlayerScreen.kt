@@ -104,7 +104,7 @@ fun MusicPlayerScreen(
                         )
                     }
 
-                    IconButton(onClick = { /* Show menu options */ }) {
+                    IconButton(onClick = {  }) {
                         Icon(
                             imageVector = Icons.Default.MoreVert,
                             contentDescription = "More options",

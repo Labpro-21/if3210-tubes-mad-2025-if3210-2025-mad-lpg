@@ -73,7 +73,7 @@ fun SettingsScreen(navController: NavController) {
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background, // Or your desired TopAppBar color
+                    containerColor = MaterialTheme.colorScheme.background,
                     titleContentColor = MaterialTheme.colorScheme.onBackground,
                     navigationIconContentColor = MaterialTheme.colorScheme.onBackground
                 )
@@ -85,7 +85,7 @@ fun SettingsScreen(navController: NavController) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(horizontal = 16.dp) // Add some horizontal padding to the list
+                .padding(horizontal = 16.dp)
         ) {
             item { Spacer(modifier = Modifier.height(16.dp)) }
 
@@ -135,8 +135,6 @@ fun SettingsScreen(navController: NavController) {
                     }
                 )
             }
-
-            // Add more sections/items as needed
             item { Spacer(modifier = Modifier.height(16.dp)) }
         }
     }
@@ -147,8 +145,8 @@ fun SettingsSectionTitle(title: String) {
     Text(
         text = title,
         style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-        color = MaterialTheme.colorScheme.onSurfaceVariant, // A slightly less prominent color for section titles
-        modifier = Modifier.padding(vertical = 8.dp, horizontal = 8.dp) // Adjusted padding
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.padding(vertical = 8.dp, horizontal = 8.dp)
     )
 }
 
@@ -158,23 +156,23 @@ fun SettingsItem(
     title: String,
     subtitle: String,
     onClick: () -> Unit,
-    iconTint: Color = MaterialTheme.colorScheme.onSurface // Use theme color for icons
+    iconTint: Color = MaterialTheme.colorScheme.onSurface
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(vertical = 16.dp, horizontal = 8.dp), // Consistent padding
+            .padding(vertical = 16.dp, horizontal = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(16.dp) // Space between icon and text column
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Icon(
             imageVector = icon,
             contentDescription = title,
-            modifier = Modifier.size(24.dp), // Standard icon size
+            modifier = Modifier.size(24.dp),
             tint = iconTint
         )
-        Column(modifier = Modifier.weight(1f)) { // Allow text to take remaining space
+        Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
@@ -184,7 +182,7 @@ fun SettingsItem(
             Text(
                 text = subtitle,
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant // Subtitle color
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
@@ -194,8 +192,8 @@ fun SettingsItem(
 fun ListDivider() {
     HorizontalDivider(
         modifier = Modifier.padding(vertical = 8.dp, horizontal = 8.dp),
-        thickness = 0.5.dp, // Thin divider
-        color = MaterialTheme.colorScheme.outlineVariant // Subtle color
+        thickness = 0.5.dp,
+        color = MaterialTheme.colorScheme.outlineVariant
     )
 }
 
