@@ -20,7 +20,7 @@ import com.tubes1.purritify.core.domain.model.Song
 
 @OptIn(ExperimentalGlideComposeApi::class)
 @Composable
-fun SongListItem(song: Song, onClick: (Song) -> Unit,) {
+fun SongListItem(song: Song, onClick: (Song) -> Unit, isOnline: Boolean = false, isUnduh: Boolean = false, isLiked: Boolean = false) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -59,6 +59,23 @@ fun SongListItem(song: Song, onClick: (Song) -> Unit,) {
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
+
+            Row {
+                if (isOnline) {
+                    StatusChip("Online", Color.Green)
+                } else {
+                    StatusChip("Offline", Color.Blue)
+                }
+
+                if (isUnduh) {
+                    StatusChip("Terunduh", Color.Yellow)
+                }
+                if (isLiked) {
+                    StatusChip("Disukai", Color.Magenta)
+                }
+            }
         }
+
+        DropdownSongOptions(song = song, onDownloadClick = {}, onShareClick = {} )
     }
 }
