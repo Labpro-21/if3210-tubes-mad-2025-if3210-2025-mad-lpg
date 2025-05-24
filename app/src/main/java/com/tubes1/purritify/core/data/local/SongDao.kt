@@ -45,4 +45,7 @@ interface SongDao {
         WHERE id = :songId
     """)
     suspend fun toggleFavorite(songId: Long): Int
+
+    @Query("SELECT * FROM song WHERE title = :title AND artist = :artist AND duration = :duration")
+    suspend fun getSongByTitleAndArtistAndDuration(title: String, artist: String, duration: Long): SongEntity?
 }

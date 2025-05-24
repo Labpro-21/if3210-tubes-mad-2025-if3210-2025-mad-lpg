@@ -62,4 +62,8 @@ class SongRepositoryImpl(
     override suspend fun toggleFavorite(songId: Long): Boolean {
         return songDao.toggleFavorite(songId) > 0
     }
+
+    override suspend fun getSongByTitleAndArtistAndDuration(title: String, artist: String, duration: Long): Song? {
+        return songDao.getSongByTitleAndArtistAndDuration(title, artist, duration)?.toSong()
+    }
 }

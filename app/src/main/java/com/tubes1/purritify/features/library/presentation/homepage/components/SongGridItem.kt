@@ -80,7 +80,7 @@ fun TopChartItem(
     ) {
         Box(
             modifier = modifier
-                .size(180.dp) // Ukuran sesuai dengan gambar kamu
+                .size(180.dp)
                 .clip(RoundedCornerShape(12.dp))
                 .clickable { onClick() }
                 .background(

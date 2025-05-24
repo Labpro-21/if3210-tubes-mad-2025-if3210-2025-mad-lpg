@@ -80,8 +80,6 @@ fun EditProfile(
 ) {
     val state = editProfileViewModel.state.collectAsState().value
     val context = LocalContext.current
-
-    // Profile picture function and variable
     val imageUri = remember { mutableStateOf<Uri?>(null) }
     val cachedImageFile = remember { mutableStateOf<File?>(null) }
 
