@@ -115,7 +115,7 @@ fun LoginPage(
             }
             Spacer(modifier = Modifier.height(16.dp))
             Text(
-                text = "Jutaan lagu, tersedia.",
+                text = "Jutaan lagu tersedia,.",
                 color = Color.White,
                 fontWeight = FontWeight.Black,
                 fontSize = 30.sp

@@ -1,13 +1,8 @@
 package com.tubes1.purritify.features.library.presentation.librarypage
 
 import UploadSongBottomSheet
-import android.util.Log
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
@@ -25,17 +20,12 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.tubes1.purritify.core.common.navigation.Screen
-import com.tubes1.purritify.core.ui.components.BottomNavigation
-import com.tubes1.purritify.features.library.domain.model.Song
-import com.tubes1.purritify.features.library.domain.usecase.AddSongUseCase
 import com.tubes1.purritify.features.library.presentation.common.ui.components.SongListAdapter
-import com.tubes1.purritify.features.library.presentation.common.ui.components.SongListItem
 import com.tubes1.purritify.features.library.presentation.librarypage.components.FilterTab
 import com.tubes1.purritify.features.library.presentation.uploadsong.UploadSongViewModel
 import com.tubes1.purritify.features.musicplayer.presentation.musicplayer.MusicPlayerViewModel
 import com.tubes1.purritify.features.musicplayer.presentation.musicplayer.SharedPlayerViewModel
 import org.koin.androidx.compose.koinViewModel
-import org.koin.compose.koinInject
 
 @Composable
 fun LibraryScreen(

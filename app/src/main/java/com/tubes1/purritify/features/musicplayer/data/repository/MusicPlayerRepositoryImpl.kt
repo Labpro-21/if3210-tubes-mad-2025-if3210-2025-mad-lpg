@@ -5,7 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
 import android.os.IBinder
-import com.tubes1.purritify.features.library.domain.model.Song
+import com.tubes1.purritify.core.domain.model.Song
 import com.tubes1.purritify.features.musicplayer.data.service.MusicPlayerService
 import com.tubes1.purritify.features.musicplayer.domain.model.MusicPlayerState
 import com.tubes1.purritify.features.musicplayer.domain.repository.MusicPlayerRepository

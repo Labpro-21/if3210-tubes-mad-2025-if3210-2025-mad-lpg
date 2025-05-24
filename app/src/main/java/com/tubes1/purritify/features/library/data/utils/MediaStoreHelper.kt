@@ -4,7 +4,7 @@ import android.content.Context
 import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.util.Log
-import com.tubes1.purritify.features.library.domain.model.Song
+import com.tubes1.purritify.core.domain.model.Song
 import com.tubes1.purritify.features.library.presentation.uploadsong.UploadSongState
 import java.io.File
 import java.io.FileOutputStream
@@ -48,7 +48,8 @@ class MediaStoreHelper(
             duration = duration,
             path = songFilePath,
             songArtUri = songArtPath,
-            dateAdded = System.currentTimeMillis()
+            dateAdded = System.currentTimeMillis(),
+            lastPlayed = null
         )
     }
 

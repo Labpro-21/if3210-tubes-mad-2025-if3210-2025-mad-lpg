@@ -1,6 +1,8 @@
 package com.tubes1.purritify
 
 import android.app.Application
+import com.tubes1.purritify.core.di.coreDataModule
+import com.tubes1.purritify.core.di.coreDomainModule
 import com.tubes1.purritify.core.di.databaseModule
 import com.tubes1.purritify.core.di.networkModule
 import com.tubes1.purritify.features.auth.di.authModule
@@ -18,6 +20,8 @@ class PurritifyApplication : Application() {
             modules(
                 networkModule,
                 databaseModule,
+                coreDataModule,
+                coreDomainModule,
                 libraryModule,
                 musicPlayerModule,
                 authModule,

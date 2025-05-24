@@ -1,6 +1,6 @@
 package com.tubes1.purritify.features.musicplayer.presentation.musicplayer
 
-import com.tubes1.purritify.features.library.domain.model.Song
+import com.tubes1.purritify.core.domain.model.Song
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
