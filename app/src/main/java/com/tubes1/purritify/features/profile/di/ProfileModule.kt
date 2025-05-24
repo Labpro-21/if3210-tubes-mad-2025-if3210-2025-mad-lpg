@@ -1,13 +1,13 @@
 package com.tubes1.purritify.features.profile.di
 
-import com.tubes1.purritify.features.musicplayer.domain.usecase.GetPlayerStateUseCase
-import com.tubes1.purritify.features.musicplayer.domain.usecase.PlaySongUseCase
 import com.tubes1.purritify.features.profile.data.remote.ProfileApi
 import com.tubes1.purritify.features.profile.data.repository.ProfileRepositoryImpl
 import com.tubes1.purritify.features.profile.domain.repository.ProfileRepository
+import com.tubes1.purritify.features.profile.domain.usecase.editprofile.EditProfileUseCase
 import com.tubes1.purritify.features.profile.domain.usecase.getprofile.GetProfilePhotoUseCase
 import com.tubes1.purritify.features.profile.domain.usecase.getprofile.GetProfileUseCase
-import com.tubes1.purritify.features.profile.presentation.profiledetail.ProfileDetailViewModel
+import com.tubes1.purritify.features.profile.presentation.profile.EditProfileViewModel
+import com.tubes1.purritify.features.profile.presentation.profile.ProfileViewModel
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 import retrofit2.Retrofit
@@ -23,6 +23,8 @@ val profileModule = module {
 
     factory { GetProfileUseCase(get()) }
     factory { GetProfilePhotoUseCase(get()) }
+    factory { EditProfileUseCase(get()) }
 
-    viewModel { ProfileDetailViewModel(get(), get(), get(), get(), get(), get(), get()) }
+    viewModel { ProfileViewModel(get(), get(), get(), get(), get(), get(), get()) }
+    viewModel { EditProfileViewModel(get(), get()) }
 }

@@ -72,7 +72,9 @@ fun LoginPage(
 
     LaunchedEffect(state.isSuccess) {
         if (state.isSuccess) {
-            navController.navigate(Screen.Home.route)
+            navController.navigate(Screen.Home.route) {
+                popUpTo(Screen.Login.route) { inclusive = true }
+            }
             loginStateViewModel.resetSuccess()
         }
     }
@@ -115,14 +117,14 @@ fun LoginPage(
             }
             Spacer(modifier = Modifier.height(16.dp))
             Text(
-                text = "Jutaan lagu, tersedia.",
+                text = "Jutaan lagu tersedia,",
                 color = Color.White,
                 fontWeight = FontWeight.Black,
                 fontSize = 30.sp
             )
             Spacer(modifier = Modifier.height(3.dp))
             Text(
-                text = "Hanya di Purritify.",
+                text = "hanya di Purritify.",
                 color = Color.White,
                 fontWeight = FontWeight.Black,
                 fontSize = 30.sp

@@ -4,7 +4,7 @@ import android.content.Context
 import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.util.Log
-import com.tubes1.purritify.features.library.domain.model.Song
+import com.tubes1.purritify.core.domain.model.Song
 import com.tubes1.purritify.features.library.presentation.uploadsong.UploadSongState
 import java.io.File
 import java.io.FileOutputStream
@@ -48,7 +48,8 @@ class MediaStoreHelper(
             duration = duration,
             path = songFilePath,
             songArtUri = songArtPath,
-            dateAdded = System.currentTimeMillis()
+            dateAdded = System.currentTimeMillis(),
+            lastPlayed = null
         )
     }
 
@@ -83,9 +84,6 @@ class MediaStoreHelper(
         }
     }
 
-    /**
-     * Saves the song file to internal storage and returns the file path
-     */
     private fun saveSongToInternalStorage(uri: Uri): String {
         val fileName = "song_${UUID.randomUUID()}.mp3"
         val file = File(context.filesDir, fileName)
@@ -99,9 +97,6 @@ class MediaStoreHelper(
         return file.absolutePath
     }
 
-    /**
-     * Saves the album art to internal storage and returns the file path
-     */
     private fun saveSongArtToInternalStorage(uri: Uri): String? {
         return try {
             val fileName = "album_art_${UUID.randomUUID()}.jpg"

@@ -4,12 +4,12 @@ import com.tubes1.purritify.core.common.utils.DeleteToken
 import com.tubes1.purritify.features.auth.data.remote.AuthApi
 import com.tubes1.purritify.features.auth.data.repository.AuthRepositoryImpl
 import com.tubes1.purritify.features.auth.domain.repository.AuthRepository
-import com.tubes1.purritify.features.auth.domain.usecase.auth.RequestTokenUseCase
-import com.tubes1.purritify.features.auth.domain.usecase.auth.GetAccessTokenUseCase
-import com.tubes1.purritify.features.auth.domain.usecase.auth.GetRefreshTokenUseCase
+import com.tubes1.purritify.features.auth.domain.usecase.token.RequestTokenUseCase
+import com.tubes1.purritify.features.auth.domain.usecase.token.GetAccessTokenUseCase
+import com.tubes1.purritify.features.auth.domain.usecase.token.GetRefreshTokenUseCase
 import com.tubes1.purritify.core.common.utils.ReadToken
-import com.tubes1.purritify.features.auth.domain.usecase.auth.RefreshTokenUseCase
-import com.tubes1.purritify.features.auth.domain.usecase.auth.VerifyTokenUseCase
+import com.tubes1.purritify.features.auth.domain.usecase.token.RefreshTokenUseCase
+import com.tubes1.purritify.features.auth.domain.usecase.token.VerifyTokenUseCase
 import com.tubes1.purritify.features.auth.presentation.login.LoginStateViewModel
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module

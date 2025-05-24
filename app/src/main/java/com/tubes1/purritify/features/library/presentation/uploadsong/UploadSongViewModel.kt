@@ -5,7 +5,8 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tubes1.purritify.features.library.data.utils.MediaStoreHelper
-import com.tubes1.purritify.features.library.domain.usecase.AddSongUseCase
+import com.tubes1.purritify.features.library.domain.usecase.getsongs.GetSongByTitleAndArtistAndDuration
+import com.tubes1.purritify.features.library.domain.usecase.uploadsong.AddSongUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -14,7 +15,8 @@ import kotlinx.coroutines.launch
 
 class UploadSongViewModel(
     private val mediaStoreHelper: MediaStoreHelper,
-    private val addSongUseCase: AddSongUseCase
+    private val addSongUseCase: AddSongUseCase,
+    private val getSongByTitleAndArtistAndDuration: GetSongByTitleAndArtistAndDuration
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(UploadSongState())
@@ -71,6 +73,17 @@ class UploadSongViewModel(
             _state.update { it.copy(isLoading = true, error = null) }
 
             try {
+                val existingSong = getSongByTitleAndArtistAndDuration(
+                    title = currentState.title,
+                    artist = currentState.artist,
+                    duration = getSongDurationFromUri(currentState.songUri)
+                )
+
+                if (existingSong != null) {
+                    _state.update { it.copy(isLoading = false, error = "Lagu yang sama telah tersimpan di koleksi!") }
+                    return@launch
+                }
+
                 val song = mediaStoreHelper.createSongFromUserInput(currentState)
                 addSongUseCase(song)
                 _state.value = UploadSongState()
