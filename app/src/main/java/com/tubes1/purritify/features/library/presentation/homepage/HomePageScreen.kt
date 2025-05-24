@@ -63,16 +63,16 @@ fun HomeScreen(
 
     val backgroundGradient = Brush.verticalGradient(
         colors = listOf(
-            Color(0xFF04363D),
+            Color(0xFF001A20),
             Color(0xFF042329),
-            Color(0xFF001A20)
+            Color(0xFF04363D)
         )
     )
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF121212))
+            .background(brush = backgroundGradient)
             .padding(WindowInsets.statusBars.asPaddingValues())
     ) {
         Column(
