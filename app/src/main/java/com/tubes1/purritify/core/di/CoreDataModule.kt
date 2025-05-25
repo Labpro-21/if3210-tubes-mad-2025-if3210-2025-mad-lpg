@@ -9,6 +9,8 @@ import org.koin.dsl.module
 
 val coreDataModule = module {
     single { get<AppDatabase>().songDao() }
+    single { get<AppDatabase>().serverSongDao() }
+    single { get<AppDatabase>().playHistoryDao() }
     single { get<AppDatabase>().artistsCountDao() }
 
     single<SongRepository> {

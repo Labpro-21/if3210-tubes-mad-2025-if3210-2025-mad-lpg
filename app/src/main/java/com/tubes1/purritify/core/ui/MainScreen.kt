@@ -46,6 +46,7 @@ import com.tubes1.purritify.features.auth.presentation.login.LoginPage
 import com.tubes1.purritify.features.musicplayer.presentation.musicplayer.MusicPlayerScreen
 import com.tubes1.purritify.features.musicplayer.presentation.musicplayer.MusicPlayerViewModel
 import com.tubes1.purritify.features.musicplayer.presentation.musicplayer.component.MiniPlayer
+import com.tubes1.purritify.features.soundcapsule.presentation.SoundCapsuleScreen
 import kotlinx.coroutines.flow.StateFlow
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
@@ -142,6 +143,9 @@ fun MainScreen(
                     }
                     composable(Screen.Settings.route) {
                         SettingsScreen(navController = navController)
+                    }
+                    composable(Screen.SoundCapsule.route) {
+                        SoundCapsuleScreen(navController = navController)
                     }
                     composable(Screen.AudioDeviceSelection.route) {
                         AudioDeviceSelectionScreen(navController = navController)
