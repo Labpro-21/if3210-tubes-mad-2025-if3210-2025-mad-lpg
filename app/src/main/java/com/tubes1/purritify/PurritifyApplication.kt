@@ -12,6 +12,7 @@ import com.tubes1.purritify.features.library.di.libraryModule
 import com.tubes1.purritify.features.musicplayer.data.service.MusicPlayerService
 import com.tubes1.purritify.features.musicplayer.di.musicPlayerModule
 import com.tubes1.purritify.features.profile.di.profileModule
+import com.tubes1.purritify.features.soundcapsule.di.soundCapsuleModule
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
 
@@ -29,7 +30,8 @@ class PurritifyApplication : Application() {
                 musicPlayerModule,
                 authModule,
                 profileModule,
-                audioDeviceModule
+                audioDeviceModule,
+                soundCapsuleModule
             )
         }
     }

@@ -75,6 +75,7 @@ fun HomeScreen(
             .background(brush = backgroundGradient)
             .padding(WindowInsets.statusBars.asPaddingValues())
     ) {
+        // profile & settings
         Column(
             modifier = Modifier
                 .background(Color(0xFF121212))
@@ -100,7 +101,11 @@ fun HomeScreen(
                     }
 
                     Column(
-                        modifier = Modifier.padding(start = 12.dp)
+                        modifier = Modifier
+                            .padding(start = 12.dp)
+                            .clickable {
+                                navController.navigate(Screen.Profile.route)
+                            }
                     ) {
                         Text(
                             text = "13522007",

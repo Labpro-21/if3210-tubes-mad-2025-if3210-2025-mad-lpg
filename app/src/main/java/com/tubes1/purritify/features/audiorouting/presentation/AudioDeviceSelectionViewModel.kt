@@ -196,30 +196,45 @@ class AudioDeviceSelectionViewModel(
                     "SysID=${deviceToRoute.systemApiId}, Addr=${deviceToRoute.address}, " +
                     "Source=${deviceToRoute.source}, Type=${deviceToRoute.type}")
 
+            val deviceForOptimisticUpdate = _uiState.value.devices.find { it.uniqueKey == deviceToRoute.uniqueKey }
+                ?: deviceToRoute // Fallback to deviceToRoute if somehow not in the list
+
+            Log.d(TAG, "selectDeviceAfterPairing: Device to pass to repo was: Name=${deviceToRoute.name}, " +
+                    "SysID=${deviceToRoute.systemApiId}, Addr=${deviceToRoute.address}, " +
+                    "Source=${deviceToRoute.source}, Type=${deviceToRoute.type}")
+            Log.d(TAG, "selectDeviceAfterPairing: Device found in UI state for optimistic update: Name=${deviceForOptimisticUpdate.name}, " +
+                    "SysID=${deviceForOptimisticUpdate.systemApiId}, Addr=${deviceForOptimisticUpdate.address}")
+
+
             try {
-                musicPlayerRepository.setPreferredAudioDevice(deviceToRoute)
+                musicPlayerRepository.setPreferredAudioDevice(deviceToRoute) // Use deviceToRoute for the actual repo call
                 Log.d(TAG, "selectDeviceAfterPairing: Waiting for service routing (1.5s)...")
                 delay(1500L)
 
-                val optimisticallySelectedDevice = _uiState.value.devices.find { it.address == deviceToRoute.address }
-                if (optimisticallySelectedDevice != null) {
-                    val tempList = _uiState.value.devices.map {
-                        if (it.address == deviceToRoute.address) {
-                            it.copy(isCurrentlySelectedOutput = true, pairingStatus = PairingStatus.PAIRED)
+                // Optimistic UI Update: Mark the device as selected in the UI
+                // Use deviceForOptimisticUpdate.uniqueKey to ensure we update the right item in the list
+                _uiState.update { currentState ->
+                    val updatedDeviceList = currentState.devices.map { deviceInList ->
+                        if (deviceInList.uniqueKey == deviceForOptimisticUpdate.uniqueKey) {
+                            deviceInList.copy(isCurrentlySelectedOutput = true, pairingStatus = PairingStatus.PAIRED)
                         } else {
-                            it.copy(isCurrentlySelectedOutput = false)
+                            deviceInList.copy(isCurrentlySelectedOutput = false)
                         }
                     }
-                    _uiState.update { it.copy(devices = tempList, isLoading = true) }
-                    Log.d(TAG, "selectDeviceAfterPairing: Optimistically marked ${deviceToRoute.name} as selected.")
+                    currentState.copy(
+                        devices = updatedDeviceList,
+                        // If routing was successful, currentlySelectedSystemApiId *should* update after refresh,
+                        // but we can optimistically set it here too if deviceForOptimisticUpdate has a systemApiId.
+                        currentlySelectedSystemApiId = deviceForOptimisticUpdate.systemApiId ?: currentState.currentlySelectedSystemApiId
+                    )
                 }
+                Log.d(TAG, "Optimistically marked ${deviceForOptimisticUpdate.name} as selected in UI.")
             } catch (e: Exception) {
                 Log.e(TAG, "Error in selectDeviceAfterPairing setting preferred device: ${e.message}", e)
-                _uiState.update { it.copy(error = "Gagal mengatur ${deviceToRoute.name}: ${e.message}") }
+                _uiState.update { it.copy(error = "Gagal mengatur ${deviceForOptimisticUpdate.name}: ${e.message}") }
             } finally {
                 Log.d(TAG, "selectDeviceAfterPairing: Refreshing full audio device list to reflect final state.")
                 refreshAudioDeviceList()
-
             }
         }
     }
@@ -530,7 +545,6 @@ class AudioDeviceSelectionViewModel(
 
         _uiState.update { it.copy(devices = sortedList) }
     }
-
 
     private fun isDeviceSuitableForUserSelection(deviceInfo: AudioDeviceInfo): Boolean {
         return when (deviceInfo.type) {
