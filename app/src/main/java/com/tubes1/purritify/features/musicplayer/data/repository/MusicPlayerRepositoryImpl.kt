@@ -6,15 +6,12 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.os.IBinder
 import android.util.Log
-import android.widget.Toast
-import com.tubes1.purritify.core.data.local.dao.PlayHistoryDao
 import com.tubes1.purritify.core.data.local.preferences.UserPreferencesRepository
 import com.tubes1.purritify.core.domain.model.Song
 import com.tubes1.purritify.features.audiorouting.domain.model.AudioDevice
 import com.tubes1.purritify.features.musicplayer.data.service.MusicPlayerService
 import com.tubes1.purritify.features.musicplayer.domain.model.MusicPlayerState
 import com.tubes1.purritify.features.musicplayer.domain.repository.MusicPlayerRepository
-import com.tubes1.purritify.features.soundcapsule.domain.usecase.GetCurrentMonthTimeListenedUseCase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -24,22 +21,17 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.Calendar
-import java.util.Locale
 
 class MusicPlayerRepositoryImpl(
     private val context: Context,
-    private val userPreferencesRepository: UserPreferencesRepository,
-    private val playHistoryDao: PlayHistoryDao
-) : MusicPlayerRepository, GetCurrentMonthTimeListenedUseCase.MusicPlayerServiceFlows {
+    private val userPreferencesRepository: UserPreferencesRepository
+) : MusicPlayerRepository {
 
     private var musicService: MusicPlayerService? = null
     private val _serviceBoundFlow = MutableStateFlow(false)
@@ -54,15 +46,12 @@ class MusicPlayerRepositoryImpl(
             musicService = binder.getService()
             _serviceBoundFlow.value = true
 
-            musicService?.setPlayHistoryDao(playHistoryDao)
 
             repositoryScope.launch {
                 userPreferencesRepository.preferredAudioDeviceFlow.firstOrNull()?.let { device ->
                     musicService?.updatePreferredAudioDevice(device)
                 }
             }
-
-            observeServiceEvents()
         }
 
         override fun onServiceDisconnected(name: ComponentName?) {
@@ -90,14 +79,14 @@ class MusicPlayerRepositoryImpl(
         Intent(context, MusicPlayerService::class.java).also { bindIntent ->
             val success = context.bindService(bindIntent, serviceConnection, Context.BIND_AUTO_CREATE)
             Log.d("MusicPlayerRepo", "bindService called, success: $success")
-            if (!success && !_serviceBoundFlow.value) {
+            if (!success && !_serviceBoundFlow.value) { // Check if already bound by a quick onServiceConnected
                 Log.e("MusicPlayerRepo", "Immediate bindService FAILED. Service might not be available.")
             }
         }
     }
 
     override fun getPlayerState(): Flow<MusicPlayerState> {
-        return serviceBoundFlow.flatMapLatest { isBound ->
+        return serviceBoundFlow.flatMapLatest { isBound -> // Use the public StateFlow
             if (isBound && musicService != null) {
                 val currentService = musicService!!
                 combine(
@@ -105,7 +94,7 @@ class MusicPlayerRepositoryImpl(
                     currentService.isPlaying,
                     currentService.currentPosition,
                     currentService.duration,
-                    currentService.preferredAudioDevice
+                    currentService.preferredAudioDevice // Also observe preferred device from service
                 ) { song, isPlaying, position, duration, preferredDevice ->
                     MusicPlayerState(
                         currentSong = song,
@@ -115,7 +104,7 @@ class MusicPlayerRepositoryImpl(
                         duration = duration,
 
 
-                        activeAudioDevice = preferredDevice
+                        activeAudioDevice = preferredDevice // Example: adding active device info
                     )
                 }
             } else {
@@ -124,36 +113,10 @@ class MusicPlayerRepositoryImpl(
         }.shareIn(repositoryScope, SharingStarted.WhileSubscribed(5000), 1)
     }
 
-    private fun observeServiceEvents() {
-        repositoryScope.launch {
-            musicService?.serviceEvents?.collect { event ->
-                when (event) {
-                    is MusicPlayerService.MusicServiceEvent.AudioOutputChanged -> {
-                        Toast.makeText(
-                            context,
-                            event.message,
-                            Toast.LENGTH_SHORT
-                        ).show()
-                        Log.i("ViewModel", "Audio Output Changed: ${event.message}")
-                    }
-
-                    is MusicPlayerService.MusicServiceEvent.PlaybackPausedDueToNoise -> {
-                        Toast.makeText(
-                            context,
-                            event.message,
-                            Toast.LENGTH_SHORT
-                        ).show()
-                        Log.i("ViewModel", "Playback Paused: ${event.message}")
-                    }
-                }
-            }
-        }
-    }
-
     override suspend fun setPreferredAudioDevice(device: AudioDevice?) {
         Log.d("MusicPlayerRepo", "Setting preferred audio device: ${device?.name ?: "None"}")
         userPreferencesRepository.savePreferredAudioDevice(device)
-        if (serviceBoundFlow.value) {
+        if (serviceBoundFlow.value) { // Use the public StateFlow
             musicService?.updatePreferredAudioDevice(device)
         } else {
             Log.w("MusicPlayerRepo", "Service not bound when setting preferred audio device. Will be picked up on next bind/start or by service itself.")
@@ -164,50 +127,20 @@ class MusicPlayerRepositoryImpl(
         return userPreferencesRepository.preferredAudioDeviceFlow
     }
 
-    override fun getCurrentPlayingSongId(): Flow<Long?> = serviceBoundFlow.flatMapLatest { isBound ->
-        if (isBound && musicService != null) {
-            musicService!!.currentSong.map { it?.id }
-        } else {
-            flowOf(null)
-        }
-    }.distinctUntilChanged()
-
-    override fun getLiveElapsedTimeMs(): Flow<Long> = serviceBoundFlow.flatMapLatest { isBound ->
-        if (isBound && musicService != null) {
-            musicService!!.liveElapsedTimeMs
-        } else {
-            flowOf(0L)
-        }
-    }.distinctUntilChanged()
-
-    override fun getCurrentSongMonthYear(): Flow<String?> = serviceBoundFlow.flatMapLatest { isBound ->
-        if (isBound && musicService != null) {
-            musicService!!.currentSong.map { song ->
-                song?.lastPlayed?.let { ts -> // Or song.dateAdded if lastPlayed is not always set
-                    val cal = Calendar.getInstance()
-                    cal.timeInMillis = ts
-                    SimpleDateFormat("yyyy-MM", Locale.getDefault()).format(cal.time)
-                }
-            }
-        } else {
-            flowOf(null)
-        }
-    }.distinctUntilChanged()
-
     private suspend fun <T> callServiceMethod(
         actionDescription: String,
         block: suspend MusicPlayerService.() -> T?
     ): T? {
-        if (serviceBoundFlow.value && musicService != null) {
+        if (serviceBoundFlow.value && musicService != null) { // Use the public StateFlow
             try {
                 return musicService!!.block()
             } catch (e: Exception) {
                 Log.e("MusicPlayerRepo", "Error calling service method for $actionDescription: ${e.message}", e)
-                return null
+                return null // Or rethrow / handle error appropriately
             }
         } else {
             Log.w("MusicPlayerRepo", "$actionDescription: Service not bound.")
-            return null
+            return null // Or throw an exception / queue the command
         }
     }
 

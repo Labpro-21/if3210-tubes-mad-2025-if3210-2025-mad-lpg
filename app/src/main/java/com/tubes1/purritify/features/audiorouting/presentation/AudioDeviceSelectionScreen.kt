@@ -27,16 +27,16 @@ import com.tubes1.purritify.features.audiorouting.domain.model.AudioDevice
 import com.tubes1.purritify.features.audiorouting.domain.model.AudioDeviceSource
 import com.tubes1.purritify.features.audiorouting.domain.model.DeviceType
 import com.tubes1.purritify.features.audiorouting.domain.model.PairingStatus
-import org.koin.androidx.compose.koinViewModel
+import org.koin.androidx.compose.koinViewModel // For Koin
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AudioDeviceSelectionScreen(
     navController: NavController,
-    viewModel: AudioDeviceSelectionViewModel = koinViewModel()
+    viewModel: AudioDeviceSelectionViewModel = koinViewModel() // Use Koin or your preferred DI
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val context = LocalContext.current
+    val context = LocalContext.current // For potential future use (e.g., Toasts)
 
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
@@ -60,7 +60,7 @@ fun AudioDeviceSelectionScreen(
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
+                    containerColor = MaterialTheme.colorScheme.surface, // Or background
                     titleContentColor = MaterialTheme.colorScheme.onSurface
                 )
             )
@@ -93,7 +93,7 @@ fun AudioDeviceSelectionScreen(
                             if (uiState.requiredPermissions.isNotEmpty() && !uiState.allPermissionsGranted) {
                                 permissionLauncher.launch(uiState.requiredPermissions.toTypedArray())
                             } else {
-                                viewModel.refreshAudioDeviceList()
+                                viewModel.refreshAudioDeviceList() // This will re-trigger permission check if needed internally
                             }
                         }
                     )
@@ -106,15 +106,15 @@ fun AudioDeviceSelectionScreen(
                         permissions = uiState.requiredPermissions
                     )
                 }
-
-
+                // Device list (or empty state within DeviceListView)
+                // No specific EmptyStateView here, DeviceListView handles it
                 else -> {
                     DeviceListView(
                         devices = uiState.devices,
                         onDeviceClick = { device ->
                             viewModel.selectDevice(device)
                         },
-                        isDiscoveringBluetooth = uiState.isDiscoveringBluetooth
+                        isDiscoveringBluetooth = uiState.isDiscoveringBluetooth // Pass this state
                     )
                 }
             }
@@ -126,7 +126,7 @@ fun AudioDeviceSelectionScreen(
 fun DeviceListView(
     devices: List<AudioDevice>,
     onDeviceClick: (AudioDevice) -> Unit,
-    isDiscoveringBluetooth: Boolean
+    isDiscoveringBluetooth: Boolean // Pass this from the ViewModel's UI state
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
         if (isDiscoveringBluetooth) {
@@ -145,19 +145,19 @@ fun DeviceListView(
                 )
             }
         }
-        if (devices.isEmpty() && !isDiscoveringBluetooth) {
+        if (devices.isEmpty() && !isDiscoveringBluetooth) { // Show empty state only if not discovering
             EmptyStateView(onRefresh = {  })
         } else if (devices.isEmpty() && isDiscoveringBluetooth) {
-
-
+            // Optionally show a different message like "Scanning... no devices found yet."
+            // For now, the global "Mencari perangkat Bluetooth..." above might suffice.
         }
         else {
             LazyColumn(
                 modifier = Modifier
-                    .weight(1f)
+                    .weight(1f) // Fill remaining space
                     .padding(horizontal = 8.dp)
             ) {
-                items(devices, key = { device -> device.uniqueKey }) { device ->
+                items(devices, key = { device -> device.uniqueKey }) { device -> // <-- Use uniqueKey
                     DeviceItemRow(
                         device = device,
                         onClick = { onDeviceClick(device) }
@@ -178,16 +178,16 @@ fun DeviceItemRow(
     onClick: () -> Unit
 ) {
     val isClickable = device.pairingStatus != PairingStatus.PAIRING && device.isConnectable
-
+    // ^ Prevent clicks while pairing, or if device is marked not connectable
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(enabled = isClickable, onClick = onClick)
-            .padding(vertical = 12.dp, horizontal = 16.dp),
+            .padding(vertical = 12.dp, horizontal = 16.dp), // Slightly adjusted padding
         verticalAlignment = Alignment.CenterVertically
     ) {
-
+        // Leading Icon & Pairing Status Indicator
         Box(modifier = Modifier.size(24.dp), contentAlignment = Alignment.Center) {
             if (device.pairingStatus == PairingStatus.PAIRING) {
                 CircularProgressIndicator(
@@ -207,7 +207,7 @@ fun DeviceItemRow(
 
         Spacer(modifier = Modifier.width(16.dp))
 
-
+        // Device Name and Subtitle for Status
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = device.name.toString(),
@@ -218,17 +218,17 @@ fun DeviceItemRow(
                 overflow = TextOverflow.Ellipsis
             )
 
-
+            // Subtitle for pairing status or connection hint
             val subtitleText = when {
                 device.pairingStatus == PairingStatus.PAIRING -> "Sedang memasangkan..."
                 device.pairingStatus == PairingStatus.FAILED -> "Gagal memasangkan"
                 device.source == AudioDeviceSource.BLUETOOTH_DISCOVERY &&
                         device.pairingStatus == PairingStatus.NONE &&
                         device.type.name.contains("BLUETOOTH", ignoreCase = true) -> "Ketuk untuk memasangkan"
-
+                // device.isCurrentlySelectedOutput -> "Terhubung (aktif)" // Already indicated by checkmark
                 device.pairingStatus == PairingStatus.PAIRED && !device.isCurrentlySelectedOutput &&
-                        device.type.name.contains("BLUETOOTH", ignoreCase = true) -> "Terpasang"
-                else -> null
+                        device.type.name.contains("BLUETOOTH", ignoreCase = true) -> "Terpasang" // Paired but not active
+                else -> null // No subtitle needed
             }
 
             subtitleText?.let {
@@ -247,9 +247,9 @@ fun DeviceItemRow(
             }
         }
 
-        Spacer(modifier = Modifier.width(8.dp))
+        Spacer(modifier = Modifier.width(8.dp)) // Space before the checkmark
 
-
+        // Trailing Checkmark Icon (if selected)
         if (device.isCurrentlySelectedOutput && device.pairingStatus != PairingStatus.FAILED) {
             Icon(
                 imageVector = Icons.Filled.CheckCircle,
@@ -258,26 +258,26 @@ fun DeviceItemRow(
                 modifier = Modifier.size(20.dp)
             )
         }
-
-
+        // Optionally, show a different icon if pairing failed but it was previously selected
+        // else if (device.pairingStatus == PairingStatus.FAILED && wasPreviouslySelected) { ... }
     }
 }
 
 @Composable
-fun getIconForDeviceType(type: DeviceType, pairingStatus: PairingStatus? = null): ImageVector {
-
-
+fun getIconForDeviceType(type: DeviceType, pairingStatus: PairingStatus? = null): ImageVector { // Added pairingStatus
+    // You could make icons more specific based on pairing status, but for now, type-based is fine.
+    // Example: if (type == DeviceType.BLUETOOTH_A2DP && pairingStatus == PairingStatus.NONE) return Icons.Filled.BluetoothSearching
     return when (type) {
         DeviceType.BUILTIN_SPEAKER -> Icons.Filled.Speaker
         DeviceType.BUILTIN_EARPIECE -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            Icons.Filled.PhoneInTalk
+            Icons.Filled.PhoneInTalk // More specific for earpiece
         } else {
-            Icons.Filled.Speaker
+            Icons.Filled.Speaker // Fallback
         }
         DeviceType.WIRED_HEADSET, DeviceType.WIRED_HEADPHONES -> Icons.Filled.Headset
         DeviceType.BLUETOOTH_A2DP, DeviceType.BLUETOOTH_SCO, DeviceType.HEARING_AID -> Icons.Filled.BluetoothAudio
         DeviceType.USB_AUDIO_DEVICE -> Icons.Filled.Usb
-        DeviceType.UNKNOWN -> Icons.Filled.DevicesOther
+        DeviceType.UNKNOWN -> Icons.Filled.DevicesOther // More generic unknown
     }
 }
 
@@ -361,7 +361,7 @@ fun EmptyStateView(onRefresh: () -> Unit) {
         verticalArrangement = Arrangement.Center
     ) {
         Icon(
-            imageVector = Icons.Filled.AudioFile,
+            imageVector = Icons.Filled.AudioFile, // Or VolumeOff, HeadsetOff
             contentDescription = "No Devices Found",
             modifier = Modifier.size(48.dp),
             tint = MaterialTheme.colorScheme.onSurfaceVariant

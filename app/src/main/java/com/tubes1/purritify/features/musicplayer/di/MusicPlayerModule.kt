@@ -1,7 +1,6 @@
 package com.tubes1.purritify.features.musicplayer.di
 
 import com.tubes1.purritify.features.musicplayer.data.repository.MusicPlayerRepositoryImpl
-import com.tubes1.purritify.features.musicplayer.data.service.MusicPlayerService
 import com.tubes1.purritify.features.musicplayer.domain.repository.MusicPlayerRepository
 import com.tubes1.purritify.features.musicplayer.domain.usecase.playback.GetPlayerStateUseCase
 import com.tubes1.purritify.features.musicplayer.domain.usecase.playback.PlayNextUseCase
@@ -19,7 +18,7 @@ import org.koin.dsl.module
 import org.koin.core.module.dsl.viewModel
 
 val musicPlayerModule = module {
-    single<MusicPlayerRepository>(createdAtStart = true) { MusicPlayerRepositoryImpl(androidContext(), get(), get()) }
+    single<MusicPlayerRepository>(createdAtStart = true) { MusicPlayerRepositoryImpl(androidContext(), get()) }
 
     factory { GetPlayerStateUseCase(get()) }
     factory { PlaySongUseCase(get()) }

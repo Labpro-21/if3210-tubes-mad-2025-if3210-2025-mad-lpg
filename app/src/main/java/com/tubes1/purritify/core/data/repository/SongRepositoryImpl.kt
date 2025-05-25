@@ -1,6 +1,6 @@
 package com.tubes1.purritify.core.data.repository
 
-import com.tubes1.purritify.core.data.local.dao.SongDao
+import com.tubes1.purritify.core.data.local.SongDao
 import com.tubes1.purritify.core.data.local.entity.toSong
 import com.tubes1.purritify.core.data.local.entity.toSongEntity
 import com.tubes1.purritify.core.domain.model.Song
