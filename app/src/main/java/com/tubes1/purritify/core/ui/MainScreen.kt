@@ -40,6 +40,7 @@ import com.tubes1.purritify.features.auth.presentation.login.LoginPage
 import com.tubes1.purritify.features.musicplayer.presentation.musicplayer.MusicPlayerScreen
 import com.tubes1.purritify.features.musicplayer.presentation.musicplayer.MusicPlayerViewModel
 import com.tubes1.purritify.features.musicplayer.presentation.musicplayer.component.MiniPlayer
+import com.tubes1.purritify.features.onlinesongs.presentation.onlinesongs.OnlineSongsScreen
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -119,6 +120,11 @@ fun MainScreen() {
                 }
                 composable(Screen.Login.route) { navBackStackEntry ->
                     LoginPage(
+                        navController = navController
+                    )
+                }
+                composable(Screen.OnlineSongs.route) { navBackStackEntry ->
+                    OnlineSongsScreen(
                         navController = navController
                     )
                 }

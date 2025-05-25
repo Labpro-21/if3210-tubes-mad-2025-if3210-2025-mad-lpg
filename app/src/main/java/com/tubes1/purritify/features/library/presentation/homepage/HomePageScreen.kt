@@ -1,47 +1,39 @@
 package com.tubes1.purritify.features.library.presentation.homepage
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.bumptech.glide.integration.compose.GlideImage
-import com.tubes1.purritify.R
 import com.tubes1.purritify.core.common.navigation.Screen
 import com.tubes1.purritify.features.library.presentation.common.ui.components.SongListItem
 import com.tubes1.purritify.features.library.presentation.homepage.components.SongGridItem
 import com.tubes1.purritify.features.library.presentation.homepage.components.TopChartItem
 import com.tubes1.purritify.features.musicplayer.presentation.musicplayer.MusicPlayerViewModel
 import com.tubes1.purritify.features.musicplayer.presentation.musicplayer.SharedPlayerViewModel
-import com.tubes1.purritify.features.musicplayer.presentation.musicplayer.component.MiniPlayer
+import com.tubes1.purritify.features.onlinesongs.presentation.onlinesongs.OnlineSongsViewModel
+import com.tubes1.purritify.features.onlinesongs.presentation.onlinesongs.SongType
+import com.tubes1.purritify.features.profile.presentation.profile.ProfileViewModel
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -49,9 +41,12 @@ fun HomeScreen(
     navController: NavController,
     viewModel: HomePageViewModel = koinViewModel(),
     sharedPlayerViewModel: SharedPlayerViewModel = koinViewModel(),
-    musicPlayerViewModel: MusicPlayerViewModel = koinViewModel()
+    musicPlayerViewModel: MusicPlayerViewModel = koinViewModel(),
+    onlineSongsViewModel: OnlineSongsViewModel = koinViewModel(),
+    profileViewModel: ProfileViewModel = koinViewModel()
 ) {
     val state by viewModel.state.collectAsState()
+    val profileState = profileViewModel.state.collectAsState().value
 
     val backgroundGradient = Brush.verticalGradient(
         colors = listOf(
@@ -92,7 +87,8 @@ fun HomeScreen(
                             title = "TOP 50",
                             subtitle = "Global",
                             onClick = {
-                                // In Progress
+                                onlineSongsViewModel.loadSongs(SongType.GLOBAL)
+                                navController.navigate(Screen.OnlineSongs.route)
                             }
                         )
                     }
@@ -103,7 +99,8 @@ fun HomeScreen(
                             title = "TOP 50",
                             subtitle = "Indo",
                             onClick = {
-                                // In Progress
+                                onlineSongsViewModel.loadSongs(SongType.COUNTRY, profileState.profile!!.location)
+                                navController.navigate(Screen.OnlineSongs.route)
                             }
                         )
                     }
