@@ -110,7 +110,9 @@ fun MainScreen(
     if (startDestination != null) {
         Scaffold(
             bottomBar = {
-                if (currentRoute != Screen.Login.route) {
+                if (currentRoute != Screen.Login.route &&
+                    currentRoute != Screen.Profile.route &&
+                    currentRoute != Screen.Settings.route) {
                     BottomNavigation(
                         onClick = { },
                         navController = navController,
