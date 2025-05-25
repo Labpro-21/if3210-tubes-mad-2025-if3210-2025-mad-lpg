@@ -5,8 +5,10 @@ import com.tubes1.purritify.core.domain.usecase.downloadsongs.DownloadServerSong
 import com.tubes1.purritify.features.onlinesongs.data.remote.OnlineSongsApi
 import com.tubes1.purritify.features.onlinesongs.data.repository.OnlineSongsRepositoryImpl
 import com.tubes1.purritify.features.onlinesongs.domain.repository.OnlineSongsRepository
+import com.tubes1.purritify.features.onlinesongs.domain.usecase.GetOnlineSongUseCase
 import com.tubes1.purritify.features.onlinesongs.domain.usecase.GetTopCountrySongsUseCase
 import com.tubes1.purritify.features.onlinesongs.domain.usecase.GetTopGlobalSongsUseCase
+import com.tubes1.purritify.features.onlinesongs.presentation.LinkLandingViewModel
 import com.tubes1.purritify.features.onlinesongs.presentation.OnlineChartsViewModel
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
@@ -29,6 +31,7 @@ val onlineSongsModule = module {
     
     factory { GetTopGlobalSongsUseCase(onlineSongsRepository = get()) } 
     factory { GetTopCountrySongsUseCase(onlineSongsRepository = get()) }
+    factory { GetOnlineSongUseCase(onlineSongsRepository = get()) }
     factory { DownloadServerSongUseCase(get(), get(), androidContext()) }
 
     viewModel { 
@@ -40,5 +43,8 @@ val onlineSongsModule = module {
             serverSongRepository = get(),
             savedStateHandle = get()
         )
+    }
+    viewModel {
+        LinkLandingViewModel( get(), get(), get(), get() )
     }
 }

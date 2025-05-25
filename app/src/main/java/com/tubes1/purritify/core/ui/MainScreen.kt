@@ -1,5 +1,6 @@
 package com.tubes1.purritify.core.ui
 
+import android.content.Intent
 import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
@@ -37,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
+import androidx.navigation.navDeepLink
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.tubes1.purritify.MainActivity
 import com.tubes1.purritify.core.common.network.Connectivity
@@ -45,9 +47,11 @@ import com.tubes1.purritify.core.common.network.ConnectivityStatusSnackbar
 import com.tubes1.purritify.core.common.utils.ReadToken
 import com.tubes1.purritify.features.audiorouting.presentation.AudioDeviceSelectionScreen
 import com.tubes1.purritify.features.auth.presentation.login.LoginPage
+import com.tubes1.purritify.features.musicplayer.domain.repository.MusicPlayerRepository
 import com.tubes1.purritify.features.musicplayer.presentation.musicplayer.MusicPlayerScreen
 import com.tubes1.purritify.features.musicplayer.presentation.musicplayer.MusicPlayerViewModel
 import com.tubes1.purritify.features.musicplayer.presentation.musicplayer.component.MiniPlayer
+import com.tubes1.purritify.features.onlinesongs.presentation.LinkLandingScreen
 import com.tubes1.purritify.features.onlinesongs.presentation.OnlineChartsScreen
 import com.tubes1.purritify.features.onlinesongs.presentation.OnlineChartsViewModel
 import com.tubes1.purritify.features.soundcapsule.presentation.SoundCapsuleScreen
@@ -176,6 +180,17 @@ fun MainScreen(
                         arguments = listOf(navArgument(OnlineChartsViewModel.NAV_ARG_CHART_TYPE) { type = NavType.StringType })
                     ) {
                         OnlineChartsScreen(navController = navController)
+                    }
+                    composable(
+                        route = "deeplink/{song_id}",
+                        arguments = listOf(navArgument("song_id") { type = NavType.LongType }),
+                        deepLinks = listOf(navDeepLink {
+                            uriPattern = "purrytify://song/{song_id}"
+                            action = Intent.ACTION_VIEW
+                        })
+                    ) { backStackEntry ->
+                        val songId = backStackEntry.arguments?.getLong("song_id") ?: return@composable
+                        LinkLandingScreen(songId = songId, navController = navController)
                     }
                 }
 

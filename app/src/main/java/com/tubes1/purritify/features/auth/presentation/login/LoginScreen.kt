@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
@@ -84,6 +85,7 @@ fun LoginPage(
             .fillMaxSize()
             .background(Color(0xFF121212))
             .verticalScroll(rememberScrollState())
+            .imePadding()
     ) {
         // Background Image
         Image(
@@ -99,8 +101,8 @@ fun LoginPage(
         // Logo dan judul
         Column(
             modifier = Modifier
-                .align(Alignment.Center)
-                .padding(horizontal = 32.dp),
+                .align(Alignment.TopCenter)
+                .padding(horizontal = 32.dp, vertical = 50.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Logo dan judul

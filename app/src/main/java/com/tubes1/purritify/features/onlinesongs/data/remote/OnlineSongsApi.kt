@@ -19,4 +19,8 @@ interface OnlineSongsApi {
         @Path("country_code") countryCode: String
     ): List<ServerSongDto> 
 
+    @GET("api/songs/{song_id}")
+    suspend fun getOnlineSong(
+        @Path("song_id") songId: Long
+    ): ServerSongDto
 }
