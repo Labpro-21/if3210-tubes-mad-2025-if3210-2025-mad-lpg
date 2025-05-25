@@ -21,7 +21,7 @@ val libraryModule = module {
 
     single { MediaStoreHelper(get()) }
 
-    viewModel { HomePageViewModel(get(), get(), get()) }
+    viewModel { HomePageViewModel(get(), get()) }
     viewModel { LibraryPageViewModel(get(), get()) }
     viewModel { UploadSongViewModel(get(), get(), get()) }
 }

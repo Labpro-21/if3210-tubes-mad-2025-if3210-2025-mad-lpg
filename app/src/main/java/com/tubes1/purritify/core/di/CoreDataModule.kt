@@ -19,7 +19,7 @@ val coreDataModule = module {
     }
 
     single<ServerSongRepository> {
-        ServerSongRepositoryImpl(get(), get())
+        ServerSongRepositoryImpl(get())
     }
 
     single { UserPreferencesRepository(androidContext()) }

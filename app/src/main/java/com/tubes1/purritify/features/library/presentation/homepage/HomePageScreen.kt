@@ -48,8 +48,7 @@ import com.tubes1.purritify.features.library.presentation.homepage.components.So
 import com.tubes1.purritify.features.library.presentation.homepage.components.TopChartItem
 import com.tubes1.purritify.features.musicplayer.presentation.musicplayer.MusicPlayerViewModel
 import com.tubes1.purritify.features.musicplayer.presentation.musicplayer.SharedPlayerViewModel
-import com.tubes1.purritify.features.onlinesongs.presentation.onlinesongs.OnlineSongsViewModel
-import com.tubes1.purritify.features.onlinesongs.presentation.onlinesongs.SongType
+import com.tubes1.purritify.features.onlinesongs.data.remote.OnlineSongsApi
 import com.tubes1.purritify.features.profile.presentation.profile.ProfileViewModel
 import org.koin.androidx.compose.koinViewModel
 
@@ -60,7 +59,6 @@ fun HomeScreen(
     viewModel: HomePageViewModel = koinViewModel(),
     sharedPlayerViewModel: SharedPlayerViewModel = koinViewModel(),
     musicPlayerViewModel: MusicPlayerViewModel = koinViewModel(),
-    onlineSongsViewModel: OnlineSongsViewModel = koinViewModel(),
     profileViewModel: ProfileViewModel = koinViewModel()
 ) {
     val state by viewModel.state.collectAsState()
@@ -171,8 +169,8 @@ fun HomeScreen(
                             title = "TOP 50",
                             subtitle = "Global",
                             onClick = {
-                                onlineSongsViewModel.loadSongs(SongType.GLOBAL)
-                                navController.navigate(Screen.OnlineSongs.route)
+                                navController.navigate(Screen.OnlineChartsScreen.createRoute(
+                                    OnlineSongsApi.COUNTRY_CODE_GLOBAL))
                             }
                         )
                     }
@@ -183,8 +181,7 @@ fun HomeScreen(
                             title = "TOP 50",
                             subtitle = "Indo",
                             onClick = {
-                                onlineSongsViewModel.loadSongs(SongType.COUNTRY, profileState.profile!!.location)
-                                navController.navigate(Screen.OnlineSongs.route)
+                                navController.navigate(Screen.OnlineChartsScreen.createRoute("ID"))
                             }
                         )
                     }

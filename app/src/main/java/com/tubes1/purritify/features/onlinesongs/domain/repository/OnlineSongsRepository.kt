@@ -1,10 +1,12 @@
 package com.tubes1.purritify.features.onlinesongs.domain.repository
 
-import com.tubes1.purritify.core.domain.model.Song
-import com.tubes1.purritify.features.onlinesongs.data.remote.dto.OnlineSongsDto
+import com.tubes1.purritify.core.common.utils.Resource
+import com.tubes1.purritify.features.onlinesongs.domain.model.ChartSong
 import kotlinx.coroutines.flow.Flow
 
 interface OnlineSongsRepository {
-    fun getTopGlobalSongs(): Flow<List<Song>>
-    fun getTopCountrySongs(countryCode: String): Flow<List<Song>>
+
+    fun getTopGlobalChartSongs(): Flow<Resource<List<ChartSong>>>
+
+    fun getTopCountryChartSongs(countryCode: String): Flow<Resource<List<ChartSong>>>
 }

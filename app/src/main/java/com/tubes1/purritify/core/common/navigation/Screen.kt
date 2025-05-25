@@ -1,5 +1,7 @@
 package com.tubes1.purritify.core.common.navigation
 
+import com.tubes1.purritify.features.onlinesongs.presentation.OnlineChartsViewModel
+
 sealed class Screen(val route: String) {
     object Home : Screen("beranda")
     object Library : Screen("koleksi")
@@ -9,5 +11,7 @@ sealed class Screen(val route: String) {
     object Settings : Screen("settings")
     object AudioDeviceSelection : Screen("audio-device-selection")
     object SoundCapsule : Screen("analitik")
-    object OnlineSongs: Screen("online-songs")
+    object OnlineChartsScreen : Screen("online-charts-screen/{${OnlineChartsViewModel.NAV_ARG_CHART_TYPE}}") {
+        fun createRoute(chartType: String) = "online-charts-screen/$chartType"
+    }
 }

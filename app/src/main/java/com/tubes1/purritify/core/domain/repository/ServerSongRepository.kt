@@ -1,11 +1,21 @@
 package com.tubes1.purritify.core.domain.repository
 
-import com.tubes1.purritify.core.domain.model.Song
+import com.tubes1.purritify.core.domain.model.ServerSong
 
 interface ServerSongRepository {
-    suspend fun getSongLocalId(serverId: Long): Long?
-    suspend fun getSongServerId(localId: Long): Long?
-    suspend fun getIsDownloadedServer(serverId: Long): Boolean?
-    suspend fun getIsDownloadedLocal(localId: Long): Boolean?
-    suspend fun insertSong(song: Song): Long?
+
+    suspend fun getServerSongByServerId(serverId: Long): ServerSong?
+
+
+    suspend fun getServerSongByLocalId(localId: Long): ServerSong?
+
+
+    suspend fun linkServerSongToLocalSong(serverId: Long, localSongId: Long, isInitiallyDownloaded: Boolean = false): ServerSong?
+
+
+    suspend fun updateServerSong(serverSong: ServerSong): Int
+
+
+
+
 }
