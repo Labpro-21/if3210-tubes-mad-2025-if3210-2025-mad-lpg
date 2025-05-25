@@ -1,5 +1,6 @@
 package com.tubes1.purritify.features.onlinesongs.presentation.components
 
+import android.content.Intent
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -36,6 +37,7 @@ fun ChartSongItem(
     modifier: Modifier = Modifier
 ) {
     var menuExpanded by remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
     Card(
         modifier = modifier
@@ -143,6 +145,16 @@ fun ChartSongItem(
                         text = { Text("Bagikan") },
                         onClick = {
                             menuExpanded = false
+                            val deepLinkUrl = "purrytify://song/${chartSong.serverId}"
+
+                            val sendIntent = Intent().apply {
+                                action = Intent.ACTION_SEND
+                                putExtra(Intent.EXTRA_TEXT, "Dengerin lagu ini di Purrytify:\n$deepLinkUrl")
+                                type = "text/plain"
+                            }
+
+                            val shareIntent = Intent.createChooser(sendIntent, "Bagikan lagu via")
+                            context.startActivity(shareIntent)
                         },
                         leadingIcon = { Icon(Icons.Filled.Share, contentDescription = "Bagikan") }
                     )

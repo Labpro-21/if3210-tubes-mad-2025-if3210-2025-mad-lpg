@@ -18,7 +18,7 @@ import com.tubes1.purritify.core.data.local.entity.SongEntity
         ServerSongEntity::class,
         ArtistsCount::class
     ],
-    version = 5,
+    version = 6,
     exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
