@@ -62,4 +62,10 @@ interface PlayHistoryDao {
 
     @Query("SELECT EXISTS (SELECT 1 FROM play_history WHERE songId = :songId AND datetime >= :dayStartMillis AND datetime < :dayEndMillis LIMIT 1)")
     suspend fun wasSongPlayedOnDay(songId: Long, dayStartMillis: Long, dayEndMillis: Long): Boolean
+
+    @Query("SELECT DISTINCT month FROM play_history ORDER BY month DESC")
+    fun getDistinctMonthsWithHistory(): Flow<List<String>> // Returns list of "YYYY-MM"
+
+    @Query("SELECT month FROM play_history ORDER BY month ASC LIMIT 1")
+    fun getEarliestMonthWithHistory(): Flow<String?>
 }

@@ -14,6 +14,7 @@ import com.tubes1.purritify.features.audiorouting.domain.model.AudioDevice
 import com.tubes1.purritify.features.musicplayer.data.service.MusicPlayerService
 import com.tubes1.purritify.features.musicplayer.domain.model.MusicPlayerState
 import com.tubes1.purritify.features.musicplayer.domain.repository.MusicPlayerRepository
+import com.tubes1.purritify.features.soundcapsule.domain.usecase.GetCurrentMonthTimeListenedUseCase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -23,17 +24,22 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
 
 class MusicPlayerRepositoryImpl(
     private val context: Context,
     private val userPreferencesRepository: UserPreferencesRepository,
     private val playHistoryDao: PlayHistoryDao
-) : MusicPlayerRepository {
+) : MusicPlayerRepository, GetCurrentMonthTimeListenedUseCase.MusicPlayerServiceFlows {
 
     private var musicService: MusicPlayerService? = null
     private val _serviceBoundFlow = MutableStateFlow(false)
@@ -157,6 +163,36 @@ class MusicPlayerRepositoryImpl(
     override fun getPreferredAudioDevice(): Flow<AudioDevice?> {
         return userPreferencesRepository.preferredAudioDeviceFlow
     }
+
+    override fun getCurrentPlayingSongId(): Flow<Long?> = serviceBoundFlow.flatMapLatest { isBound ->
+        if (isBound && musicService != null) {
+            musicService!!.currentSong.map { it?.id }
+        } else {
+            flowOf(null)
+        }
+    }.distinctUntilChanged()
+
+    override fun getLiveElapsedTimeMs(): Flow<Long> = serviceBoundFlow.flatMapLatest { isBound ->
+        if (isBound && musicService != null) {
+            musicService!!.liveElapsedTimeMs
+        } else {
+            flowOf(0L)
+        }
+    }.distinctUntilChanged()
+
+    override fun getCurrentSongMonthYear(): Flow<String?> = serviceBoundFlow.flatMapLatest { isBound ->
+        if (isBound && musicService != null) {
+            musicService!!.currentSong.map { song ->
+                song?.lastPlayed?.let { ts -> // Or song.dateAdded if lastPlayed is not always set
+                    val cal = Calendar.getInstance()
+                    cal.timeInMillis = ts
+                    SimpleDateFormat("yyyy-MM", Locale.getDefault()).format(cal.time)
+                }
+            }
+        } else {
+            flowOf(null)
+        }
+    }.distinctUntilChanged()
 
     private suspend fun <T> callServiceMethod(
         actionDescription: String,

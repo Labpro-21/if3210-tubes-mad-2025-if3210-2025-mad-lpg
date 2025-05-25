@@ -16,9 +16,6 @@ data class AudioDevice(
     @Transient val underlyingSystemApiDevice: AudioDeviceInfo? = null,
     @Transient val underlyingBluetoothDevice: AndroidBluetoothDevice? = null
 ) {
-
-
-
     val uniqueKey: String
         get() = address ?: "system_${systemApiId}_${systemDeviceType}"
 

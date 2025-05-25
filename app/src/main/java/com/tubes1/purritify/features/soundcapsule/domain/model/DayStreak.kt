@@ -6,5 +6,5 @@ data class DayStreak(
     val artist: String,
     val songArtUri: String?,
     val streakDays: Int,
-    val lastDayOfStreak: Long // Timestamp of the last day in the streak
+    val lastDayOfStreak: Long
 )

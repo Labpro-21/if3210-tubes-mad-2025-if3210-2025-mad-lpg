@@ -8,7 +8,11 @@ interface SoundCapsuleRepository {
 
     fun getMonthlyAnalytics(monthYear: String): Flow<MonthlyAnalytics>
 
-    fun getTotalTimeListenedForMonth(monthYear: String): Flow<Long> // Returns 0L if no data
+    fun getTotalTimeListenedForMonth(monthYear: String): Flow<Long>
 
     fun getRawPlayHistoryForMonth(monthYear: String): Flow<List<PlayHistoryEntity>>
+
+    fun getAvailableMonths(): Flow<List<String>>
+
+    fun getEarliestMonth(): Flow<String?>
 }

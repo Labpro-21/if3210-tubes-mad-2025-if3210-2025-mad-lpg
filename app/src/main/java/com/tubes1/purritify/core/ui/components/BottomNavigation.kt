@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Analytics
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.Icon
@@ -36,11 +37,11 @@ fun BottomNavigation(
     currentRoute: String?,
     modifier: Modifier = Modifier
 ) {
-    val items = listOf(Screen.Home, Screen.Library, Screen.Profile)
+    val items = listOf(Screen.Home, Screen.Library, Screen.SoundCapsule)
     val icons = listOf(
         Icons.Outlined.Home,
         ImageVector.vectorResource(id = R.drawable.library_icon),
-        Icons.Outlined.Person
+        Icons.Outlined.Analytics
     )
 
     Surface(
