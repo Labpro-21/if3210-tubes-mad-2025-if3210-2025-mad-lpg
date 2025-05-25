@@ -71,7 +71,7 @@ class ProfileViewModel(
                             is Resource.Error -> {
                                 _state.value = _state.value.copy(
                                     isLoading = false,
-                                    error = resource.message ?: "Login gagal"
+                                    error = resource.message ?: "Gagal mengambil profil"
                                 )
                             }
 

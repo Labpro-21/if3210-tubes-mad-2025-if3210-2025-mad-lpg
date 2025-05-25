@@ -3,11 +3,17 @@ package com.tubes1.purritify.features.library.presentation.homepage
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.tubes1.purritify.core.common.utils.ReadToken
+import com.tubes1.purritify.core.common.utils.Resource
 import com.tubes1.purritify.core.domain.model.Song
 import com.tubes1.purritify.core.domain.usecase.getsongs.GetRecommendedSongsUseCase
 import com.tubes1.purritify.features.library.domain.usecase.getsongs.GetNewlyAddedSongsUseCase
 import com.tubes1.purritify.features.library.domain.usecase.getsongs.GetRecentlyPlayedSongsUseCase
 import com.tubes1.purritify.features.musicplayer.domain.usecase.playback.PlaySongUseCase
+import com.tubes1.purritify.features.profile.domain.usecase.getprofile.GetProfilePhotoUseCase
+import com.tubes1.purritify.features.profile.domain.usecase.getprofile.GetProfileUseCase
+import com.tubes1.purritify.features.profile.presentation.profile.ProfilePhotoState
+import com.tubes1.purritify.features.profile.presentation.profile.ProfileState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -19,13 +25,18 @@ class HomePageViewModel(
     private val getNewlyAddedSongsUseCase: GetNewlyAddedSongsUseCase,
     private val getRecentlyPlayedSongsUseCase: GetRecentlyPlayedSongsUseCase,
     private val getRecommendedSongsUseCase: GetRecommendedSongsUseCase,
-    private val playSongUseCase: PlaySongUseCase
+    private val playSongUseCase: PlaySongUseCase,
+    private val readToken: ReadToken,
+    private val getProfileUseCase: GetProfileUseCase
 ) : ViewModel() {
-
     private val _state = MutableStateFlow(HomePageState())
     val state: StateFlow<HomePageState> = _state.asStateFlow()
 
+    private val _profile_state = MutableStateFlow(ProfileState())
+    val profile_state: StateFlow<ProfileState> = _profile_state.asStateFlow()
+
     init {
+        getProfile()
         loadNewlyAddedSongs()
         loadRecentlyPlayedSongs()
         loadRecommendedSongs()
@@ -114,5 +125,51 @@ class HomePageViewModel(
 
     fun clearError() {
         _state.update { it.copy(error = null) }
+    }
+
+    private fun getProfile() {
+        viewModelScope.launch {
+            val token = readToken()
+            if (token == "") {
+                _profile_state.value = _profile_state.value.copy(
+                    tokenExpired = true
+                )
+                return@launch
+            }
+
+            try {
+                getProfileUseCase("Bearer $token")
+                    .collect { resource ->
+                        when (resource) {
+                            is Resource.Success -> {
+                                _profile_state.value = ProfileState(
+                                    isLoading = false,
+                                    profile = resource.data,
+                                    error = ""
+                                )
+                            }
+
+                            is Resource.Error -> {
+                                _profile_state.value = _profile_state.value.copy(
+                                    isLoading = false,
+                                    error = resource.message ?: "Gagal mengambil profil"
+                                )
+                            }
+
+                            is Resource.Loading -> {
+                                _profile_state.value = _profile_state.value.copy(
+                                    isLoading = true,
+                                    error = ""
+                                )
+                            }
+                        }
+                    }
+            } catch (e: Exception) {
+                _profile_state.value = _profile_state.value.copy(
+                    isLoading = false,
+                    error = e.message ?: "Terjadi kesalahan saat merequest profil"
+                )
+            }
+        }
     }
 }
