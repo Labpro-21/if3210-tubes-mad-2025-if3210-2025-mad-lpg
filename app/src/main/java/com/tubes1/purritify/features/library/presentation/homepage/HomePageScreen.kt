@@ -48,7 +48,9 @@ import com.tubes1.purritify.features.library.presentation.homepage.components.So
 import com.tubes1.purritify.features.library.presentation.homepage.components.TopChartItem
 import com.tubes1.purritify.features.musicplayer.presentation.musicplayer.MusicPlayerViewModel
 import com.tubes1.purritify.features.musicplayer.presentation.musicplayer.SharedPlayerViewModel
-import com.tubes1.purritify.features.musicplayer.presentation.musicplayer.component.MiniPlayer
+import com.tubes1.purritify.features.onlinesongs.presentation.onlinesongs.OnlineSongsViewModel
+import com.tubes1.purritify.features.onlinesongs.presentation.onlinesongs.SongType
+import com.tubes1.purritify.features.profile.presentation.profile.ProfileViewModel
 import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalGlideComposeApi::class)
@@ -57,9 +59,12 @@ fun HomeScreen(
     navController: NavController,
     viewModel: HomePageViewModel = koinViewModel(),
     sharedPlayerViewModel: SharedPlayerViewModel = koinViewModel(),
-    musicPlayerViewModel: MusicPlayerViewModel = koinViewModel()
+    musicPlayerViewModel: MusicPlayerViewModel = koinViewModel(),
+    onlineSongsViewModel: OnlineSongsViewModel = koinViewModel(),
+    profileViewModel: ProfileViewModel = koinViewModel()
 ) {
     val state by viewModel.state.collectAsState()
+    val profileState = profileViewModel.state.collectAsState().value
 
     val backgroundGradient = Brush.verticalGradient(
         colors = listOf(
@@ -166,7 +171,8 @@ fun HomeScreen(
                             title = "TOP 50",
                             subtitle = "Global",
                             onClick = {
-                                // In Progress
+                                onlineSongsViewModel.loadSongs(SongType.GLOBAL)
+                                navController.navigate(Screen.OnlineSongs.route)
                             }
                         )
                     }
@@ -177,7 +183,8 @@ fun HomeScreen(
                             title = "TOP 50",
                             subtitle = "Indo",
                             onClick = {
-                                // In Progress
+                                onlineSongsViewModel.loadSongs(SongType.COUNTRY, profileState.profile!!.location)
+                                navController.navigate(Screen.OnlineSongs.route)
                             }
                         )
                     }
