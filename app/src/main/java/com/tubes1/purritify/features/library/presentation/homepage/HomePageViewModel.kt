@@ -4,18 +4,21 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tubes1.purritify.core.domain.model.Song
+import com.tubes1.purritify.core.domain.usecase.getsongs.GetRecommendedSongsUseCase
 import com.tubes1.purritify.features.library.domain.usecase.getsongs.GetNewlyAddedSongsUseCase
 import com.tubes1.purritify.features.library.domain.usecase.getsongs.GetRecentlyPlayedSongsUseCase
 import com.tubes1.purritify.features.musicplayer.domain.usecase.playback.PlaySongUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class HomePageViewModel(
     private val getNewlyAddedSongsUseCase: GetNewlyAddedSongsUseCase,
     private val getRecentlyPlayedSongsUseCase: GetRecentlyPlayedSongsUseCase,
+    private val getRecommendedSongsUseCase: GetRecommendedSongsUseCase,
     private val playSongUseCase: PlaySongUseCase
 ) : ViewModel() {
 
@@ -71,6 +74,31 @@ class HomePageViewModel(
                     it.copy(
                         isLoadingRecentSongs = false,
                         error = "Gagal memuat lagu yang akhir-akhir ini dimainkan: ${e.localizedMessage}"
+                    )
+                }
+            }
+        }
+    }
+
+    private fun loadRecommendedSongs() {
+        viewModelScope.launch {
+            _state.update { it.copy(isLoadingRecommendedSongs = true) }
+
+            try {
+                getRecommendedSongsUseCase().collect { songs ->
+                    _state.update {
+                        it.copy(
+                            recommendedSongs = songs,
+                            isLoadingRecommendedSongs = false
+                        )
+                    }
+                }
+            } catch (e: Exception) {
+                _state.update {
+                    Log.e("HomePageViewModel", "Error loading recommended songs: ${e.localizedMessage}")
+                    it.copy(
+                        isLoadingRecommendedSongs = false,
+                        error = "Gagal memuat rekomendasi lagu: ${e.localizedMessage}"
                     )
                 }
             }

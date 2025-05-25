@@ -24,6 +24,21 @@ interface SongDao {
     @Query("SELECT * FROM song WHERE lastPlayed IS NOT NULL ORDER BY title ASC")
     fun getAllListenedSongs(): Flow<List<SongEntity>>
 
+    @Query("""
+    SELECT * FROM song
+    WHERE EXISTS (
+        SELECT 1 FROM artists_count
+        WHERE song.artist LIKE '%' || name || '%'
+    )
+    ORDER BY (
+        SELECT likedCount FROM artists_count
+        WHERE song.artist LIKE '%' || name || '%'
+        LIMIT 1
+    ) DESC
+    LIMIT 10
+""")
+    fun getRecommendedSongs(): Flow<List<SongEntity>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSong(song: SongEntity): Long
 

@@ -1,4 +1,4 @@
-package com.tubes1.purritify.core.data.local
+package com.tubes1.purritify.core.data.datastore
 
 import android.content.Context
 import androidx.datastore.dataStore

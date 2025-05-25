@@ -251,7 +251,40 @@ fun HomeScreen(
                     )
                 }
             }
-        }
 
+            // recommendation section
+            item {
+                Text(
+                    text = "Disarankan untukmu",
+                    color = Color.White,
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    modifier = Modifier.padding(top = 24.dp, bottom = 12.dp)
+                )
+            }
+
+            if (state.recommendedSongs.isEmpty()) {
+                item {
+                    Text(
+                        text = "Belum ada rekomendasi untukmu",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = Color.White,
+                        modifier = Modifier.fillMaxWidth().padding(16.dp),
+                        textAlign = TextAlign.Left
+                    )
+                }
+            } else {
+                items(state.recommendedSongs) { song ->
+                    SongListItem(
+                        song = song,
+                        onClick = {
+                            sharedPlayerViewModel.setSongAndQueue(song, state.recentlyPlayedSongs)
+                            navController.navigate(Screen.MusicPlayer.route)
+                            musicPlayerViewModel.playSong(song, state.recentlyPlayedSongs)
+                        }
+                    )
+                }
+            }
+        }
     }
 }

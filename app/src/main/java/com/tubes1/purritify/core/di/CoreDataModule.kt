@@ -8,12 +8,11 @@ import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
 
 val coreDataModule = module {
-    single {
-        get<AppDatabase>().songDao()
-    }
+    single { get<AppDatabase>().songDao() }
+    single { get<AppDatabase>().artistsCountDao() }
 
     single<SongRepository> {
-        SongRepositoryImpl(get())
+        SongRepositoryImpl(get(), get())
     }
 
     single { UserPreferencesRepository(androidContext()) }

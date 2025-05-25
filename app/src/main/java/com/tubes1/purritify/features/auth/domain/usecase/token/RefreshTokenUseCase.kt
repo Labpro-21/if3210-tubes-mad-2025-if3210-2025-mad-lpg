@@ -2,7 +2,7 @@ package com.tubes1.purritify.features.auth.domain.usecase.token
 
 import android.content.Context
 import com.tubes1.purritify.core.common.utils.Resource
-import com.tubes1.purritify.core.data.local.userPreferencesDataStore
+import com.tubes1.purritify.core.data.datastore.userPreferencesDataStore
 import com.tubes1.purritify.features.auth.data.remote.dto.RefreshRequest
 import com.tubes1.purritify.features.auth.data.remote.dto.toToken
 import com.tubes1.purritify.features.auth.domain.model.Token
