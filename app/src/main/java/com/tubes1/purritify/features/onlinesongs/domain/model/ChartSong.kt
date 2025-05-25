@@ -17,15 +17,14 @@ data class ChartSong(
 
 fun ChartSong.toPlayerSong(): Song {
     return Song(
-        id = this.localSongId, 
+        id = this.localSongId,
         title = this.title,
         artist = this.artist,
         duration = this.durationMillis,
-        path = this.streamUrl, 
-        songArtUri = this.artworkUrl, 
-        dateAdded = System.currentTimeMillis(), 
-        lastPlayed = null,
-        isFavorited = false, 
+        path = this.streamUrl,
+        songArtUri = this.artworkUrl,
+        dateAdded = System.currentTimeMillis(),
+        isFavorited = false,
         isFromServer = true
     )
 }
