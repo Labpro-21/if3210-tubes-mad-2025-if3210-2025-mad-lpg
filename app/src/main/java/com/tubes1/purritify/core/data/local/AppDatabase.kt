@@ -2,6 +2,7 @@ package com.tubes1.purritify.core.data.local
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
+import com.tubes1.purritify.core.data.local.dao.ArtistsCountDao
 import com.tubes1.purritify.core.data.local.dao.PlayHistoryDao
 import com.tubes1.purritify.core.data.local.dao.ServerSongDao
 import com.tubes1.purritify.core.data.local.dao.SongDao
