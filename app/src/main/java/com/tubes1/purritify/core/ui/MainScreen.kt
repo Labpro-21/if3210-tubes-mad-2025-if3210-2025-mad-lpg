@@ -5,10 +5,13 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -35,8 +38,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
+import androidx.navigation.NavController
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.tubes1.purritify.MainActivity
+import com.tubes1.purritify.core.common.navigation.isLandscape
 import com.tubes1.purritify.core.common.network.Connectivity
 import com.tubes1.purritify.core.common.network.ConnectivityObserver
 import com.tubes1.purritify.core.common.network.ConnectivityStatusSnackbar
@@ -45,11 +50,47 @@ import com.tubes1.purritify.features.audiorouting.presentation.AudioDeviceSelect
 import com.tubes1.purritify.features.auth.presentation.login.LoginPage
 import com.tubes1.purritify.features.musicplayer.presentation.musicplayer.MusicPlayerScreen
 import com.tubes1.purritify.features.musicplayer.presentation.musicplayer.MusicPlayerViewModel
+import com.tubes1.purritify.features.musicplayer.presentation.musicplayer.PlayerUiState
 import com.tubes1.purritify.features.musicplayer.presentation.musicplayer.component.MiniPlayer
 import com.tubes1.purritify.features.soundcapsule.presentation.SoundCapsuleScreen
 import kotlinx.coroutines.flow.StateFlow
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
+
+@Composable
+fun AnimatedVisibilityX (
+    shouldShowMiniPlayer: Boolean,
+    playerState: PlayerUiState,
+    playerViewModel: MusicPlayerViewModel,
+    currentRoute: String?,
+    navController: NavController
+) {
+    Box {
+        AnimatedVisibility(
+            visible = shouldShowMiniPlayer,
+            enter = slideInVertically(initialOffsetY = { it }),
+            exit = slideOutVertically(targetOffsetY = { it }),
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+        ) {
+            MiniPlayer(
+                playerUiState = playerState,
+                onPlayPauseClick = { playerViewModel.togglePlayPause() },
+                onPreviousClick = { playerViewModel.playPrevious() },
+                onNextClick = { playerViewModel.playNext() },
+                onCloseClick = {
+                    Log.d("MainScreen", "MiniPlayer Close clicked")
+                    playerViewModel.stopPlayback()
+                },
+                onMiniPlayerClick = {
+                    if (currentRoute != Screen.MusicPlayer.route) {
+                        navController.navigate(Screen.MusicPlayer.route)
+                    }
+                }
+            )
+        }
+    }
+}
 
 @Composable
 fun MainScreen(
@@ -107,94 +148,177 @@ fun MainScreen(
         Log.d("MainScreen", "Start destination determined: $startDestination")
     }
 
-    if (startDestination != null) {
-        Scaffold(
-            bottomBar = {
-                if (currentRoute != Screen.Login.route) {
-                    BottomNavigation(
-                        onClick = { },
-                        navController = navController,
-                        currentRoute = currentRoute,
-                    )
-                }
-            },
-            containerColor = Color.Black
-        ) { paddingValues ->
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-            ) {
-                ConnectivityStatusSnackbar()
+    if (isLandscape()) {
+        Row(modifier = Modifier.fillMaxSize()) {
+            BottomNavigation(
+                onClick = { },
+                navController = navController,
+                currentRoute = currentRoute,
+                modifier = Modifier.fillMaxHeight().width(200.dp)
+            )
 
-                NavHost(
-                    navController = navController,
-                    startDestination = startDestination!!,
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    composable(Screen.Home.route) {
-                        HomeScreen(navController = navController)
-                    }
-                    composable(Screen.Library.route) {
-                        LibraryScreen(navController = navController)
-                    }
-                    composable(Screen.Profile.route) {
-                        ProfileScreen(navController = navController)
-                    }
-                    composable(Screen.Settings.route) {
-                        SettingsScreen(navController = navController)
-                    }
-                    composable(Screen.SoundCapsule.route) {
-                        SoundCapsuleScreen(navController = navController)
-                    }
-                    composable(Screen.AudioDeviceSelection.route) {
-                        AudioDeviceSelectionScreen(navController = navController)
-                    }
-                    composable(Screen.MusicPlayer.route) {
-                        MusicPlayerScreen(
-                            onBackPressed = {
-                                if (navController.previousBackStackEntry != null) {
-                                    navController.popBackStack()
-                                } else {
-                                    navController.navigate(Screen.Home.route) { popUpTo(Screen.MusicPlayer.route) { inclusive = true } }
-                                }
-                            },
-                            playerViewModel = playerViewModel
-                        )
-                    }
-                    composable(Screen.Login.route) {
-                        LoginPage(navController = navController)
-                    }
-                }
+            if (startDestination != null) {
+                Scaffold(
+                    containerColor = Color.Black
+                ) { paddingValues ->
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(paddingValues),
+                        contentAlignment = Alignment.BottomCenter
+                    ) {
+                        ConnectivityStatusSnackbar()
 
-                AnimatedVisibility(
-                    visible = shouldShowMiniPlayer,
-                    enter = slideInVertically(initialOffsetY = { it }),
-                    exit = slideOutVertically(targetOffsetY = { it }),
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                ) {
-                    MiniPlayer(
-                        playerUiState = playerState,
-                        onPlayPauseClick = { playerViewModel.togglePlayPause() },
-                        onPreviousClick = { playerViewModel.playPrevious() },
-                        onNextClick = { playerViewModel.playNext() },
-                        onCloseClick = {
-                            Log.d("MainScreen", "MiniPlayer Close clicked")
-                            playerViewModel.stopPlayback()
-                        },
-                        onMiniPlayerClick = {
-                            if (currentRoute != Screen.MusicPlayer.route) {
-                                navController.navigate(Screen.MusicPlayer.route)
+                        NavHost(
+                            navController = navController,
+                            startDestination = startDestination!!,
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            composable(Screen.Home.route) {
+                                HomeScreen(navController = navController)
+                            }
+                            composable(Screen.Library.route) {
+                                LibraryScreen(navController = navController)
+                            }
+                            composable(Screen.Profile.route) {
+                                ProfileScreen(navController = navController)
+                            }
+                            composable(Screen.Settings.route) {
+                                SettingsScreen(navController = navController)
+                            }
+                            composable(Screen.SoundCapsule.route) {
+                                SoundCapsuleScreen(navController = navController)
+                            }
+                            composable(Screen.AudioDeviceSelection.route) {
+                                AudioDeviceSelectionScreen(navController = navController)
+                            }
+                            composable(Screen.MusicPlayer.route) {
+                                MusicPlayerScreen(
+                                    onBackPressed = {
+                                        if (navController.previousBackStackEntry != null) {
+                                            navController.popBackStack()
+                                        } else {
+                                            navController.navigate(Screen.Home.route) {
+                                                popUpTo(Screen.MusicPlayer.route) {
+                                                    inclusive = true
+                                                }
+                                            }
+                                        }
+                                    },
+                                    playerViewModel = playerViewModel
+                                )
+                            }
+                            composable(Screen.Login.route) {
+                                LoginPage(navController = navController)
                             }
                         }
-                    )
+                        AnimatedVisibilityX(shouldShowMiniPlayer, playerState, playerViewModel, currentRoute, navController)
+                    }
+                }
+
+            } else {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
                 }
             }
         }
     } else {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            CircularProgressIndicator()
+        if (startDestination != null) {
+            Scaffold(
+                bottomBar = {
+                    if (currentRoute != Screen.Login.route) {
+                        BottomNavigation(
+                            onClick = { },
+                            navController = navController,
+                            currentRoute = currentRoute,
+                        )
+                    }
+                },
+                containerColor = Color.Black
+            ) { paddingValues ->
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
+                    contentAlignment = Alignment.BottomCenter
+                ) {
+                    ConnectivityStatusSnackbar()
+
+                    NavHost(
+                        navController = navController,
+                        startDestination = startDestination!!,
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        composable(Screen.Home.route) {
+                            HomeScreen(navController = navController)
+                        }
+                        composable(Screen.Library.route) {
+                            LibraryScreen(navController = navController)
+                        }
+                        composable(Screen.Profile.route) {
+                            ProfileScreen(navController = navController)
+                        }
+                        composable(Screen.Settings.route) {
+                            SettingsScreen(navController = navController)
+                        }
+                        composable(Screen.SoundCapsule.route) {
+                            SoundCapsuleScreen(navController = navController)
+                        }
+                        composable(Screen.AudioDeviceSelection.route) {
+                            AudioDeviceSelectionScreen(navController = navController)
+                        }
+                        composable(Screen.MusicPlayer.route) {
+                            MusicPlayerScreen(
+                                onBackPressed = {
+                                    if (navController.previousBackStackEntry != null) {
+                                        navController.popBackStack()
+                                    } else {
+                                        navController.navigate(Screen.Home.route) {
+                                            popUpTo(Screen.MusicPlayer.route) {
+                                                inclusive = true
+                                            }
+                                        }
+                                    }
+                                },
+                                playerViewModel = playerViewModel
+                            )
+                        }
+                        composable(Screen.Login.route) {
+                            LoginPage(navController = navController)
+                        }
+                    }
+
+                    Box (contentAlignment = Alignment.BottomCenter) {
+                        AnimatedVisibility(
+                            visible = shouldShowMiniPlayer,
+                            enter = slideInVertically(initialOffsetY = { it }),
+                            exit = slideOutVertically(targetOffsetY = { it }),
+                            modifier = Modifier
+                                .align(Alignment.BottomCenter)
+                        ) {
+                            MiniPlayer(
+                                playerUiState = playerState,
+                                onPlayPauseClick = { playerViewModel.togglePlayPause() },
+                                onPreviousClick = { playerViewModel.playPrevious() },
+                                onNextClick = { playerViewModel.playNext() },
+                                onCloseClick = {
+                                    Log.d("MainScreen", "MiniPlayer Close clicked")
+                                    playerViewModel.stopPlayback()
+                                },
+                                onMiniPlayerClick = {
+                                    if (currentRoute != Screen.MusicPlayer.route) {
+                                        navController.navigate(Screen.MusicPlayer.route)
+                                    }
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+        } else {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
         }
     }
 }
