@@ -18,13 +18,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
@@ -60,7 +58,6 @@ import androidx.core.content.FileProvider
 import coil.compose.rememberAsyncImagePainter
 import com.google.android.gms.location.LocationServices
 import com.tubes1.purritify.R
-import com.tubes1.purritify.core.common.navigation.isLandscape
 import com.tubes1.purritify.features.profile.presentation.profile.EditProfileViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -313,77 +310,61 @@ fun EditProfile(
     }
 
     Dialog(onDismissRequest = onDismiss) {
-        if (isLandscape()) {
-            Surface(
-                shape = RoundedCornerShape(16.dp),
-                color = Color(0xFF1C1C1E),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
+        Surface(
+            shape = RoundedCornerShape(16.dp),
+            color = Color(0xFF1C1C1E),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(20.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Column(
-                    modifier = Modifier.padding(20.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                Text("Edit Profil", color = Color.White, style = MaterialTheme.typography.titleMedium)
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                // Edit picture
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(
-                        "Edit Profil",
-                        color = Color.White,
-                        style = MaterialTheme.typography.titleMedium
-                    )
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Image(
+                            painter = rememberAsyncImagePainter(model = cachedImageFile.value ?: R.drawable.image_icon),
+                            contentDescription = "Profile Picture Baru",
+                            modifier = Modifier
+                                .size(120.dp)
+                        )
 
-                    Spacer(modifier = Modifier.height(20.dp))
+                        Button(
+                            onClick = { showImagePickerDialog = true },
+                            enabled = !state.isLoading,
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2C2C2E)),
+                            shape = RoundedCornerShape(5.dp),
+                        ) {
+                            Text("Ubah Foto Profil")
+                        }
+                    }
+                }
 
-                    // Edit picture
-                    Box(
-                        contentAlignment = Alignment.Center,
+                Spacer(modifier = Modifier.height(20.dp))
+
+                // Lokasi
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color(0xFF2C2C2E))
+                        .padding(16.dp)
+                        .fillMaxWidth()
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween,
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        // Box agar bisa tumpuk gambar dan tombol
-                        Box(modifier = Modifier.size(120.dp)) {
-                            Image(
-                                painter = rememberAsyncImagePainter(
-                                    model = cachedImageFile.value ?: R.drawable.image_icon
-                                ),
-                                contentDescription = "Foto Profil",
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .clip(CircleShape)
-                            )
-
-                            IconButton(
-                                onClick = { showImagePickerDialog = true },
-                                modifier = Modifier
-                                    .align(Alignment.TopEnd)
-                                    .background(Color.White, shape = CircleShape)
-                                    .padding(2.dp)
-                                    .size(24.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Edit,
-                                    contentDescription = "Edit Foto",
-                                    tint = Color.Black,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                            }
-                        }
-
-                    }
-
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    // Lokasi
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(Color(0xFF2C2C2E))
-                            .padding(8.dp)
-                            .fillMaxWidth()
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
+                        Column {
                             Text("Lokasi:", color = Color.Gray)
                             if (isGettingLocation) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -393,11 +374,7 @@ fun EditProfile(
                                         modifier = Modifier.size(16.dp)
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
-                                    Text(
-                                        "Mendapatkan lokasi...",
-                                        color = Color.White,
-                                        fontWeight = FontWeight.Bold
-                                    )
+                                    Text("Mendapatkan lokasi...", color = Color.White, fontWeight = FontWeight.Bold)
                                 }
                             } else {
                                 Text(
@@ -406,231 +383,78 @@ fun EditProfile(
                                     fontWeight = FontWeight.Bold
                                 )
                             }
-                            IconButton(
-                                onClick = { showLocationPickerDialog = true },
-                                modifier = Modifier
-                                    .background(Color.White, shape = RoundedCornerShape(5.dp))
-                                    .size(24.dp)
-                            ) {
-                                Icon(
-                                    Icons.Default.Edit,
-                                    contentDescription = "Edit",
-                                    tint = Color.Black
-                                )
-                            }
                         }
-                    }
-
-                    Spacer(modifier = Modifier.height(24.dp))
-
-                    // Buttons
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Button(
-                            onClick = onDismiss,
-                            enabled = !state.isLoading,
-                            colors = ButtonDefaults.buttonColors(containerColor = Color.Gray),
-                            modifier = Modifier.weight(1f)
+                        IconButton(
+                            onClick = { showLocationPickerDialog = true },
+                            modifier = Modifier
+                                .background(Color.White, shape = RoundedCornerShape(5.dp))
+                                .size(24.dp)
                         ) {
-                            if (state.isLoading) {
-                                CircularProgressIndicator(
-                                    color = Color.White,
-                                    modifier = Modifier.semantics {
-                                        contentDescription = "Memperbarui profil"
-                                    }
-                                )
-                            } else {
-                                Text("Batalkan")
-                            }
+                            Icon(Icons.Default.Edit, contentDescription = "Edit", tint = Color.Black)
                         }
-                        Button(
-                            onClick = { save() },
-                            enabled = !state.isLoading,
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50)),
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            if (state.isLoading) {
-                                CircularProgressIndicator(
-                                    color = Color.White,
-                                    modifier = Modifier.semantics {
-                                        contentDescription = "Memperbarui profil"
-                                    }
-                                )
-                            } else {
-                                Text(
-                                    text = "Simpan"
-                                )
-                            }
-                        }
-                    }
-
-                    // Pesan error
-                    if (state.error.isNotBlank()) {
-                        Text(
-                            text = state.error,
-                            color = Color(0xffff4242),
-                            fontSize = 12.sp
-                        )
-                    } else if (state.isEditSuccess) {
-                        Text(
-                            text = "Edit profil berhasil",
-                            color = Color.Green,
-                            fontSize = 12.sp
-                        )
-                    } else {
-                        Text("")
                     }
                 }
-            }
-        } else {
-            Surface(
-                shape = RoundedCornerShape(16.dp),
-                color = Color(0xFF1C1C1E),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-            ) {
-                Column(
-                    modifier = Modifier.padding(20.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Buttons
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Edit Profil", color = Color.White, style = MaterialTheme.typography.titleMedium)
-
-                    Spacer(modifier = Modifier.height(20.dp))
-
-                    // Edit picture
-                    Box(
-                        contentAlignment = Alignment.Center,
-                        modifier = Modifier.fillMaxWidth()
+                    Button(
+                        onClick = onDismiss,
+                        enabled = !state.isLoading,
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.Gray),
+                        modifier = Modifier.weight(1f)
                     ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Image(
-                                painter = rememberAsyncImagePainter(model = cachedImageFile.value ?: R.drawable.image_icon),
-                                contentDescription = "Profile Picture Baru",
-                                modifier = Modifier
-                                    .size(120.dp)
-                            )
-
-                            Button(
-                                onClick = { showImagePickerDialog = true },
-                                enabled = !state.isLoading,
-                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2C2C2E)),
-                                shape = RoundedCornerShape(5.dp),
-                            ) {
-                                Text("Ubah Foto Profil")
-                            }
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(20.dp))
-
-                    // Lokasi
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(Color(0xFF2C2C2E))
-                            .padding(16.dp)
-                            .fillMaxWidth()
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Column {
-                                Text("Lokasi:", color = Color.Gray)
-                                if (isGettingLocation) {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        CircularProgressIndicator(
-                                            color = Color.White,
-                                            strokeWidth = 2.dp,
-                                            modifier = Modifier.size(16.dp)
-                                        )
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                        Text("Mendapatkan lokasi...", color = Color.White, fontWeight = FontWeight.Bold)
-                                    }
-                                } else {
-                                    Text(
-                                        text = country ?: "",
-                                        color = Color.White,
-                                        fontWeight = FontWeight.Bold
-                                    )
+                        if (state.isLoading) {
+                            CircularProgressIndicator(
+                                color = Color.White,
+                                modifier = Modifier.semantics {
+                                    contentDescription = "Memperbarui profil"
                                 }
-                            }
-                            IconButton(
-                                onClick = { showLocationPickerDialog = true },
-                                modifier = Modifier
-                                    .background(Color.White, shape = RoundedCornerShape(5.dp))
-                                    .size(24.dp)
-                            ) {
-                                Icon(Icons.Default.Edit, contentDescription = "Edit", tint = Color.Black)
-                            }
+                            )
+                        } else {
+                            Text("Batalkan")
                         }
                     }
-
-                    Spacer(modifier = Modifier.height(24.dp))
-
-                    // Buttons
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        modifier = Modifier.fillMaxWidth()
+                    Button(
+                        onClick = { save() },
+                        enabled = !state.isLoading,
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50)),
+                        modifier = Modifier.weight(1f)
                     ) {
-                        Button(
-                            onClick = onDismiss,
-                            enabled = !state.isLoading,
-                            colors = ButtonDefaults.buttonColors(containerColor = Color.Gray),
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            if (state.isLoading) {
-                                CircularProgressIndicator(
-                                    color = Color.White,
-                                    modifier = Modifier.semantics {
-                                        contentDescription = "Memperbarui profil"
-                                    }
-                                )
-                            } else {
-                                Text("Batalkan")
-                            }
-                        }
-                        Button(
-                            onClick = { save() },
-                            enabled = !state.isLoading,
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50)),
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            if (state.isLoading) {
-                                CircularProgressIndicator(
-                                    color = Color.White,
-                                    modifier = Modifier.semantics {
-                                        contentDescription = "Memperbarui profil"
-                                    }
-                                )
-                            } else {
-                                Text(
-                                    text = "Simpan"
-                                )
-                            }
+                        if (state.isLoading) {
+                            CircularProgressIndicator(
+                                color = Color.White,
+                                modifier = Modifier.semantics {
+                                    contentDescription = "Memperbarui profil"
+                                }
+                            )
+                        } else {
+                            Text(
+                                text = "Simpan"
+                            )
                         }
                     }
+                }
 
-                    // Pesan error
-                    if (state.error.isNotBlank()) {
-                        Text(
-                            text = state.error,
-                            color = Color(0xffff4242),
-                            fontSize = 12.sp
-                        )
-                    } else if (state.isEditSuccess) {
-                        Text(
-                            text = "Edit profil berhasil",
-                            color = Color.Green,
-                            fontSize = 12.sp
-                        )
-                    } else {
-                        Text("")
-                    }
+                // Pesan error
+                if (state.error.isNotBlank()) {
+                    Text(
+                        text = state.error,
+                        color = Color(0xffff4242),
+                        fontSize = 12.sp
+                    )
+                } else if (state.isEditSuccess) {
+                    Text(
+                        text = "Edit profil berhasil",
+                        color = Color.Green,
+                        fontSize = 12.sp
+                    )
+                } else {
+                    Text("")
                 }
             }
         }

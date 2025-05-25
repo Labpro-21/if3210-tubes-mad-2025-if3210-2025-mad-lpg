@@ -1,4 +1,4 @@
-package com.tubes1.purritify.core.data.local.dao
+package com.tubes1.purritify.core.data.local
 
 import androidx.room.Dao
 import androidx.room.Insert

@@ -8,7 +8,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -32,7 +31,6 @@ import androidx.compose.ui.unit.sp
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.tubes1.purritify.R
-import com.tubes1.purritify.core.common.navigation.isLandscape
 import java.util.Locale
 
 @OptIn(ExperimentalGlideComposeApi::class)
@@ -42,112 +40,79 @@ fun UploadArea(
     description: String,
     icon: ImageVector?,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier,
     imagePreview: Boolean = false,
-    songDuration: Long? = null
+    songDuration: Long? = null,
+    modifier: Modifier = Modifier
 ) {
     val formattedTitle = filePath?.let { getFormattedFileName(it) } ?: description
+
     Box(
         modifier = modifier
+            .aspectRatio(1f)
             .border(
                 width = 1.dp,
                 color = Color.Gray.copy(alpha = 0.5f),
                 shape = RoundedCornerShape(8.dp)
             )
-            .padding(8.dp)
             .clip(RoundedCornerShape(8.dp))
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
-        if (imagePreview && filePath != null && !isLandscape()) {
-                GlideImage(
-                    model = filePath,
-                    contentDescription = formattedTitle,
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
-                )
+        if (imagePreview && filePath != null) {
+            GlideImage(
+                model = filePath,
+                contentDescription = formattedTitle,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
+            )
         } else {
-            if (isLandscape()) {
-                Row () {
-                    if (filePath == null) {
-                        // Add button
-                        Box(
-                            modifier = Modifier
-                                .size(24.dp)
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(Color.White),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Add,
-                                contentDescription = "Add",
-                                tint = Color.Black,
-                                modifier = Modifier.size(16.dp)
-                            )
-                        }
-                    }
+            Column(
+                modifier = Modifier.padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Image(
+                    painter = painterResource(
+                        id = if (icon != null) R.drawable.image_icon else R.drawable.waveform_icon
+                    ),
+                    contentDescription = formattedTitle,
+                    modifier = Modifier
+                        .size(48.dp)
+                        .padding(bottom = 8.dp)
+                )
 
+                Text(
+                    text = formattedTitle.ifEmpty { description },
+                    color = Color.Gray,
+                    fontSize = 14.sp
+                )
+
+                if (songDuration != null && icon == null) {
+                    val minutes = (songDuration / 1000) / 60
+                    val seconds = (songDuration / 1000) % 60
                     Text(
-                        text = formattedTitle.ifEmpty { description },
+                        text = String.format(Locale.getDefault(), "Durasi: %d:%02d", minutes, seconds),
                         color = Color.Gray,
-                        fontSize = 14.sp,
-                        modifier = Modifier.padding(start = 16.dp)
+                        fontSize = 12.sp,
+                        modifier = Modifier.padding(top = 4.dp)
                     )
                 }
-            } else {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Image(
-                        painter = painterResource(
-                            id = if (icon != null) R.drawable.image_icon else R.drawable.waveform_icon
-                        ),
-                        contentDescription = formattedTitle,
+
+                if (filePath == null) {
+                    // Add button
+                    Box(
                         modifier = Modifier
-                            .size(48.dp)
-                            .padding(bottom = 8.dp)
-                    )
-
-                    Text(
-                        text = formattedTitle.ifEmpty { description },
-                        color = Color.Gray,
-                        fontSize = 14.sp
-                    )
-
-                    if (songDuration != null && icon == null) {
-                        val minutes = (songDuration / 1000) / 60
-                        val seconds = (songDuration / 1000) % 60
-                        Text(
-                            text = String.format(
-                                Locale.getDefault(),
-                                "Durasi: %d:%02d",
-                                minutes,
-                                seconds
-                            ),
-                            color = Color.Gray,
-                            fontSize = 12.sp,
-                            modifier = Modifier.padding(top = 4.dp)
+                            .padding(top = 8.dp)
+                            .size(24.dp)
+                            .background(Color.White, CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "Add",
+                            tint = Color.Black,
+                            modifier = Modifier.size(16.dp)
                         )
-                    }
-
-                    if (filePath == null) {
-                        // Add button
-                        Box(
-                            modifier = Modifier
-                                .padding(top = 8.dp)
-                                .size(24.dp)
-                                .background(Color.White, CircleShape),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Add,
-                                contentDescription = "Add",
-                                tint = Color.Black,
-                                modifier = Modifier.size(16.dp)
-                            )
-                        }
                     }
                 }
             }
