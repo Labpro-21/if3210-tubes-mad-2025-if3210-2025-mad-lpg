@@ -1,7 +1,6 @@
 package com.tubes1.purritify.features.library.presentation.homepage
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,12 +12,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
@@ -35,7 +32,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -48,7 +44,6 @@ import com.tubes1.purritify.features.library.presentation.homepage.components.So
 import com.tubes1.purritify.features.library.presentation.homepage.components.TopChartItem
 import com.tubes1.purritify.features.musicplayer.presentation.musicplayer.MusicPlayerViewModel
 import com.tubes1.purritify.features.musicplayer.presentation.musicplayer.SharedPlayerViewModel
-import com.tubes1.purritify.features.musicplayer.presentation.musicplayer.component.MiniPlayer
 import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalGlideComposeApi::class)
@@ -256,7 +251,40 @@ fun HomeScreen(
                     )
                 }
             }
-        }
 
+            // recommendation section
+            item {
+                Text(
+                    text = "Disarankan untukmu",
+                    color = Color.White,
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    modifier = Modifier.padding(top = 24.dp, bottom = 12.dp)
+                )
+            }
+
+            if (state.recommendedSongs.isEmpty()) {
+                item {
+                    Text(
+                        text = "Belum ada rekomendasi untukmu",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = Color.White,
+                        modifier = Modifier.fillMaxWidth().padding(16.dp),
+                        textAlign = TextAlign.Left
+                    )
+                }
+            } else {
+                items(state.recommendedSongs) { song ->
+                    SongListItem(
+                        song = song,
+                        onClick = {
+                            sharedPlayerViewModel.setSongAndQueue(song, state.recentlyPlayedSongs)
+                            navController.navigate(Screen.MusicPlayer.route)
+                            musicPlayerViewModel.playSong(song, state.recentlyPlayedSongs)
+                        }
+                    )
+                }
+            }
+        }
     }
 }

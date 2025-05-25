@@ -11,9 +11,10 @@ val coreDataModule = module {
     single { get<AppDatabase>().songDao() }
     single { get<AppDatabase>().serverSongDao() }
     single { get<AppDatabase>().playHistoryDao() }
+    single { get<AppDatabase>().artistsCountDao() }
 
     single<SongRepository> {
-        SongRepositoryImpl(get())
+        SongRepositoryImpl(get(), get())
     }
 
     single { UserPreferencesRepository(androidContext()) }
