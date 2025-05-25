@@ -113,7 +113,7 @@ fun MusicPlayerScreen(
                     }
                 }
 
-                // Album Art
+
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -128,7 +128,7 @@ fun MusicPlayerScreen(
                             modifier = Modifier.fillMaxSize()
                         )
                     } else {
-                        // placeholder if no song is loaded
+
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
