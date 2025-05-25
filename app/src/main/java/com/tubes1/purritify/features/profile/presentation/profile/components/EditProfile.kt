@@ -60,7 +60,7 @@ import androidx.core.content.FileProvider
 import coil.compose.rememberAsyncImagePainter
 import com.google.android.gms.location.LocationServices
 import com.tubes1.purritify.R
-import com.tubes1.purritify.core.common.navigation.isLandscape
+import com.tubes1.purritify.core.common.navigation.Screen.AudioDeviceSelection.isLandscape
 import com.tubes1.purritify.features.profile.presentation.profile.EditProfileViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

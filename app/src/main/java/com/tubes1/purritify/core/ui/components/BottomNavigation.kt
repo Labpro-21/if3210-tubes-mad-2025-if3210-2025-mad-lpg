@@ -31,7 +31,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.tubes1.purritify.R
 import com.tubes1.purritify.core.common.navigation.Screen
-import com.tubes1.purritify.core.common.navigation.isLandscape
+import com.tubes1.purritify.core.common.navigation.Screen.AudioDeviceSelection.isLandscape
 
 @Composable
 fun BottomNavigation(

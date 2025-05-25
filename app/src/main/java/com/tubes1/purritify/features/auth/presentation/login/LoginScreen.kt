@@ -55,7 +55,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.tubes1.purritify.R
 import com.tubes1.purritify.core.common.navigation.Screen
-import com.tubes1.purritify.core.common.navigation.isLandscape
+import com.tubes1.purritify.core.common.navigation.Screen.AudioDeviceSelection.isLandscape
 import com.tubes1.purritify.features.auth.presentation.login.components.rememberImeState
 import org.koin.androidx.compose.koinViewModel
 

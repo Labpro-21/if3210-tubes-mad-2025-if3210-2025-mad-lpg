@@ -45,7 +45,7 @@ import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.tubes1.purritify.MainActivity
-import com.tubes1.purritify.core.common.navigation.isLandscape
+import com.tubes1.purritify.core.common.navigation.Screen.AudioDeviceSelection.isLandscape
 import com.tubes1.purritify.core.common.network.Connectivity
 import com.tubes1.purritify.core.common.network.ConnectivityObserver
 import com.tubes1.purritify.core.common.network.ConnectivityStatusSnackbar
@@ -223,25 +223,25 @@ fun MainScreen(
                             composable(Screen.Login.route) {
                                 LoginPage(navController = navController)
                             }
+                            composable(
+                                route = Screen.OnlineChartsScreen.route,
+                                arguments = listOf(navArgument(OnlineChartsViewModel.NAV_ARG_CHART_TYPE) { type = NavType.StringType })
+                            ) {
+                                OnlineChartsScreen(navController = navController)
+                            }
+                            composable(
+                                route = "deeplink/{song_id}",
+                                arguments = listOf(navArgument("song_id") { type = NavType.LongType }),
+                                deepLinks = listOf(navDeepLink {
+                                    uriPattern = "purrytify://song/{song_id}"
+                                    action = Intent.ACTION_VIEW
+                                })
+                            ) { backStackEntry ->
+                                val songId = backStackEntry.arguments?.getLong("song_id") ?: return@composable
+                                LinkLandingScreen(songId = songId, navController = navController)
+                            }
                         }
                         AnimatedVisibilityX(shouldShowMiniPlayer, playerState, playerViewModel, currentRoute, navController)
-                    }
-                    composable(
-                        route = Screen.OnlineChartsScreen.route,
-                        arguments = listOf(navArgument(OnlineChartsViewModel.NAV_ARG_CHART_TYPE) { type = NavType.StringType })
-                    ) {
-                        OnlineChartsScreen(navController = navController)
-                    }
-                    composable(
-                        route = "deeplink/{song_id}",
-                        arguments = listOf(navArgument("song_id") { type = NavType.LongType }),
-                        deepLinks = listOf(navDeepLink {
-                            uriPattern = "purrytify://song/{song_id}"
-                            action = Intent.ACTION_VIEW
-                        })
-                    ) { backStackEntry ->
-                        val songId = backStackEntry.arguments?.getLong("song_id") ?: return@composable
-                        LinkLandingScreen(songId = songId, navController = navController)
                     }
                 }
 

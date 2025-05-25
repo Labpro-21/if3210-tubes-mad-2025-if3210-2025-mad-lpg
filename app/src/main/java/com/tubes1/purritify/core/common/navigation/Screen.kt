@@ -14,11 +14,14 @@ sealed class Screen(val route: String) {
     object Settings : Screen("settings")
     object AudioDeviceSelection : Screen("audio-device-selection")
     object SoundCapsule : Screen("analitik")
-    object OnlineChartsScreen : Screen("online-charts-screen/{${OnlineChartsViewModel.NAV_ARG_CHART_TYPE}}") {
+    object OnlineChartsScreen :
+        Screen("online-charts-screen/{${OnlineChartsViewModel.NAV_ARG_CHART_TYPE}}") {
         fun createRoute(chartType: String) = "online-charts-screen/$chartType"
     }
-@Composable
-fun isLandscape(): Boolean {
-    val configuration = LocalConfiguration.current
-    return configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+
+    @Composable
+    fun isLandscape(): Boolean {
+        val configuration = LocalConfiguration.current
+        return configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+    }
 }

@@ -22,7 +22,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.ui.text.style.TextAlign
-import com.tubes1.purritify.core.common.navigation.isLandscape
+import com.tubes1.purritify.core.common.navigation.Screen.AudioDeviceSelection.isLandscape
 import com.tubes1.purritify.core.ui.components.InputField
 import com.tubes1.purritify.features.library.presentation.uploadsong.UploadSongViewModel
 import com.tubes1.purritify.features.library.presentation.uploadsong.components.UploadArea
