@@ -56,6 +56,8 @@ import com.tubes1.purritify.features.library.presentation.homepage.components.To
 import com.tubes1.purritify.features.musicplayer.presentation.musicplayer.MusicPlayerViewModel
 import com.tubes1.purritify.features.musicplayer.presentation.musicplayer.SharedPlayerViewModel
 import com.tubes1.purritify.features.profile.presentation.profile.getFlagEmoji
+import com.tubes1.purritify.features.onlinesongs.data.remote.OnlineSongsApi
+import com.tubes1.purritify.features.profile.presentation.profile.ProfileViewModel
 import org.koin.androidx.compose.koinViewModel
 import java.util.Locale
 
@@ -65,7 +67,8 @@ fun HomeScreen(
     navController: NavController,
     viewModel: HomePageViewModel = koinViewModel(),
     sharedPlayerViewModel: SharedPlayerViewModel = koinViewModel(),
-    musicPlayerViewModel: MusicPlayerViewModel = koinViewModel()
+    musicPlayerViewModel: MusicPlayerViewModel = koinViewModel(),
+    profileViewModel: ProfileViewModel = koinViewModel()
 ) {
     val state by viewModel.state.collectAsState()
     val profileState = viewModel.profile_state.collectAsState()
@@ -99,9 +102,22 @@ fun HomeScreen(
                 Row(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    GlideImage(
+                        model = R.drawable.dummy_profile,
+                        contentDescription = "Profile picture",
+                        modifier = Modifier
+                            .size(56.dp)
+                            .clip(CircleShape)
+                    ) {
+                        it.centerCrop()
+                    }
+
                     Column(
                         modifier = Modifier
                             .padding(start = 12.dp)
+                            .clickable {
+                                navController.navigate(Screen.Profile.route)
+                            }
                     ) {
                         Text(
                             text = profileState.value.profile?.username ?: "13522xxx",
@@ -157,7 +173,8 @@ fun HomeScreen(
                             title = "TOP 50",
                             subtitle = "Global",
                             onClick = {
-                                // In Progress
+                                navController.navigate(Screen.OnlineChartsScreen.createRoute(
+                                    OnlineSongsApi.COUNTRY_CODE_GLOBAL))
                             }
                         )
                     }
@@ -168,7 +185,7 @@ fun HomeScreen(
                             title = "TOP 50",
                             subtitle = "Indo",
                             onClick = {
-                                // In Progress
+                                navController.navigate(Screen.OnlineChartsScreen.createRoute("ID"))
                             }
                         )
                     }

@@ -3,13 +3,15 @@ package com.tubes1.purritify.features.library.presentation.homepage
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.tubes1.purritify.core.common.utils.ReadToken
 import com.tubes1.purritify.core.common.utils.Resource
+import com.tubes1.purritify.core.common.utils.ReadToken
 import com.tubes1.purritify.core.domain.model.Song
 import com.tubes1.purritify.core.domain.usecase.getsongs.GetRecommendedSongsUseCase
 import com.tubes1.purritify.features.library.domain.usecase.getsongs.GetNewlyAddedSongsUseCase
 import com.tubes1.purritify.features.library.domain.usecase.getsongs.GetRecentlyPlayedSongsUseCase
 import com.tubes1.purritify.features.musicplayer.domain.usecase.playback.PlaySongUseCase
+import com.tubes1.purritify.features.onlinesongs.domain.usecase.GetTopCountrySongsUseCase
+import com.tubes1.purritify.features.onlinesongs.domain.usecase.GetTopGlobalSongsUseCase
 import com.tubes1.purritify.features.profile.domain.usecase.getprofile.GetProfilePhotoUseCase
 import com.tubes1.purritify.features.profile.domain.usecase.getprofile.GetProfileUseCase
 import com.tubes1.purritify.features.profile.presentation.profile.ProfilePhotoState
@@ -17,6 +19,8 @@ import com.tubes1.purritify.features.profile.presentation.profile.ProfileState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch

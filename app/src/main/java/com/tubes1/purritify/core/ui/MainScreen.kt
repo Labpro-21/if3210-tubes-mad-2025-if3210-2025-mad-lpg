@@ -35,6 +35,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.tubes1.purritify.MainActivity
 import com.tubes1.purritify.core.common.network.Connectivity
@@ -46,6 +48,8 @@ import com.tubes1.purritify.features.auth.presentation.login.LoginPage
 import com.tubes1.purritify.features.musicplayer.presentation.musicplayer.MusicPlayerScreen
 import com.tubes1.purritify.features.musicplayer.presentation.musicplayer.MusicPlayerViewModel
 import com.tubes1.purritify.features.musicplayer.presentation.musicplayer.component.MiniPlayer
+import com.tubes1.purritify.features.onlinesongs.presentation.OnlineChartsScreen
+import com.tubes1.purritify.features.onlinesongs.presentation.OnlineChartsViewModel
 import com.tubes1.purritify.features.soundcapsule.presentation.SoundCapsuleScreen
 import kotlinx.coroutines.flow.StateFlow
 import org.koin.androidx.compose.koinViewModel
@@ -166,6 +170,12 @@ fun MainScreen(
                     }
                     composable(Screen.Login.route) {
                         LoginPage(navController = navController)
+                    }
+                    composable(
+                        route = Screen.OnlineChartsScreen.route,
+                        arguments = listOf(navArgument(OnlineChartsViewModel.NAV_ARG_CHART_TYPE) { type = NavType.StringType })
+                    ) {
+                        OnlineChartsScreen(navController = navController)
                     }
                 }
 

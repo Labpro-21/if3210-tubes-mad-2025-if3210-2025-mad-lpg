@@ -64,7 +64,7 @@ interface PlayHistoryDao {
     suspend fun wasSongPlayedOnDay(songId: Long, dayStartMillis: Long, dayEndMillis: Long): Boolean
 
     @Query("SELECT DISTINCT month FROM play_history ORDER BY month DESC")
-    fun getDistinctMonthsWithHistory(): Flow<List<String>> // Returns list of "YYYY-MM"
+    fun getDistinctMonthsWithHistory(): Flow<List<String>>
 
     @Query("SELECT month FROM play_history ORDER BY month ASC LIMIT 1")
     fun getEarliestMonthWithHistory(): Flow<String?>

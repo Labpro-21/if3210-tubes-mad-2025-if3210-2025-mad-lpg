@@ -138,8 +138,6 @@ class UserPreferencesRepository(private val context: Context) {
                 underlyingBluetoothDevice = null
             )
         } catch (e: IllegalArgumentException) {
-
-
             null
         }
     }
