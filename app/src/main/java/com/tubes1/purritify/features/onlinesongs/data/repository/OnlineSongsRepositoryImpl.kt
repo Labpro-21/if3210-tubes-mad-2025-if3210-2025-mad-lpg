@@ -76,4 +76,26 @@ class OnlineSongsRepositoryImpl(
             )
         }.sortedBy { it.rank }
     }
+
+    override fun getOnlineSong(songId: Long): Flow<Resource<ChartSong>> = flow {
+        emit(Resource.Loading())
+        try {
+            val serverSongEntity = serverSongDao.getServerSongByServerId(songId)
+            val chartSong = onlineSongsApi.getOnlineSong(songId).toChartSong(
+                isDownloaded = serverSongEntity?.isDownloaded ?: false,
+                localSongId = serverSongEntity?.localSongId
+            )
+            emit(Resource.Success(chartSong))
+        } catch (e: HttpException) {
+            val errorMsg = e.response()?.errorBody()?.string() ?: "HTTP error (Code: ${e.code()})"
+            Log.e("OnlineSongsRepo", "getOnlineSong HTTP error: $errorMsg", e)
+            emit(Resource.Error("Gagal memuat lagu dari server: $errorMsg"))
+        } catch (e: IOException) {
+            Log.e("OnlineSongsRepo", "getOnlineSong IO error: ${e.message}", e)
+            emit(Resource.Error("Koneksi internet bermasalah."))
+        } catch (e: Exception) {
+            Log.e("OnlineSongsRepo", "getOnlineSong general error: ${e.message}", e)
+            emit(Resource.Error("Lagu tidak ditemukan: ${e.message}"))
+        }
+    }.flowOn(Dispatchers.IO)
 }

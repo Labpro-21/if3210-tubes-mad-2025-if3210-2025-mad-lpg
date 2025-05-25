@@ -9,4 +9,6 @@ interface OnlineSongsRepository {
     fun getTopGlobalChartSongs(): Flow<Resource<List<ChartSong>>>
 
     fun getTopCountryChartSongs(countryCode: String): Flow<Resource<List<ChartSong>>>
+
+    fun getOnlineSong(songId: Long): Flow<Resource<ChartSong>>
 }
