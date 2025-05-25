@@ -28,6 +28,7 @@ class HomePageViewModel(
     init {
         loadNewlyAddedSongs()
         loadRecentlyPlayedSongs()
+        loadRecommendedSongs()
     }
 
     private fun loadNewlyAddedSongs() {

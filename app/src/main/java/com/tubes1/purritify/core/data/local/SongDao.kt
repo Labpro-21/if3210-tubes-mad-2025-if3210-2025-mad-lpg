@@ -29,7 +29,7 @@ interface SongDao {
     WHERE EXISTS (
         SELECT 1 FROM artists_count
         WHERE song.artist LIKE '%' || name || '%'
-    )
+    ) AND isFavorited = 0
     ORDER BY (
         SELECT likedCount FROM artists_count
         WHERE song.artist LIKE '%' || name || '%'
