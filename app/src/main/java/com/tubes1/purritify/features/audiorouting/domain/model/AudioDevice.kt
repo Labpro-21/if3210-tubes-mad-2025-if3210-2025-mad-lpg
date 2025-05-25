@@ -1,24 +1,21 @@
 package com.tubes1.purritify.features.audiorouting.domain.model
 
-import android.bluetooth.BluetoothDevice as AndroidBluetoothDevice // Alias for clarity
+import android.bluetooth.BluetoothDevice as AndroidBluetoothDevice
 import android.media.AudioDeviceInfo
 
 data class AudioDevice(
     val systemApiId: Int?,
     val name: CharSequence,
-    val type: DeviceType, // Your app's abstracted device type
-    val systemDeviceType: Int, // Original system type from AudioDeviceInfo or BluetoothClass
-    val address: String?, // MAC address for BT devices, crucial for identification and pairing
-    var isCurrentlySelectedOutput: Boolean = false, // Is this the actively routed output device?
-    var pairingStatus: PairingStatus = PairingStatus.NONE, // Pairing status for Bluetooth devices
-    val source: AudioDeviceSource, // Where did this device info come from?
-    val isConnectable: Boolean = true, // Can the app attempt to connect/select this device?
-    @Transient val underlyingSystemApiDevice: AudioDeviceInfo? = null, // Original AudioDeviceInfo if source is SYSTEM_API
-    @Transient val underlyingBluetoothDevice: AndroidBluetoothDevice? = null // Original BluetoothDevice if BT
+    val type: DeviceType,
+    val systemDeviceType: Int,
+    val address: String?,
+    var isCurrentlySelectedOutput: Boolean = false,
+    var pairingStatus: PairingStatus = PairingStatus.NONE,
+    val source: AudioDeviceSource,
+    val isConnectable: Boolean = true,
+    @Transient val underlyingSystemApiDevice: AudioDeviceInfo? = null,
+    @Transient val underlyingBluetoothDevice: AndroidBluetoothDevice? = null
 ) {
-
-
-
     val uniqueKey: String
         get() = address ?: "system_${systemApiId}_${systemDeviceType}"
 

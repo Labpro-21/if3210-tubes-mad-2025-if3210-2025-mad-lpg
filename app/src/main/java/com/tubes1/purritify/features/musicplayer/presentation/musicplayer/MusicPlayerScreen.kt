@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.sp
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.tubes1.purritify.R
+import com.tubes1.purritify.core.common.navigation.isLandscape
 import org.koin.androidx.compose.koinViewModel
 import java.io.File
 import java.util.concurrent.TimeUnit
@@ -76,7 +77,7 @@ fun MusicPlayerScreen(
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
-        containerColor = Color.Transparent
+        containerColor = Color.Transparent,
     ) { padding ->
         Box(
             modifier = Modifier
@@ -92,7 +93,7 @@ fun MusicPlayerScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 8.dp, bottom = 24.dp),
+                        .padding(top = 8.dp, bottom = 8.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -113,182 +114,364 @@ fun MusicPlayerScreen(
                     }
                 }
 
-                // Album Art
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .aspectRatio(1f)
-                        .clip(RoundedCornerShape(8.dp))
-                ) {
-                    if (state.currentSong != null) {
-                        GlideImage(
-                            model = state.currentSong?.songArtUri ?: R.drawable.dummy_song_art,
-                            contentDescription = "Album art",
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier.fillMaxSize()
-                        )
-                    } else {
-                        // placeholder if no song is loaded
+                if (isLandscape()) {
+                    Row {
                         Box(
                             modifier = Modifier
-                                .fillMaxSize()
-                                .background(Color.DarkGray)
-                        )
-                    }
+                                .fillMaxHeight()
+                                .aspectRatio(1f)
+                                .clip(RoundedCornerShape(8.dp))
+                        ) {
+                            if (state.currentSong != null) {
+                                GlideImage(
+                                    model = state.currentSong?.songArtUri ?: R.drawable.dummy_song_art,
+                                    contentDescription = "Album art",
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                            } else {
 
-                    if (state.isLoading) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.align(Alignment.Center),
-                            color = Color.White
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    // song title
-                    Text(
-                        text = state.currentSong?.title ?: "No song playing",
-                        color = Color.White,
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f)
-                    )
-
-                    // favorite button
-                    state.currentSong?.let { song ->
-                        IconButton(onClick = {
-                            state.currentSong?.id?.let { songId ->
-                                playerViewModel.toggleFavorite(songId)
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .background(Color.DarkGray)
+                                )
                             }
-                        }) {
-                            Icon(
-                                imageVector = if (state.currentSong?.isFavorited == true)
-                                    Icons.Default.Favorite
-                                else
-                                    Icons.Default.FavoriteBorder,
-                                contentDescription = "Favorite",
-                                tint = Color.White
+
+                            if (state.isLoading) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.align(Alignment.Center),
+                                    color = Color.White
+                                )
+                            }
+                        }
+
+                        Column (
+                            verticalArrangement = Arrangement.SpaceEvenly,
+                            modifier = Modifier.padding(start = 18.dp).fillMaxHeight()
+                        ){
+                            Row(
+                                modifier = Modifier.fillMaxWidth().weight(1f).padding(8.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.Bottom
+                            ) {
+                                // song title
+                                Text(
+                                    text = state.currentSong?.title ?: "No song playing",
+                                    color = Color.White,
+                                    fontSize = 36.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.padding(end = 8.dp)
+                                )
+
+                                // artist name
+                                Text(
+                                    text = "(${state.currentSong?.artist})"?: "",
+                                    color = Color.White.copy(alpha = 0.7f),
+                                    fontSize = 24.sp,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.weight(1f)
+                                )
+
+                                // favorite button
+                                state.currentSong?.let { song ->
+                                    IconButton(onClick = {
+                                        state.currentSong?.id?.let { songId ->
+                                            playerViewModel.toggleFavorite(songId)
+                                        }
+                                    }) {
+                                        Icon(
+                                            imageVector = if (state.currentSong?.isFavorited == true)
+                                                Icons.Default.Favorite
+                                            else
+                                                Icons.Default.FavoriteBorder,
+                                            contentDescription = "Favorite",
+                                            tint = Color.White
+                                        )
+                                    }
+                                }
+                            }
+
+                            // progress bar
+                            Column(modifier = Modifier.fillMaxWidth().weight(1f)) {
+                                var sliderPosition by remember { mutableStateOf(0f) }
+                                var isDragging by remember { mutableStateOf(false) }
+
+                                LaunchedEffect(state.currentPosition) {
+                                    if (!isDragging) {
+                                        sliderPosition = state.currentPosition.toFloat()
+                                    }
+                                }
+
+                                Slider(
+                                    value = sliderPosition,
+                                    onValueChange = { newValue ->
+                                        isDragging = true
+                                        sliderPosition = newValue
+                                    },
+                                    onValueChangeFinished = {
+                                        isDragging = false
+                                        playerViewModel.seekTo((sliderPosition).toLong())
+                                    },
+                                    valueRange = 0f..state.duration.toFloat().coerceAtLeast(1f),
+                                    colors = SliderDefaults.colors(
+                                        thumbColor = Color.White,
+                                        activeTrackColor = Color.White,
+                                        inactiveTrackColor = Color.White.copy(alpha = 0.3f)
+                                    ),
+                                    modifier = Modifier.fillMaxWidth().weight(2f)
+                                )
+
+                                // song duration
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(
+                                        text = formatDuration(state.currentPosition),
+                                        color = Color.White.copy(alpha = 0.7f),
+                                        fontSize = 12.sp
+                                    )
+
+                                    Text(
+                                        text = formatDuration(state.duration),
+                                        color = Color.White.copy(alpha = 0.7f),
+                                        fontSize = 12.sp
+                                    )
+                                }
+                            }
+
+                            // player controls
+                            Row(
+                                modifier = Modifier.fillMaxWidth().weight(1f),
+                                horizontalArrangement = Arrangement.SpaceEvenly,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                // prev button
+                                IconButton(
+                                    onClick = { playerViewModel.playPrevious() },
+                                    modifier = Modifier.size(36.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.SkipPrevious,
+                                        contentDescription = "Previous",
+                                        tint = Color.White,
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                }
+
+                                // play/pause button
+                                IconButton(
+                                    onClick = {
+                                        playerViewModel.togglePlayPause()
+                                    },
+                                    modifier = Modifier
+                                        .size(48.dp)
+                                        .background(Color.White, CircleShape)
+                                ) {
+                                    Icon(
+                                        imageVector = if (state.isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                                        contentDescription = if (state.isPlaying) "Pause" else "Play",
+                                        tint = Color.Black,
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                }
+
+                                // next button
+                                IconButton(
+                                    onClick = { playerViewModel.playNext() },
+                                    modifier = Modifier.size(36.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.SkipNext,
+                                        contentDescription = "Next",
+                                        tint = Color.White,
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .aspectRatio(1f)
+                            .clip(RoundedCornerShape(8.dp))
+                    ) {
+                        if (state.currentSong != null) {
+                            GlideImage(
+                                model = state.currentSong?.songArtUri ?: R.drawable.dummy_song_art,
+                                contentDescription = "Album art",
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        } else {
+
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .background(Color.DarkGray)
+                            )
+                        }
+
+                        if (state.isLoading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.align(Alignment.Center),
+                                color = Color.White
                             )
                         }
                     }
-                }
 
-                // artist name
-                Text(
-                    text = state.currentSong?.artist ?: "",
-                    color = Color.White.copy(alpha = 0.7f),
-                    fontSize = 16.sp,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.padding(bottom = 24.dp)
-                )
+                    Spacer(modifier = Modifier.height(24.dp))
 
-                // progress bar
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    var sliderPosition by remember { mutableStateOf(0f) }
-                    var isDragging by remember { mutableStateOf(false) }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // song title
+                        Text(
+                            text = state.currentSong?.title ?: "No song playing",
+                            color = Color.White,
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f)
+                        )
 
-                    LaunchedEffect(state.currentPosition) {
-                        if (!isDragging) {
-                            sliderPosition = state.currentPosition.toFloat()
+                        // favorite button
+                        state.currentSong?.let { song ->
+                            IconButton(onClick = {
+                                state.currentSong?.id?.let { songId ->
+                                    playerViewModel.toggleFavorite(songId)
+                                }
+                            }) {
+                                Icon(
+                                    imageVector = if (state.currentSong?.isFavorited == true)
+                                        Icons.Default.Favorite
+                                    else
+                                        Icons.Default.FavoriteBorder,
+                                    contentDescription = "Favorite",
+                                    tint = Color.White
+                                )
+                            }
                         }
                     }
 
-                    Slider(
-                        value = sliderPosition,
-                        onValueChange = { newValue ->
-                            isDragging = true
-                            sliderPosition = newValue
-                        },
-                        onValueChangeFinished = {
-                            isDragging = false
-                            playerViewModel.seekTo((sliderPosition).toLong())
-                        },
-                        valueRange = 0f..state.duration.toFloat().coerceAtLeast(1f),
-                        colors = SliderDefaults.colors(
-                            thumbColor = Color.White,
-                            activeTrackColor = Color.White,
-                            inactiveTrackColor = Color.White.copy(alpha = 0.3f)
-                        ),
-                        modifier = Modifier.fillMaxWidth()
+                    // artist name
+                    Text(
+                        text = state.currentSong?.artist ?: "",
+                        color = Color.White.copy(alpha = 0.7f),
+                        fontSize = 16.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.padding(bottom = 24.dp)
                     )
 
-                    // song duration
+                    // progress bar
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        var sliderPosition by remember { mutableStateOf(0f) }
+                        var isDragging by remember { mutableStateOf(false) }
+
+                        LaunchedEffect(state.currentPosition) {
+                            if (!isDragging) {
+                                sliderPosition = state.currentPosition.toFloat()
+                            }
+                        }
+
+                        Slider(
+                            value = sliderPosition,
+                            onValueChange = { newValue ->
+                                isDragging = true
+                                sliderPosition = newValue
+                            },
+                            onValueChangeFinished = {
+                                isDragging = false
+                                playerViewModel.seekTo((sliderPosition).toLong())
+                            },
+                            valueRange = 0f..state.duration.toFloat().coerceAtLeast(1f),
+                            colors = SliderDefaults.colors(
+                                thumbColor = Color.White,
+                                activeTrackColor = Color.White,
+                                inactiveTrackColor = Color.White.copy(alpha = 0.3f)
+                            ),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        // song duration
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = formatDuration(state.currentPosition),
+                                color = Color.White.copy(alpha = 0.7f),
+                                fontSize = 12.sp
+                            )
+
+                            Text(
+                                text = formatDuration(state.duration),
+                                color = Color.White.copy(alpha = 0.7f),
+                                fontSize = 12.sp
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(32.dp))
+
+                    // player controls
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                        horizontalArrangement = Arrangement.SpaceEvenly,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = formatDuration(state.currentPosition),
-                            color = Color.White.copy(alpha = 0.7f),
-                            fontSize = 12.sp
-                        )
+                        // prev button
+                        IconButton(
+                            onClick = { playerViewModel.playPrevious() },
+                            modifier = Modifier.size(48.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.SkipPrevious,
+                                contentDescription = "Previous",
+                                tint = Color.White,
+                                modifier = Modifier.size(32.dp)
+                            )
+                        }
 
-                        Text(
-                            text = formatDuration(state.duration),
-                            color = Color.White.copy(alpha = 0.7f),
-                            fontSize = 12.sp
-                        )
-                    }
-                }
+                        // play/pause button
+                        IconButton(
+                            onClick = {
+                                playerViewModel.togglePlayPause()
+                            },
+                            modifier = Modifier
+                                .size(64.dp)
+                                .background(Color.White, CircleShape)
+                        ) {
+                            Icon(
+                                imageVector = if (state.isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                                contentDescription = if (state.isPlaying) "Pause" else "Play",
+                                tint = Color.Black,
+                                modifier = Modifier.size(32.dp)
+                            )
+                        }
 
-                Spacer(modifier = Modifier.height(32.dp))
-
-                // player controls
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    // prev button
-                    IconButton(
-                        onClick = { playerViewModel.playPrevious() },
-                        modifier = Modifier.size(48.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.SkipPrevious,
-                            contentDescription = "Previous",
-                            tint = Color.White,
-                            modifier = Modifier.size(32.dp)
-                        )
-                    }
-
-                    // play/pause button
-                    IconButton(
-                        onClick = {
-                            playerViewModel.togglePlayPause()
-                        },
-                        modifier = Modifier
-                            .size(64.dp)
-                            .background(Color.White, CircleShape)
-                    ) {
-                        Icon(
-                            imageVector = if (state.isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                            contentDescription = if (state.isPlaying) "Pause" else "Play",
-                            tint = Color.Black,
-                            modifier = Modifier.size(32.dp)
-                        )
-                    }
-
-                    // next button
-                    IconButton(
-                        onClick = { playerViewModel.playNext() },
-                        modifier = Modifier.size(48.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.SkipNext,
-                            contentDescription = "Next",
-                            tint = Color.White,
-                            modifier = Modifier.size(32.dp)
-                        )
+                        // next button
+                        IconButton(
+                            onClick = { playerViewModel.playNext() },
+                            modifier = Modifier.size(48.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.SkipNext,
+                                contentDescription = "Next",
+                                tint = Color.White,
+                                modifier = Modifier.size(32.dp)
+                            )
+                        }
                     }
                 }
             }

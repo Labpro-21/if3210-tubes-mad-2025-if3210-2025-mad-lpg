@@ -35,15 +35,15 @@ import com.tubes1.purritify.features.musicplayer.domain.repository.MusicPlayerRe
 
 data class AudioDeviceSelectionUiState(
     val devices: List<AudioDevice> = emptyList(),
-    val isLoading: Boolean = false, // General loading for initial list
-    val isDiscoveringBluetooth: Boolean = false, // Specific state for BT discovery
+    val isLoading: Boolean = false,
+    val isDiscoveringBluetooth: Boolean = false,
     val error: String? = null,
     val requiredPermissions: List<String> = emptyList(),
     val allPermissionsGranted: Boolean = false,
-    val currentlySelectedSystemApiId: Int? = null // To highlight the active device based on AudioManager
+    val currentlySelectedSystemApiId: Int? = null
 )
 
-@SuppressLint("MissingPermission") // Permissions are checked dynamically
+@SuppressLint("MissingPermission")
 class AudioDeviceSelectionViewModel(
     private val applicationContext: Context,
     private val musicPlayerRepository: MusicPlayerRepository
@@ -58,14 +58,13 @@ class AudioDeviceSelectionViewModel(
     private val bluetoothAdapter: BluetoothAdapter? = bluetoothManager?.adapter
 
     private var systemApiAudioDevices = mutableListOf<AudioDevice>()
-    private var discoveredBluetoothDevices = mutableMapOf<String, AudioDevice>() // MAC address -> AudioDevice
+    private var discoveredBluetoothDevices = mutableMapOf<String, AudioDevice>()
 
     private var discoveryJob: Job? = null
 
-
     companion object {
         private const val TAG = "AudioDeviceVM"
-        private const val BLUETOOTH_DISCOVERY_DURATION_MS = 15000L // 15 seconds
+        private const val BLUETOOTH_DISCOVERY_DURATION_MS = 15000L
     }
 
     private val bluetoothStateReceiver = object : BroadcastReceiver() {
@@ -80,8 +79,8 @@ class AudioDeviceSelectionViewModel(
                     }
                     device?.let {
                         Log.d(TAG, "Bluetooth device FOUND: Name: ${it.name ?: "N/A"}, Address: ${it.address}, BondState: ${it.bondState}")
-                        // Filter for audio devices if possible (e.g. by BluetoothClass)
-                        if (it.name != null && isBluetoothDeviceAudioOutput(it)) { // Only add named devices that are audio capable
+
+                        if (it.name != null && isBluetoothDeviceAudioOutput(it)) {
                             mapBluetoothDeviceToAppDevice(it)?.let { appDevice ->
                                 discoveredBluetoothDevices[appDevice.address!!] = appDevice
                                 updateDeviceListInUi()
@@ -96,7 +95,7 @@ class AudioDeviceSelectionViewModel(
                 BluetoothAdapter.ACTION_DISCOVERY_FINISHED -> {
                     Log.d(TAG, "Bluetooth discovery FINISHED")
                     _uiState.update { it.copy(isDiscoveringBluetooth = false) }
-                    // The list is already updated progressively by ACTION_FOUND
+
                 }
                 BluetoothDevice.ACTION_BOND_STATE_CHANGED -> {
                     val device: BluetoothDevice? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -109,39 +108,52 @@ class AudioDeviceSelectionViewModel(
                     val previousBondState = intent.getIntExtra(BluetoothDevice.EXTRA_PREVIOUS_BOND_STATE, BluetoothDevice.ERROR)
 
                     device?.let { btDevice ->
+                        val oldUiDeviceStatus = _uiState.value.devices.find { it.address == btDevice.address }?.pairingStatus
                         Log.i(TAG, "Bond state changed for ${btDevice.name ?: btDevice.address}: " +
                                 "${bondStateToString(previousBondState)} -> ${bondStateToString(bondState)}")
+
                         val newPairingStatus = when (bondState) {
                             BluetoothDevice.BOND_BONDED -> PairingStatus.PAIRED
                             BluetoothDevice.BOND_BONDING -> PairingStatus.PAIRING
                             BluetoothDevice.BOND_NONE -> PairingStatus.NONE
-                            else -> PairingStatus.FAILED // Or keep current if unknown
+                            else -> oldUiDeviceStatus ?: PairingStatus.FAILED
                         }
-                        // Update the specific device in the list
-                        updateDevicePairingStatus(btDevice.address, newPairingStatus)
+
+
+                        updateDevicePairingStatus(btDevice.address, newPairingStatus, oldUiDeviceStatus)
 
                         if (bondState == BluetoothDevice.BOND_BONDED) {
-                            // Attempt to set as preferred device after successful pairing
-                            // Find the full AudioDevice object
-                            val appDevice = _uiState.value.devices.find { it.address == btDevice.address }
-                            if (appDevice != null) {
-                                Log.d(TAG, "Device ${btDevice.name} successfully paired. Attempting to select.")
-                                // We might want to automatically select it, or let the user confirm.
-                                // For now, let's refresh the list and the user can tap again if needed,
-                                // or call selectDevice directly.
-                                selectDevice(appDevice.copy(pairingStatus = PairingStatus.PAIRED)) // Reselect with new status
+                            Log.d(TAG, "Device ${btDevice.name ?: btDevice.address} successfully paired. Kicking off post-pairing selection.")
+
+
+
+                            val originalDiscoveredDevice = discoveredBluetoothDevices[btDevice.address]
+                            val appDeviceNowPaired = originalDiscoveredDevice?.copy(
+                                pairingStatus = PairingStatus.PAIRED,
+
+                                name = btDevice.name ?: originalDiscoveredDevice.name
+                            ) ?: mapBluetoothDeviceToAppDevice(btDevice)?.copy(
+                                pairingStatus = PairingStatus.PAIRED
+                            )
+
+
+                            if (appDeviceNowPaired != null) {
+                                selectDeviceAfterPairing(appDeviceNowPaired)
                             } else {
-                                refreshAudioDeviceList() // Refresh list to pick up newly paired device
+                                Log.e(TAG, "CRITICAL: Could not construct an AudioDevice for ${btDevice.address} post-bond. Refreshing list.")
+                                _uiState.update { it.copy(isLoading = false) }
+                                refreshAudioDeviceList()
                             }
                         } else if (bondState == BluetoothDevice.BOND_NONE && previousBondState == BluetoothDevice.BOND_BONDING) {
-                            // Pairing failed
-                            Log.w(TAG, "Pairing failed for ${btDevice.name}")
-                            // Error message can be set if desired
+                            Log.w(TAG, "Pairing failed or reverted to NONE for ${btDevice.name ?: btDevice.address}")
+                            _uiState.update { it.copy(error = "Pairing gagal dengan ${btDevice.name ?: btDevice.address}.") }
+
+                        } else if (bondState == BluetoothDevice.BOND_BONDING) {
+                            Log.d(TAG, "Device ${btDevice.name ?: btDevice.address} is still bonding.")
+
                         }
                     }
                 }
-                // Optional: Listen for A2DP connection state changes for more fine-grained control
-                // BluetoothA2dp.ACTION_CONNECTION_STATE_CHANGED
             }
         }
     }
@@ -152,7 +164,7 @@ class AudioDeviceSelectionViewModel(
 
         if (granted) {
             registerBluetoothReceiver()
-            refreshAudioDeviceList() // This will also start discovery if appropriate
+            refreshAudioDeviceList()
         }
 
         viewModelScope.launch {
@@ -161,9 +173,101 @@ class AudioDeviceSelectionViewModel(
                 .collectLatest { preferredDeviceFromRepo ->
                     Log.d(TAG, "User preference from repo changed to: ${preferredDeviceFromRepo?.name}")
                     if (_uiState.value.allPermissionsGranted) {
-                        refreshAudioDeviceList() // Refresh to reflect new active state
+                        refreshAudioDeviceList()
                     }
                 }
+        }
+    }
+
+    private fun selectDeviceAfterPairing(devicePaired: AudioDevice) {
+        viewModelScope.launch {
+            Log.d(TAG, "selectDeviceAfterPairing: For ${devicePaired.name}. Current isLoading: ${_uiState.value.isLoading}")
+            _uiState.update { it.copy(isLoading = true, error = null) }
+
+            Log.d(TAG, "selectDeviceAfterPairing: Waiting for device to register with AudioManager (2.5s)...")
+            delay(2500L)
+
+            Log.d(TAG, "selectDeviceAfterPairing: Refreshing system API audio devices now.")
+            refreshSystemApiAudioDevicesInternalOnly()
+            updateDeviceListInUi()
+
+            val deviceToRoute = _uiState.value.devices.find { it.address == devicePaired.address } ?: devicePaired
+            Log.d(TAG, "selectDeviceAfterPairing: Device to pass to repo: Name=${deviceToRoute.name}, " +
+                    "SysID=${deviceToRoute.systemApiId}, Addr=${deviceToRoute.address}, " +
+                    "Source=${deviceToRoute.source}, Type=${deviceToRoute.type}")
+
+            val deviceForOptimisticUpdate = _uiState.value.devices.find { it.uniqueKey == deviceToRoute.uniqueKey }
+                ?: deviceToRoute // Fallback to deviceToRoute if somehow not in the list
+
+            Log.d(TAG, "selectDeviceAfterPairing: Device to pass to repo was: Name=${deviceToRoute.name}, " +
+                    "SysID=${deviceToRoute.systemApiId}, Addr=${deviceToRoute.address}, " +
+                    "Source=${deviceToRoute.source}, Type=${deviceToRoute.type}")
+            Log.d(TAG, "selectDeviceAfterPairing: Device found in UI state for optimistic update: Name=${deviceForOptimisticUpdate.name}, " +
+                    "SysID=${deviceForOptimisticUpdate.systemApiId}, Addr=${deviceForOptimisticUpdate.address}")
+
+
+            try {
+                musicPlayerRepository.setPreferredAudioDevice(deviceToRoute) // Use deviceToRoute for the actual repo call
+                Log.d(TAG, "selectDeviceAfterPairing: Waiting for service routing (1.5s)...")
+                delay(1500L)
+
+                // Optimistic UI Update: Mark the device as selected in the UI
+                // Use deviceForOptimisticUpdate.uniqueKey to ensure we update the right item in the list
+                _uiState.update { currentState ->
+                    val updatedDeviceList = currentState.devices.map { deviceInList ->
+                        if (deviceInList.uniqueKey == deviceForOptimisticUpdate.uniqueKey) {
+                            deviceInList.copy(isCurrentlySelectedOutput = true, pairingStatus = PairingStatus.PAIRED)
+                        } else {
+                            deviceInList.copy(isCurrentlySelectedOutput = false)
+                        }
+                    }
+                    currentState.copy(
+                        devices = updatedDeviceList,
+                        // If routing was successful, currentlySelectedSystemApiId *should* update after refresh,
+                        // but we can optimistically set it here too if deviceForOptimisticUpdate has a systemApiId.
+                        currentlySelectedSystemApiId = deviceForOptimisticUpdate.systemApiId ?: currentState.currentlySelectedSystemApiId
+                    )
+                }
+                Log.d(TAG, "Optimistically marked ${deviceForOptimisticUpdate.name} as selected in UI.")
+            } catch (e: Exception) {
+                Log.e(TAG, "Error in selectDeviceAfterPairing setting preferred device: ${e.message}", e)
+                _uiState.update { it.copy(error = "Gagal mengatur ${deviceForOptimisticUpdate.name}: ${e.message}") }
+            } finally {
+                Log.d(TAG, "selectDeviceAfterPairing: Refreshing full audio device list to reflect final state.")
+                refreshAudioDeviceList()
+            }
+        }
+    }
+    private suspend fun refreshSystemApiAudioDevicesInternalOnly() {
+        if (!_uiState.value.allPermissionsGranted) {
+            Log.w(TAG, "refreshSystemApiAudioDevicesInternalOnly: Permissions not granted.")
+            return
+        }
+        try {
+            val outputDevicesInfo = audioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS)
+            val activeDevice: AudioDeviceInfo? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                audioManager.communicationDevice
+            } else {
+                outputDevicesInfo.firstOrNull { it.isSink && isDeviceAudioOutput(it) && it.id == _uiState.value.currentlySelectedSystemApiId }
+                    ?: outputDevicesInfo.firstOrNull { it.isSink && isDeviceAudioOutput(it) }
+            }
+            val activeId = activeDevice?.id
+            _uiState.update { it.copy(currentlySelectedSystemApiId = activeId) }
+
+
+            systemApiAudioDevices.clear()
+            outputDevicesInfo.forEach { deviceInfo ->
+                if (isDeviceSuitableForUserSelection(deviceInfo)) {
+                    mapAudioDeviceInfoToAppDevice(deviceInfo, activeId)?.let { appDevice ->
+                        systemApiAudioDevices.add(appDevice)
+                    }
+                }
+            }
+            Log.d(TAG, "refreshSystemApiAudioDevicesInternalOnly: Updated systemApiAudioDevices with ${systemApiAudioDevices.size} devices.")
+        } catch (e: SecurityException) {
+            Log.e(TAG, "SecurityException in refreshSystemApiAudioDevicesInternalOnly: ${e.message}", e)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error in refreshSystemApiAudioDevicesInternalOnly: ${e.message}", e)
         }
     }
 
@@ -176,20 +280,37 @@ class AudioDeviceSelectionViewModel(
             else -> "UNKNOWN ($bondState)"
         }
     }
-    private fun updateDevicePairingStatus(deviceAddress: String, newStatus: PairingStatus) {
+
+    private fun updateDevicePairingStatus(deviceAddress: String, newStatus: PairingStatus, previousStatus: PairingStatus?) {
+        Log.d(TAG, "updateDevicePairingStatus: Addr=$deviceAddress, NewStatus=$newStatus, PrevStatus=$previousStatus, CurrentIsLoading=${_uiState.value.isLoading}")
+
         val updatedDevices = _uiState.value.devices.map {
             if (it.address == deviceAddress) {
                 it.copy(pairingStatus = newStatus)
-            } else {
-                it
-            }
+            } else { it }
         }
-        _uiState.update { it.copy(devices = updatedDevices, isLoading = false) } // Stop general loading
 
-        // Also update the discoveredBluetoothDevices map if the device originated there
+        var turnOffLoading = false
+        if (previousStatus == PairingStatus.PAIRING && (newStatus == PairingStatus.FAILED || newStatus == PairingStatus.NONE)) {
+            turnOffLoading = true
+        }
+
+        if (previousStatus == PairingStatus.NONE && newStatus == PairingStatus.FAILED && _uiState.value.isLoading) {
+            turnOffLoading = true
+        }
+
+        _uiState.update {
+            it.copy(
+                devices = updatedDevices,
+                isLoading = if (turnOffLoading) false else it.isLoading,
+                error = if (newStatus == PairingStatus.FAILED && it.error == null) "Pairing Gagal untuk ${deviceAddress.takeLast(5)}" else it.error
+            )
+        }
+
         discoveredBluetoothDevices[deviceAddress]?.let {
             discoveredBluetoothDevices[deviceAddress] = it.copy(pairingStatus = newStatus)
         }
+        Log.d(TAG, "updateDevicePairingStatus: After update, isLoading=${_uiState.value.isLoading}")
     }
 
 
@@ -199,20 +320,18 @@ class AudioDeviceSelectionViewModel(
             addAction(BluetoothAdapter.ACTION_DISCOVERY_STARTED)
             addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED)
             addAction(BluetoothDevice.ACTION_BOND_STATE_CHANGED)
-            // addAction(BluetoothA2dp.ACTION_CONNECTION_STATE_CHANGED) // If using A2DP profile
         }
         applicationContext.registerReceiver(bluetoothStateReceiver, filter)
     }
 
     private fun determineRequiredPermissions(): List<String> {
         val permissions = mutableListOf<String>()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) { // Android 12+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             permissions.add(Manifest.permission.BLUETOOTH_SCAN)
             permissions.add(Manifest.permission.BLUETOOTH_CONNECT)
         } else {
             permissions.add(Manifest.permission.BLUETOOTH)
             permissions.add(Manifest.permission.BLUETOOTH_ADMIN)
-            // Location permission is needed for Bluetooth scanning on Android 6-11
             permissions.add(Manifest.permission.ACCESS_FINE_LOCATION)
         }
         permissions.add(Manifest.permission.MODIFY_AUDIO_SETTINGS)
@@ -228,13 +347,13 @@ class AudioDeviceSelectionViewModel(
 
     fun onPermissionsResult(grantedPermissions: Map<String, Boolean>) {
         val allNowGranted = grantedPermissions.values.all { it } &&
-                checkAllPermissions(_uiState.value.requiredPermissions) // Re-check all required
+                checkAllPermissions(_uiState.value.requiredPermissions)
 
         _uiState.update { it.copy(allPermissionsGranted = allNowGranted) }
 
         if (allNowGranted) {
             _uiState.update { it.copy(error = null) }
-            registerBluetoothReceiver() // Register if not already (e.g., if granted after initial load)
+            registerBluetoothReceiver()
             refreshAudioDeviceList()
         } else {
             val deniedPermissions = _uiState.value.requiredPermissions.filterNot {
@@ -244,7 +363,7 @@ class AudioDeviceSelectionViewModel(
 
             _uiState.update { it.copy(error = "Permissions denied: $deniedString. Cannot list or manage all audio devices.") }
             Log.w(TAG, "Permissions denied: $deniedString")
-            // Clear device list if crucial permissions are missing
+
             if (deniedPermissions.contains(Manifest.permission.BLUETOOTH_CONNECT) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 _uiState.update { it.copy(devices = emptyList()) }
             }
@@ -253,48 +372,42 @@ class AudioDeviceSelectionViewModel(
 
     fun selectDevice(deviceToSelect: AudioDevice) {
         viewModelScope.launch {
-            Log.d(TAG, "User selected device: ${deviceToSelect.name}, Address: ${deviceToSelect.address}, Source: ${deviceToSelect.source}, Pairing: ${deviceToSelect.pairingStatus}")
-            _uiState.update { it.copy(isLoading = true) }
+            Log.d(TAG, "selectDevice (user click): ${deviceToSelect.name}, Pairing: ${deviceToSelect.pairingStatus}")
 
-            try {
-                if (deviceToSelect.underlyingBluetoothDevice != null &&
-                    deviceToSelect.pairingStatus == PairingStatus.NONE && // Only attempt to bond if not paired
-                    deviceToSelect.underlyingBluetoothDevice.bondState == BluetoothDevice.BOND_NONE) {
+            if (deviceToSelect.underlyingBluetoothDevice != null &&
+                deviceToSelect.pairingStatus == PairingStatus.NONE &&
+                deviceToSelect.underlyingBluetoothDevice.bondState == BluetoothDevice.BOND_NONE) {
 
-                    Log.i(TAG, "Initiating pairing with ${deviceToSelect.name} (${deviceToSelect.address})")
-                    updateDevicePairingStatus(deviceToSelect.address!!, PairingStatus.PAIRING)
-                    val pairingStarted = deviceToSelect.underlyingBluetoothDevice.createBond()
+                Log.i(TAG, "selectDevice: Initiating pairing for ${deviceToSelect.name}")
+                updateDevicePairingStatus(deviceToSelect.address!!, PairingStatus.PAIRING, PairingStatus.NONE)
+                _uiState.update { it.copy(isLoading = true) }
 
-                    if (!pairingStarted) {
-                        Log.w(TAG, "Failed to start pairing with ${deviceToSelect.name}")
-                        updateDevicePairingStatus(deviceToSelect.address, PairingStatus.FAILED)
-                        _uiState.update { it.copy(isLoading = false, error = "Gagal memulai pairing dengan ${deviceToSelect.name}") }
-                    } else {
-                        // Pairing initiated, wait for ACTION_BOND_STATE_CHANGED. Stop loading indicator here.
-                        _uiState.update { it.copy(isLoading = false) }
-                    }
-                    return@launch // Exit, BroadcastReceiver will handle bond state changes
-                } else if (deviceToSelect.underlyingBluetoothDevice != null &&
-                    deviceToSelect.underlyingBluetoothDevice.bondState == BluetoothDevice.BOND_BONDING) {
-                    Log.i(TAG, "${deviceToSelect.name} is already pairing.")
-                    _uiState.update { it.copy(isLoading = false) } // Just reflect current state
-                    return@launch
+                val pairingStarted = deviceToSelect.underlyingBluetoothDevice.createBond()
+                if (!pairingStarted) {
+                    Log.w(TAG, "selectDevice: Failed to start pairing with ${deviceToSelect.name}")
+                    updateDevicePairingStatus(deviceToSelect.address, PairingStatus.FAILED, PairingStatus.PAIRING)
                 }
 
-                // If device is already paired or not a Bluetooth device needing pairing
-                musicPlayerRepository.setPreferredAudioDevice(deviceToSelect)
-                // Delay to allow system to process the routing request
-                delay(1000) // Increased slightly
-                refreshAudioDeviceList() // Refresh to show the *actual* active device
-                _uiState.update { it.copy(isLoading = false, error = null) }
+                return@launch
+            } else if (deviceToSelect.underlyingBluetoothDevice != null &&
+                deviceToSelect.underlyingBluetoothDevice.bondState == BluetoothDevice.BOND_BONDING) {
+                Log.i(TAG, "selectDevice: ${deviceToSelect.name} is already pairing.")
+                if (deviceToSelect.pairingStatus != PairingStatus.PAIRING) {
+                    updateDevicePairingStatus(deviceToSelect.address!!, PairingStatus.PAIRING, deviceToSelect.pairingStatus)
+                }
+                _uiState.update { it.copy(isLoading = true) }
+                return@launch
+            }
 
-            } catch (e: SecurityException) {
-                Log.e(TAG, "SecurityException during selectDevice: ${e.message}", e)
-                _uiState.update { it.copy(isLoading = false, error = "Izin ditolak: ${e.message}") }
-                refreshAudioDeviceList()
+            Log.d(TAG, "selectDevice: Device is already paired or non-BT. Attempting to set as preferred.")
+            _uiState.update { it.copy(isLoading = true) }
+            try {
+                musicPlayerRepository.setPreferredAudioDevice(deviceToSelect)
+                delay(1000L)
             } catch (e: Exception) {
-                Log.e(TAG, "Error selecting device: ${e.message}", e)
-                _uiState.update { it.copy(isLoading = false, error = "Gagal memilih '${deviceToSelect.name}': ${e.message}") }
+                Log.e(TAG, "Error selecting device (non-pairing): ${e.message}", e)
+                _uiState.update { it.copy(error = "Gagal memilih '${deviceToSelect.name}': ${e.message}") }
+            } finally {
                 refreshAudioDeviceList()
             }
         }
@@ -302,60 +415,40 @@ class AudioDeviceSelectionViewModel(
 
     fun refreshAudioDeviceList() {
         if (!_uiState.value.allPermissionsGranted) {
-            Log.w(TAG, "Cannot refresh devices without all permissions.")
-            if (_uiState.value.error == null) {
-                _uiState.update { it.copy(error = "Required permissions are not granted to list devices.") }
-            }
-            // Potentially request permissions again or guide user.
+            Log.w(TAG, "refreshAudioDeviceList: Permissions not granted.")
+
             val perms = determineRequiredPermissions()
             val granted = checkAllPermissions(perms)
             if (!granted) {
-                _uiState.update { it.copy(requiredPermissions = perms, allPermissionsGranted = false) }
-                return // Don't proceed if permissions are still not there. UI should show permission needed view.
+                _uiState.update { it.copy(requiredPermissions = perms, allPermissionsGranted = false, isLoading = false, error = "Izin dibutuhkan.") }
+                return
             } else {
-                _uiState.update { it.copy(allPermissionsGranted = true, error = null) } // Permissions might have been granted in background
+                _uiState.update { it.copy(allPermissionsGranted = true, error = null) }
             }
         }
 
+        Log.d(TAG, "refreshAudioDeviceList: Starting. Current isLoading: ${_uiState.value.isLoading}, isDiscovering: ${_uiState.value.isDiscoveringBluetooth}")
         _uiState.update { it.copy(isLoading = true, error = null) }
-        systemApiAudioDevices.clear()
-        // Discovered devices are not cleared here, they persist until a new scan cycle or if they connect and appear in systemApi
 
         viewModelScope.launch {
             try {
-                // 1. Get devices from AudioManager (connected, remembered)
-                val outputDevicesInfo = audioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS)
-                val actualActiveDevice: AudioDeviceInfo? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) { // S = API 31
-                    audioManager.communicationDevice
+                refreshSystemApiAudioDevicesInternalOnly()
+
+                if (bluetoothAdapter?.isEnabled == true && _uiState.value.allPermissionsGranted && ContextCompat.checkSelfPermission(applicationContext, Manifest.permission.BLUETOOTH_SCAN) == PackageManager.PERMISSION_GRANTED) {
+                    startBluetoothDiscovery()
                 } else {
-                    audioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS)
-                        .firstOrNull { it.isSink && isDeviceAudioOutput(it) }
-                }
-                val actualActiveSystemApiId = actualActiveDevice?.id
-                _uiState.update { it.copy(currentlySelectedSystemApiId = actualActiveSystemApiId) }
-
-                Log.d(TAG, "Actual active device from AudioManager: Name=${actualActiveDevice?.productName}, ID=${actualActiveSystemApiId}, Type=${actualActiveDevice?.type}")
-
-                outputDevicesInfo.forEach { deviceInfo ->
-                    if (isDeviceSuitableForUserSelection(deviceInfo)) {
-                        mapAudioDeviceInfoToAppDevice(deviceInfo, actualActiveSystemApiId)?.let { appDevice ->
-                            systemApiAudioDevices.add(appDevice)
-                        }
-                    }
+                    Log.w(TAG, "refreshAudioDeviceList: BT not enabled or SCAN perm missing, skipping BT discovery.")
+                    _uiState.update { it.copy(isDiscoveringBluetooth = false) }
                 }
 
-                // 2. Start Bluetooth Discovery for other nearby devices
-                startBluetoothDiscovery() // This will update discoveredBluetoothDevices via receiver
-
-                // 3. Merge and update UI (initial merge, will be updated by discovery)
                 updateDeviceListInUi()
-                _uiState.update { it.copy(isLoading = false) } // Initial load from AudioManager done
 
+                _uiState.update { it.copy(isLoading = false) }
             } catch (e: SecurityException) {
-                Log.e(TAG, "SecurityException getting audio devices: ${e.message}", e)
-                _uiState.update { it.copy(isLoading = false, error = "Permission issue: ${e.message}", allPermissionsGranted = false) }
+                Log.e(TAG, "SecurityException in refreshAudioDeviceList: ${e.message}", e)
+                _uiState.update { it.copy(isLoading = false, error = "Izin bermasalah: ${e.message}", allPermissionsGranted = false) }
             } catch (e: Exception) {
-                Log.e(TAG, "Error loading audio devices: ${e.message}", e)
+                Log.e(TAG, "Error in refreshAudioDeviceList: ${e.message}", e)
                 _uiState.update { it.copy(isLoading = false, error = "Gagal memuat perangkat: ${e.message}") }
             }
         }
@@ -375,13 +468,13 @@ class AudioDeviceSelectionViewModel(
     private fun startBluetoothDiscovery() {
         if (bluetoothAdapter == null || !_uiState.value.allPermissionsGranted) {
             Log.w(TAG, "Bluetooth not supported or permissions missing for discovery.")
-            _uiState.update { it.copy(isDiscoveringBluetooth = false) } // Ensure it's false
+            _uiState.update { it.copy(isDiscoveringBluetooth = false) }
             return
         }
 
         if (bluetoothAdapter.isDiscovering) {
             Log.d(TAG, "Already discovering Bluetooth devices.")
-            // Update UI state just in case it was missed
+
             _uiState.update { it.copy(isDiscoveringBluetooth = true) }
             return
         }
@@ -395,23 +488,16 @@ class AudioDeviceSelectionViewModel(
                 isDiscoveringBluetooth = false,
                 error = "Izin Pindai Bluetooth tidak diberikan."
             )}
-            return // CRITICAL: Do not proceed without the permission
+            return
         } else {
             Log.i(TAG, "BLUETOOTH_SCAN permission IS granted at runtime.")
         }
 
-// Also good to check BLUETOOTH_CONNECT if you use it before discovery (though SCAN is primary for discovery start)
         if (ContextCompat.checkSelfPermission(applicationContext, Manifest.permission.BLUETOOTH_CONNECT)
             != PackageManager.PERMISSION_GRANTED) {
             Log.w(TAG, "BLUETOOTH_CONNECT permission is NOT granted at runtime. This might affect later operations like pairing or getting names.")
-            // Discovery might still start, but other things will fail.
-        }
 
-        // Clear previously *only* discovered devices that aren't paired yet. Paired ones might still be relevant.
-        // Or, rely on them being overwritten if found again.
-        // For simplicity, let's allow them to persist a bit and get updated if found/paired.
-        // A more aggressive clear: discoveredBluetoothDevices.clear()
-        // However, this might remove a device that user was about to tap if discovery restarts.
+        }
 
         if (bluetoothAdapter.startDiscovery()) {
             Log.i(TAG, "Starting Bluetooth discovery...")
@@ -421,7 +507,7 @@ class AudioDeviceSelectionViewModel(
                 delay(BLUETOOTH_DISCOVERY_DURATION_MS)
                 if (bluetoothAdapter.isDiscovering) {
                     Log.i(TAG, "Bluetooth discovery timeout. Cancelling.")
-                    bluetoothAdapter.cancelDiscovery() // This will trigger ACTION_DISCOVERY_FINISHED
+                    bluetoothAdapter.cancelDiscovery()
                 }
                 _uiState.update { it.copy(isDiscoveringBluetooth = false) }
             }
@@ -432,25 +518,19 @@ class AudioDeviceSelectionViewModel(
     }
 
     private fun updateDeviceListInUi() {
-        val combinedDevices = mutableMapOf<String, AudioDevice>() // Use uniqueKey as map key
+        val combinedDevices = mutableMapOf<String, AudioDevice>()
 
-        // Add system API devices first (they might have more accurate "isCurrentlySelectedOutput")
         systemApiAudioDevices.forEach { device ->
             combinedDevices[device.uniqueKey] = device
         }
 
-        // Add/update with discovered Bluetooth devices
-        // If a device from discovery has the same address as one from system API,
-        // the system API one (already in map) might be preferred or info merged.
         discoveredBluetoothDevices.values.forEach { discoveredDevice ->
             val existing = combinedDevices[discoveredDevice.uniqueKey]
             if (existing != null) {
-                // Merge: prioritize system API for `isCurrentlySelectedOutput`, but update pairing status
-                // and underlyingBluetoothDevice from discovery if it's more current.
                 combinedDevices[discoveredDevice.uniqueKey] = existing.copy(
-                    pairingStatus = discoveredDevice.pairingStatus, // Discovery has fresher pairing intent
+                    pairingStatus = discoveredDevice.pairingStatus,
                     underlyingBluetoothDevice = discoveredDevice.underlyingBluetoothDevice ?: existing.underlyingBluetoothDevice,
-                    name = if (discoveredDevice.name.isNotBlank() && discoveredDevice.name != "N/A") discoveredDevice.name else existing.name // Prefer non-generic name
+                    name = if (discoveredDevice.name.isNotBlank() && discoveredDevice.name != "N/A") discoveredDevice.name else existing.name
                 )
             } else {
                 combinedDevices[discoveredDevice.uniqueKey] = discoveredDevice
@@ -458,17 +538,15 @@ class AudioDeviceSelectionViewModel(
         }
         val sortedList = combinedDevices.values.sortedWith(
             compareByDescending<AudioDevice> { it.isCurrentlySelectedOutput }
-                .thenByDescending { it.pairingStatus == PairingStatus.PAIRED && it.source == AudioDeviceSource.SYSTEM_API } // Paired & connected
-                .thenBy { it.pairingStatus != PairingStatus.PAIRED && it.source == AudioDeviceSource.BLUETOOTH_DISCOVERY } // Discoverable last
+                .thenByDescending { it.pairingStatus == PairingStatus.PAIRED && it.source == AudioDeviceSource.SYSTEM_API }
+                .thenBy { it.pairingStatus != PairingStatus.PAIRED && it.source == AudioDeviceSource.BLUETOOTH_DISCOVERY }
                 .thenBy { it.name.toString() }
         )
 
         _uiState.update { it.copy(devices = sortedList) }
     }
 
-
     private fun isDeviceSuitableForUserSelection(deviceInfo: AudioDeviceInfo): Boolean {
-        // Your existing logic, ensure it aligns with DeviceType mapping
         return when (deviceInfo.type) {
             AudioDeviceInfo.TYPE_BUILTIN_SPEAKER,
             AudioDeviceInfo.TYPE_BUILTIN_EARPIECE,
@@ -483,7 +561,7 @@ class AudioDeviceSelectionViewModel(
             AudioDeviceInfo.TYPE_REMOTE_SUBMIX, AudioDeviceInfo.TYPE_TELEPHONY -> false
             else -> {
                 Log.d(TAG, "Considering device suitability for type ${deviceInfo.type} (${deviceInfo.productName}): false by default")
-                false // Default to false for unhandled types
+                false
             }
         }
     }
@@ -493,7 +571,7 @@ class AudioDeviceSelectionViewModel(
         val appDeviceType = getAppDeviceTypeFromInfo(deviceInfo)
 
         if (appDeviceType == DeviceType.UNKNOWN && deviceName.contains("Unknown", ignoreCase = true) && deviceInfo.id != activeSystemApiId) {
-            return null // Skip truly unknown devices unless active
+            return null
         }
 
         val isBluetooth = appDeviceType == DeviceType.BLUETOOTH_A2DP || appDeviceType == DeviceType.BLUETOOTH_SCO || appDeviceType == DeviceType.HEARING_AID
@@ -512,9 +590,8 @@ class AudioDeviceSelectionViewModel(
                 Log.w(TAG, "Invalid Bluetooth address from AudioDeviceInfo: ${deviceInfo.address}")
             }
         } else if (!isBluetooth) {
-            pairingStat = PairingStatus.PAIRED // Non-BT devices are implicitly "paired" or not applicable
+            pairingStat = PairingStatus.PAIRED
         }
-
 
         return AudioDevice(
             systemApiId = deviceInfo.id,
@@ -525,7 +602,7 @@ class AudioDeviceSelectionViewModel(
             isCurrentlySelectedOutput = (deviceInfo.id == activeSystemApiId),
             pairingStatus = pairingStat,
             source = AudioDeviceSource.SYSTEM_API,
-            isConnectable = true, // Assume connectable if from AudioManager and suitable
+            isConnectable = true,
             underlyingSystemApiDevice = deviceInfo,
             underlyingBluetoothDevice = underlyingBtDevice
         )
@@ -539,7 +616,7 @@ class AudioDeviceSelectionViewModel(
             }
         } catch (e: SecurityException) {
             Log.w(TAG, "SecurityException getting product name for device ID ${deviceInfo.id}. Fallback. Error: ${e.message}")
-            getFallbackDeviceName(deviceInfo, true) // Force fallback if security exception
+            getFallbackDeviceName(deviceInfo, true)
         }
     }
 
@@ -557,38 +634,45 @@ class AudioDeviceSelectionViewModel(
         }
     }
     private fun isBluetoothDeviceAudioOutput(btDevice: BluetoothDevice): Boolean {
-        // Check BluetoothClass for audio capabilities
-        // This is a hint, not a guarantee it's A2DP or HFP.
-        val btClass = btDevice.bluetoothClass ?: return false // No class info, assume not audio
-        return when (btClass.majorDeviceClass) {
-            android.bluetooth.BluetoothClass.Device.Major.AUDIO_VIDEO -> {
-                when (btClass.deviceClass) {
-                    android.bluetooth.BluetoothClass.Device.AUDIO_VIDEO_HANDSFREE,
-                    android.bluetooth.BluetoothClass.Device.AUDIO_VIDEO_HEADPHONES,
-                    android.bluetooth.BluetoothClass.Device.AUDIO_VIDEO_LOUDSPEAKER,
-                    android.bluetooth.BluetoothClass.Device.AUDIO_VIDEO_PORTABLE_AUDIO,
-                    android.bluetooth.BluetoothClass.Device.AUDIO_VIDEO_HIFI_AUDIO,
-                    android.bluetooth.BluetoothClass.Device.AUDIO_VIDEO_CAR_AUDIO -> true
-                    else -> false
+        val btClass = btDevice.bluetoothClass ?: return false
+        Log.d(TAG, "isBluetoothDeviceAudioOutput for ${btDevice.name ?: btDevice.address}: " +
+                "Major=${String.format("0x%04X", btClass.majorDeviceClass)}, " +
+                "Device=${String.format("0x%06X", btClass.deviceClass)}, " +
+                "HasAudioService=${btClass.hasService(android.bluetooth.BluetoothClass.Service.AUDIO)}")
+
+        if (btClass.majorDeviceClass == android.bluetooth.BluetoothClass.Device.Major.AUDIO_VIDEO) {
+            if (btClass.hasService(android.bluetooth.BluetoothClass.Service.AUDIO)) {
+                Log.d(TAG, " -> IS Audio Output (Major AUDIO_VIDEO + AUDIO service).")
+                return true
+            }
+
+            return when (btClass.deviceClass) {
+                android.bluetooth.BluetoothClass.Device.AUDIO_VIDEO_WEARABLE_HEADSET,
+                android.bluetooth.BluetoothClass.Device.AUDIO_VIDEO_HANDSFREE,
+                android.bluetooth.BluetoothClass.Device.AUDIO_VIDEO_HEADPHONES,
+                android.bluetooth.BluetoothClass.Device.AUDIO_VIDEO_LOUDSPEAKER,
+                android.bluetooth.BluetoothClass.Device.AUDIO_VIDEO_PORTABLE_AUDIO,
+                android.bluetooth.BluetoothClass.Device.AUDIO_VIDEO_HIFI_AUDIO,
+                android.bluetooth.BluetoothClass.Device.AUDIO_VIDEO_CAR_AUDIO -> {
+                    Log.d(TAG, " -> IS Audio Output (Major AUDIO_VIDEO + specific minor device class).")
+                    true
+                }
+                else -> {
+                    Log.d(TAG, " -> NOT Audio Output (Major AUDIO_VIDEO but no AUDIO service bit and no matching specific minor class).")
+                    false
                 }
             }
-            else -> false
         }
+        Log.d(TAG, " -> NOT AUDIO_VIDEO major device class.")
+        return false
     }
 
 
     private fun mapBluetoothDeviceToAppDevice(btDevice: BluetoothDevice): AudioDevice? {
-        // Don't add if address is null, which shouldn't happen for real devices
         if (btDevice.address == null) return null
         val deviceName = btDevice.name ?: "Unknown Bluetooth Device"
-        // Determine DeviceType based on BluetoothClass if possible, default to BLUETOOTH_A2DP or UNKNOWN
-        // This is a simplification; a full mapping from BluetoothClass to your DeviceType would be complex.
-        val appDeviceType = if (isBluetoothDeviceAudioOutput(btDevice)) DeviceType.BLUETOOTH_A2DP else DeviceType.UNKNOWN
-        if (appDeviceType == DeviceType.UNKNOWN && !deviceName.contains("speaker", true) && !deviceName.contains("headphone", true) && !deviceName.contains("audio", true)) {
-            // Log.d(TAG, "Skipping discovered BT device '${deviceName}' as it doesn't appear to be audio output by class/name.")
-            // return null // Be more lenient for discovered devices, let user decide if name sounds plausible.
-        }
 
+        val appDeviceType = if (isBluetoothDeviceAudioOutput(btDevice)) DeviceType.BLUETOOTH_A2DP else DeviceType.UNKNOWN
 
         val pairingStatus = when (btDevice.bondState) {
             BluetoothDevice.BOND_BONDED -> PairingStatus.PAIRED
@@ -596,17 +680,16 @@ class AudioDeviceSelectionViewModel(
             else -> PairingStatus.NONE
         }
 
-        // systemApiId is null because this is from discovery, not yet (or maybe never) from AudioDeviceInfo
         return AudioDevice(
-            systemApiId = null, // Will be populated if it connects and appears in AudioManager
+            systemApiId = null,
             name = deviceName,
-            type = appDeviceType, // Or more specific based on btClass
-            systemDeviceType = btDevice.bluetoothClass?.deviceClass ?: 0, // Store raw BT class
+            type = appDeviceType,
+            systemDeviceType = btDevice.bluetoothClass?.deviceClass ?: 0,
             address = btDevice.address,
-            isCurrentlySelectedOutput = false, // Discovered devices are not active output initially
+            isCurrentlySelectedOutput = false,
             pairingStatus = pairingStatus,
             source = AudioDeviceSource.BLUETOOTH_DISCOVERY,
-            isConnectable = true, // Assume connectable
+            isConnectable = true,
             underlyingSystemApiDevice = null,
             underlyingBluetoothDevice = btDevice
         )
@@ -629,11 +712,11 @@ class AudioDeviceSelectionViewModel(
                     Log.w(TAG, "Error looking up BT device name for address ${deviceInfo.address}: ${e.message}")
                 }
             }
-            // Fallback for Bluetooth if name not found via adapter or address missing from AudioDeviceInfo
+
             return when (deviceInfo.type) {
                 AudioDeviceInfo.TYPE_BLUETOOTH_A2DP, AudioDeviceInfo.TYPE_BLUETOOTH_SCO -> "Bluetooth Audio"
                 AudioDeviceInfo.TYPE_HEARING_AID -> "Hearing Aid"
-                else -> "Bluetooth Device ${deviceInfo.id}" // Generic if forced and not a known BT type
+                else -> "Bluetooth Device ${deviceInfo.id}"
             }
         }
 
