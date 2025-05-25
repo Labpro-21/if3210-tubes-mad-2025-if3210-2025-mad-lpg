@@ -23,4 +23,9 @@ object SharedPlayerState {
     fun updateQueue(queue: List<Song>) {
         _musicQueue.value = queue
     }
+
+    fun clearSongAndQueue() {
+        _currentPlayingSong.value = null
+        _musicQueue.value = emptyList()
+    }
 }

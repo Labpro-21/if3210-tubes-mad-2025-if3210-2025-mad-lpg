@@ -1,4 +1,4 @@
-package com.tubes1.purritify.core.data.local
+package com.tubes1.purritify.core.data.local.dao
 
 import androidx.room.Dao
 import androidx.room.Insert
@@ -45,4 +45,7 @@ interface SongDao {
         WHERE id = :songId
     """)
     suspend fun toggleFavorite(songId: Long): Int
+
+    @Query("SELECT * FROM song WHERE title = :title AND artist = :artist AND duration = :duration")
+    suspend fun getSongByTitleAndArtistAndDuration(title: String, artist: String, duration: Long): SongEntity?
 }

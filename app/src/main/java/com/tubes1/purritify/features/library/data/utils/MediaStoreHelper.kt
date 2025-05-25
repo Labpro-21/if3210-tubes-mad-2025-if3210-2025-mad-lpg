@@ -84,9 +84,6 @@ class MediaStoreHelper(
         }
     }
 
-    /**
-     * Saves the song file to internal storage and returns the file path
-     */
     private fun saveSongToInternalStorage(uri: Uri): String {
         val fileName = "song_${UUID.randomUUID()}.mp3"
         val file = File(context.filesDir, fileName)
@@ -100,9 +97,6 @@ class MediaStoreHelper(
         return file.absolutePath
     }
 
-    /**
-     * Saves the album art to internal storage and returns the file path
-     */
     private fun saveSongArtToInternalStorage(uri: Uri): String? {
         return try {
             val fileName = "album_art_${UUID.randomUUID()}.jpg"

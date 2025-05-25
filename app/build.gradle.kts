@@ -87,6 +87,7 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.kotlinx.serialization.json)
+    implementation(libs.androidx.media)
     implementation(libs.coil.kt.coil.compose)
     implementation(libs.play.services.location)
     implementation(libs.osmdroid.android)

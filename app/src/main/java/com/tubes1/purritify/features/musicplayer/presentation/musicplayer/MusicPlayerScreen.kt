@@ -36,7 +36,7 @@ import org.koin.androidx.compose.koinViewModel
 import java.io.File
 import java.util.concurrent.TimeUnit
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalGlideComposeApi::class)
+@OptIn(ExperimentalGlideComposeApi::class)
 @Composable
 fun MusicPlayerScreen(
     onBackPressed: () -> Unit,
@@ -104,7 +104,7 @@ fun MusicPlayerScreen(
                         )
                     }
 
-                    IconButton(onClick = { /* Show menu options */ }) {
+                    IconButton(onClick = {  }) {
                         Icon(
                             imageVector = Icons.Default.MoreVert,
                             contentDescription = "More options",
@@ -113,7 +113,7 @@ fun MusicPlayerScreen(
                     }
                 }
 
-                // Album Art
+
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -128,7 +128,7 @@ fun MusicPlayerScreen(
                             modifier = Modifier.fillMaxSize()
                         )
                     } else {
-                        // placeholder if no song is loaded
+
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()

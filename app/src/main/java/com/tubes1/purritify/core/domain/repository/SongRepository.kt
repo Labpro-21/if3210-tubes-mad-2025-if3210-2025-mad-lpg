@@ -24,4 +24,6 @@ interface SongRepository {
     suspend fun updateLastPlayed(songId: Long): Unit
 
     suspend fun toggleFavorite(songId: Long): Boolean
+
+    suspend fun getSongByTitleAndArtistAndDuration(title: String, artist: String, duration: Long): Song?
 }

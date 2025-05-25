@@ -5,6 +5,7 @@ import com.tubes1.purritify.features.library.domain.usecase.uploadsong.AddSongUs
 import com.tubes1.purritify.features.library.domain.usecase.uploadsong.DeleteSongUseCase
 import com.tubes1.purritify.features.library.domain.usecase.getsongs.GetNewlyAddedSongsUseCase
 import com.tubes1.purritify.features.library.domain.usecase.getsongs.GetRecentlyPlayedSongsUseCase
+import com.tubes1.purritify.features.library.domain.usecase.getsongs.GetSongByTitleAndArtistAndDuration
 import com.tubes1.purritify.features.library.presentation.homepage.HomePageViewModel
 import com.tubes1.purritify.features.library.presentation.librarypage.LibraryPageViewModel
 import com.tubes1.purritify.features.library.presentation.uploadsong.UploadSongViewModel
@@ -16,10 +17,11 @@ val libraryModule = module {
     factory { DeleteSongUseCase(get()) }
     factory { GetNewlyAddedSongsUseCase(get()) }
     factory { GetRecentlyPlayedSongsUseCase(get()) }
+    factory { GetSongByTitleAndArtistAndDuration(get()) }
 
     single { MediaStoreHelper(get()) }
 
     viewModel { HomePageViewModel(get(), get(), get()) }
     viewModel { LibraryPageViewModel(get(), get()) }
-    viewModel { UploadSongViewModel(get(), get()) }
+    viewModel { UploadSongViewModel(get(), get(), get()) }
 }
