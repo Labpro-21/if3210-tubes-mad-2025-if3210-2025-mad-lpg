@@ -22,6 +22,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.ui.text.style.TextAlign
+import com.tubes1.purritify.core.common.navigation.isLandscape
 import com.tubes1.purritify.core.ui.components.InputField
 import com.tubes1.purritify.features.library.presentation.uploadsong.UploadSongViewModel
 import com.tubes1.purritify.features.library.presentation.uploadsong.components.UploadArea
@@ -124,12 +125,19 @@ fun UploadSongBottomSheet(
                                 .padding(bottom = 24.dp),
                             horizontalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
+                            val modifier: Modifier
+                            if (isLandscape()) {
+                                modifier = Modifier.weight(1f)
+                            } else {
+                                modifier = Modifier.weight(1f).aspectRatio(1f)
+                            }
+
                             UploadArea(
                                 filePath = state.songArtUri,
                                 description = "Unggah Foto",
                                 icon = Icons.Outlined.AccountCircle,
                                 onClick = { photoPickerLauncher.launch("image/*") },
-                                modifier = Modifier.weight(1f),
+                                modifier = modifier,
                                 imagePreview = true
                             )
 
@@ -139,32 +147,36 @@ fun UploadSongBottomSheet(
                                 icon = null,
                                 onClick =
                                 { songPickerLauncher.launch(arrayOf("audio/*")) },
-                                modifier = Modifier.weight(1f),
+                                modifier = modifier,
                                 songDuration = duration
                             )
                         }
 
-                        // title input
-                        InputField(
-                            label = "Judul",
-                            value = state.title,
-                            onValueChange = { viewModel.onTitleChanged(it) },
-                            placeholder = "Judul lagu",
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 16.dp)
-                        )
+                        if (isLandscape()) {
+                            Row {
+                                // title input
+                                InputField(
+                                    label = "Judul",
+                                    value = state.title,
+                                    onValueChange = { viewModel.onTitleChanged(it) },
+                                    placeholder = "Judul lagu",
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .padding(bottom = 16.dp)
+                                )
 
-                        // artist input
-                        InputField(
-                            label = "Artis",
-                            value = state.artist,
-                            onValueChange = { viewModel.onArtistChanged(it) },
-                            placeholder = "Artis lagu",
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 32.dp)
-                        )
+                                // artist input
+                                InputField(
+                                    label = "Artis",
+                                    value = state.artist,
+                                    onValueChange = { viewModel.onArtistChanged(it) },
+                                    placeholder = "Artis lagu",
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .padding(bottom = 32.dp)
+                                )
+                            }
+                        }
 
                         if (state.error != null) {
                             Text(

@@ -1,5 +1,6 @@
 package com.tubes1.purritify.features.library.presentation.homepage
 
+import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.Log
@@ -41,6 +42,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -50,6 +52,7 @@ import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.tubes1.purritify.R
 import com.tubes1.purritify.core.common.navigation.Screen
+import com.tubes1.purritify.core.common.network.Connectivity
 import com.tubes1.purritify.features.library.presentation.common.ui.components.SongListItem
 import com.tubes1.purritify.features.library.presentation.homepage.components.SongGridItem
 import com.tubes1.purritify.features.library.presentation.homepage.components.TopChartItem
@@ -68,10 +71,12 @@ fun HomeScreen(
     viewModel: HomePageViewModel = koinViewModel(),
     sharedPlayerViewModel: SharedPlayerViewModel = koinViewModel(),
     musicPlayerViewModel: MusicPlayerViewModel = koinViewModel(),
-    profileViewModel: ProfileViewModel = koinViewModel()
+    profileViewModel: ProfileViewModel = koinViewModel(),
+    context: Context = LocalContext.current,
 ) {
     val state by viewModel.state.collectAsState()
     val profileState = viewModel.profile_state.collectAsState()
+    val isConnected = Connectivity.isConnected(context)
 
     val backgroundGradient = Brush.verticalGradient(
         colors = listOf(
@@ -167,27 +172,46 @@ fun HomeScreen(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    // Global Chart
-                    item {
-                        TopChartItem(
-                            title = "TOP 50",
-                            subtitle = "Global",
-                            onClick = {
-                                navController.navigate(Screen.OnlineChartsScreen.createRoute(
-                                    OnlineSongsApi.COUNTRY_CODE_GLOBAL))
-                            }
-                        )
-                    }
+                    if (isConnected) {
+                        // Global Chart
+                        item {
+                            TopChartItem(
+                                title = "TOP 50",
+                                subtitle = "Global",
+                                onClick = {
+                                    navController.navigate(
+                                        Screen.OnlineChartsScreen.createRoute(
+                                            OnlineSongsApi.COUNTRY_CODE_GLOBAL
+                                        )
+                                    )
+                                }
+                            )
+                        }
 
-                    // Local Chart
-                    item {
-                        TopChartItem(
-                            title = "TOP 50",
-                            subtitle = "Indo",
-                            onClick = {
-                                navController.navigate(Screen.OnlineChartsScreen.createRoute("ID"))
-                            }
-                        )
+                        // Local Chart
+                        item {
+                            TopChartItem(
+                                title = "TOP 50",
+                                subtitle = profileState.value.profile?.location.toString(),
+                                onClick = {
+                                    navController.navigate(
+                                        Screen.OnlineChartsScreen.createRoute(
+                                            profileState.value.profile?.location.toString()
+                                        )
+                                    )
+                                }
+                            )
+                        }
+                    } else {
+                        item {
+                            Text(
+                                text = "Anda tidak terhubung ke internet",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = Color.White,
+                                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                                textAlign = TextAlign.Center
+                            )
+                        }
                     }
                 }
             }

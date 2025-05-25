@@ -1,5 +1,8 @@
 package com.tubes1.purritify.core.common.navigation
 
+import android.content.res.Configuration
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalConfiguration
 import com.tubes1.purritify.features.onlinesongs.presentation.OnlineChartsViewModel
 
 sealed class Screen(val route: String) {
@@ -14,4 +17,8 @@ sealed class Screen(val route: String) {
     object OnlineChartsScreen : Screen("online-charts-screen/{${OnlineChartsViewModel.NAV_ARG_CHART_TYPE}}") {
         fun createRoute(chartType: String) = "online-charts-screen/$chartType"
     }
+@Composable
+fun isLandscape(): Boolean {
+    val configuration = LocalConfiguration.current
+    return configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 }
