@@ -7,6 +7,7 @@ import android.content.ServiceConnection
 import android.os.IBinder
 import android.util.Log
 import android.widget.Toast
+import com.tubes1.purritify.core.data.local.dao.PlayHistoryDao
 import com.tubes1.purritify.core.data.local.preferences.UserPreferencesRepository
 import com.tubes1.purritify.core.domain.model.Song
 import com.tubes1.purritify.features.audiorouting.domain.model.AudioDevice
@@ -30,7 +31,8 @@ import kotlinx.coroutines.launch
 
 class MusicPlayerRepositoryImpl(
     private val context: Context,
-    private val userPreferencesRepository: UserPreferencesRepository
+    private val userPreferencesRepository: UserPreferencesRepository,
+    private val playHistoryDao: PlayHistoryDao
 ) : MusicPlayerRepository {
 
     private var musicService: MusicPlayerService? = null
@@ -46,6 +48,7 @@ class MusicPlayerRepositoryImpl(
             musicService = binder.getService()
             _serviceBoundFlow.value = true
 
+            musicService?.setPlayHistoryDao(playHistoryDao)
 
             repositoryScope.launch {
                 userPreferencesRepository.preferredAudioDeviceFlow.firstOrNull()?.let { device ->

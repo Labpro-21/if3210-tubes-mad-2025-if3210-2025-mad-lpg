@@ -34,6 +34,8 @@ import android.content.BroadcastReceiver
 import android.content.IntentFilter
 import android.media.AudioDeviceInfo
 import com.tubes1.purritify.R
+import com.tubes1.purritify.core.data.local.dao.PlayHistoryDao
+import com.tubes1.purritify.core.data.local.entity.PlayHistoryEntity
 import com.tubes1.purritify.core.domain.model.Song
 import com.tubes1.purritify.features.audiorouting.domain.model.AudioDevice
 import com.tubes1.purritify.features.audiorouting.domain.model.AudioDeviceSource
@@ -46,10 +48,11 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import org.koin.core.component.KoinComponent
 import java.io.IOException
 
 
-class MusicPlayerService : Service() {
+class MusicPlayerService : Service(), KoinComponent {
     private val binder = MusicPlayerBinder()
     private var mediaPlayer: MediaPlayer? = null
     var currentQueue: List<Song> = emptyList()
@@ -59,6 +62,8 @@ class MusicPlayerService : Service() {
 
     private lateinit var mediaSession: MediaSessionCompat
     private lateinit var notificationManager: NotificationManager
+
+    private var playHistoryDao: PlayHistoryDao? = null
 
     private val _preferredAudioDevice = MutableStateFlow<AudioDevice?>(null)
     val preferredAudioDevice: StateFlow<AudioDevice?> = _preferredAudioDevice.asStateFlow()
@@ -80,7 +85,6 @@ class MusicPlayerService : Service() {
     sealed class MusicServiceEvent {
         data class AudioOutputChanged(val message: String, val newDeviceName: String?) : MusicServiceEvent()
         data class PlaybackPausedDueToNoise(val message: String) : MusicServiceEvent()
-
     }
 
     private val _serviceEvents = MutableSharedFlow<MusicServiceEvent>(replay = 0)
@@ -88,6 +92,9 @@ class MusicPlayerService : Service() {
 
     private var audioBecomingNoisyReceiver: BroadcastReceiver? = null
     private var bluetoothA2dpStateReceiver: BroadcastReceiver? = null
+
+    private var currentSongPlayStartTime: Long = 0L
+    private var currentSongListenedDurationBeforePause: Long = 0L
 
     companion object {
         const val NOTIFICATION_CHANNEL_ID = "purritify_music_channel"
@@ -126,6 +133,11 @@ class MusicPlayerService : Service() {
         Log.d(TAG, "onCreate: Service created and initializations done.")
     }
 
+    fun setPlayHistoryDao(dao: PlayHistoryDao) {
+        this.playHistoryDao = dao
+        Log.i(TAG, "PlayHistoryDao has been set in service.")
+    }
+
     fun updatePreferredAudioDevice(device: AudioDevice?) {
         val oldDeviceName = _preferredAudioDevice.value?.name
         Log.i(TAG, "Service updating preferred audio device to: ${device?.name ?: "System Default"}")
@@ -149,7 +161,17 @@ class MusicPlayerService : Service() {
                     .setUsage(AudioAttributes.USAGE_MEDIA)
                     .build()
             )
-            setOnCompletionListener { playNext() }
+            setOnCompletionListener {
+                Log.d(TAG, "Song completed.")
+                val completedSong = _currentSong.value
+                if (completedSong != null) {
+                    val elapsedTime = System.currentTimeMillis() - currentSongPlayStartTime
+                    currentSongListenedDurationBeforePause += elapsedTime
+                    logPlayHistoryIfNeeded(isCompletion = true, manualStop = false, listenedDuration = currentSongListenedDurationBeforePause)
+                }
+                currentSongListenedDurationBeforePause = 0L // Reset for next song
+                playNext()
+            }
             setOnPreparedListener { mp ->
                 Log.d(TAG, "MediaPlayer prepared. Duration: ${mp.duration}")
                 _duration.value = mp.duration.toLong()
@@ -157,6 +179,8 @@ class MusicPlayerService : Service() {
                 applyAudioRouting()
                 mp.start()
                 _isPlaying.value = true
+                currentSongPlayStartTime = System.currentTimeMillis() // Record start time
+                currentSongListenedDurationBeforePause = 0L // Reset for new song play
                 startPositionUpdates()
                 mediaSession.isActive = true
 
@@ -541,6 +565,16 @@ class MusicPlayerService : Service() {
 
     fun playSong(song: Song, queue: List<Song> = listOf(song)) {
         Log.d(TAG, "playSong called for: ${song.title}")
+
+        val previouslyPlayingSong = _currentSong.value
+        if (previouslyPlayingSong != null && previouslyPlayingSong.id != song.id && _isPlaying.value) {
+            val playedDuration = System.currentTimeMillis() - currentSongPlayStartTime
+            currentSongListenedDurationBeforePause += playedDuration
+            Log.d(TAG, "Song changed while playing ${previouslyPlayingSong.title}. Logging its play duration: ${currentSongListenedDurationBeforePause}ms")
+            logPlayHistoryIfNeeded(isCompletion = false, manualStop = true, listenedDuration = currentSongListenedDurationBeforePause) // Treat as a stop for the old song
+        }
+        currentSongListenedDurationBeforePause = 0L // Reset for the new song
+
         _currentSong.value = song
         currentQueue = queue
         currentSongIndex = queue.indexOf(song).takeIf { it >= 0 } ?: 0
@@ -601,6 +635,9 @@ class MusicPlayerService : Service() {
                 Log.d(TAG, "playPause: Pausing.")
                 it.pause()
                 _isPlaying.value = false
+                val playedDuration = System.currentTimeMillis() - currentSongPlayStartTime
+                currentSongListenedDurationBeforePause += playedDuration // Accumulate
+                logPlayHistoryIfNeeded(isCompletion = false, manualStop = true, listenedDuration = currentSongListenedDurationBeforePause) // Log partial play
                 stopPositionUpdates()
             } else {
                 Log.d(TAG, "playPause: Playing.")
@@ -614,6 +651,7 @@ class MusicPlayerService : Service() {
 
                     it.start()
                     _isPlaying.value = true
+                    currentSongPlayStartTime = System.currentTimeMillis()
                     startPositionUpdates()
                 } catch (e: IllegalStateException) {
                     Log.e(TAG, "playPause: MediaPlayer not ready to start, attempting to replay current song.", e)
@@ -674,12 +712,18 @@ class MusicPlayerService : Service() {
                     try {
                         val currentPos = mediaPlayer!!.currentPosition.toLong()
                         _currentPosition.value = currentPos
+
+                        val liveElapsed = (System.currentTimeMillis() - currentSongPlayStartTime) + currentSongListenedDurationBeforePause
+                        _liveElapsedTimeMs.value = liveElapsed
+
                         updateMediaSessionPlaybackState(_currentSong.value, currentPos, _isPlaying.value)
                     } catch (e: IllegalStateException) {
                         Log.w("MusicPlayerService", "Error getting current position: ${e.message}")
                         stopPositionUpdates()
                         break
                     }
+                } else {
+                    _liveElapsedTimeMs.value = currentSongListenedDurationBeforePause
                 }
                 delay(1000)
             }
@@ -693,6 +737,14 @@ class MusicPlayerService : Service() {
 
     fun stopPlaybackAndNotification() {
         Log.d(TAG, "stopPlaybackAndNotification called")
+
+        if (_isPlaying.value && _currentSong.value != null) {
+            val playedDuration = System.currentTimeMillis() - currentSongPlayStartTime
+            currentSongListenedDurationBeforePause += playedDuration
+            logPlayHistoryIfNeeded(isCompletion = false, manualStop = true, listenedDuration = currentSongListenedDurationBeforePause)
+        }
+        currentSongListenedDurationBeforePause = 0L
+
         mediaPlayer?.apply {
             if (this.isPlaying) {
                 try { this.stop() }
@@ -712,6 +764,56 @@ class MusicPlayerService : Service() {
 
         Log.d(TAG, "Service playback stopped.")
     }
+
+    private fun logPlayHistoryIfNeeded(isCompletion: Boolean, manualStop: Boolean, listenedDuration: Long) {
+        val songToLog = _currentSong.value
+        val currentPlayHistoryDao = playHistoryDao
+
+        if (currentPlayHistoryDao == null) {
+            Log.e(TAG, "PlayHistoryDao is null in service. Cannot log play history.")
+            return
+        }
+
+        if (songToLog?.id == null) {
+            Log.w(TAG, "Cannot log play history, song or songId is null.")
+            return
+        }
+
+        // Define "significant play" - e.g., more than 10 seconds or if completed
+        val significantPlayThresholdMs = 10000L // 10 seconds
+        if (!isCompletion && listenedDuration < significantPlayThresholdMs) {
+            Log.d(TAG, "Song '${songToLog.title}' listened for ${listenedDuration}ms, less than threshold. Not logging.")
+            return
+        }
+
+        val actualListenedDuration = if (isCompletion) songToLog.duration else listenedDuration
+
+        // Format month as "YYYY-MM"
+        val calendar = java.util.Calendar.getInstance()
+        val year = calendar.get(java.util.Calendar.YEAR)
+        val monthInt = calendar.get(java.util.Calendar.MONTH) + 1 // Month is 0-indexed
+        val monthYear = String.format("%d-%02d", year, monthInt)
+
+        val historyEntry = PlayHistoryEntity(
+            datetime = System.currentTimeMillis(),
+            songId = songToLog.id!!, // Already checked for null
+            artist = songToLog.artist,
+            month = monthYear,
+            duration = actualListenedDuration // Log the actual duration listened or full if completed
+        )
+
+        serviceScope.launch(Dispatchers.IO) { // Perform DB operation on IO dispatcher
+            try {
+                val id = currentPlayHistoryDao.insertPlayHistory(historyEntry)
+                Log.i(TAG, "Logged play history for '${songToLog.title}', ID: $id, Duration: $actualListenedDuration, Month: $monthYear")
+            } catch (e: Exception) {
+                Log.e(TAG, "Error logging play history for ${songToLog.title}", e)
+            }
+        }
+    }
+
+    private val _liveElapsedTimeMs = MutableStateFlow(0L)
+    val liveElapsedTimeMs: StateFlow<Long> = _liveElapsedTimeMs.asStateFlow()
 
     private fun stopForegroundAndRemoveNotification() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
