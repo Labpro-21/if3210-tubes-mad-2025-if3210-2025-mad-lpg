@@ -1,6 +1,8 @@
 package com.tubes1.purritify.core.data.repository
 
+import com.tubes1.purritify.core.data.local.dao.ArtistsCountDao
 import com.tubes1.purritify.core.data.local.dao.SongDao
+import com.tubes1.purritify.core.data.local.entity.ArtistsCount
 import com.tubes1.purritify.core.data.local.entity.toSong
 import com.tubes1.purritify.core.data.local.entity.toSongEntity
 import com.tubes1.purritify.core.domain.model.Song
@@ -10,7 +12,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
 class SongRepositoryImpl(
-    private val songDao: SongDao
+    private val songDao: SongDao,
+    private val artistsCountDao: ArtistsCountDao
 ) : SongRepository {
 
     override fun getAllSongs(): Flow<List<Song>> {
@@ -43,6 +46,11 @@ class SongRepositoryImpl(
         }
     }
 
+    override fun getRecommendedSongs(): Flow<List<Song>> {
+        return songDao.getRecommendedSongs()
+            .map { entities -> entities.map { it.toSong() } }
+    }
+
     override suspend fun addSong(song: Song): Long {
         return songDao.insertSong(song.toSongEntity())
     }
@@ -60,7 +68,30 @@ class SongRepositoryImpl(
     }
 
     override suspend fun toggleFavorite(songId: Long): Boolean {
-        return songDao.toggleFavorite(songId) > 0
+        val song = songDao.getSongById(songId) ?: return false
+        val isUpdated = songDao.toggleFavorite(songId) > 0
+
+        fun splitArtists(artistField: String): List<String> {
+            return artistField.split(",").map { it.trim() }.filter { it.isNotEmpty() }
+        }
+
+        if (isUpdated) {
+            val artists = splitArtists(song.artist)
+
+            if (song.isFavorited) {
+                for (artist in artists) {
+                    artistsCountDao.decrementLike(artist)
+                }
+            } else {
+                for (artist in artists) {
+                    val inserted = artistsCountDao.insert(ArtistsCount(artist, 1))
+                    if (inserted == -1L) {
+                        artistsCountDao.incrementLike(artist)
+                    }
+                }
+            }
+        }
+        return isUpdated
     }
 
     override suspend fun getSongByTitleAndArtistAndDuration(title: String, artist: String, duration: Long): Song? {
