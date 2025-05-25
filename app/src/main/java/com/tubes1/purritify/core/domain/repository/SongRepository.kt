@@ -1,5 +1,6 @@
 package com.tubes1.purritify.core.domain.repository
 
+import com.tubes1.purritify.core.data.local.entity.SongEntity
 import com.tubes1.purritify.core.domain.model.Song
 import kotlinx.coroutines.flow.Flow
 
@@ -14,6 +15,8 @@ interface SongRepository {
     fun getAllFavoritedSongs(): Flow<List<Song>>
 
     fun getAllListenedSongs(): Flow<List<Song>>
+
+    fun getRecommendedSongs(): Flow<List<Song>>
 
     suspend fun addSong(song: Song): Long
 

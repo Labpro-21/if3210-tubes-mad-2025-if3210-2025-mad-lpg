@@ -91,4 +91,5 @@ dependencies {
     implementation(libs.coil.kt.coil.compose)
     implementation(libs.play.services.location)
     implementation(libs.osmdroid.android)
+    implementation(libs.retrofit2.kotlinx.serialization.converter)
 }

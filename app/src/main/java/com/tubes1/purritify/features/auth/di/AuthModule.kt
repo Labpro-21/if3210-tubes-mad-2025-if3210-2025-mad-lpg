@@ -8,16 +8,19 @@ import com.tubes1.purritify.features.auth.domain.usecase.token.RequestTokenUseCa
 import com.tubes1.purritify.features.auth.domain.usecase.token.GetAccessTokenUseCase
 import com.tubes1.purritify.features.auth.domain.usecase.token.GetRefreshTokenUseCase
 import com.tubes1.purritify.core.common.utils.ReadToken
+import com.tubes1.purritify.core.di.NetworkQualifiers
 import com.tubes1.purritify.features.auth.domain.usecase.token.RefreshTokenUseCase
 import com.tubes1.purritify.features.auth.domain.usecase.token.VerifyTokenUseCase
 import com.tubes1.purritify.features.auth.presentation.login.LoginStateViewModel
 import org.koin.core.module.dsl.viewModel
+import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import retrofit2.Retrofit
 
 val authModule = module {
-    single {
-        get<Retrofit>().create(AuthApi::class.java)
+    single<AuthApi> { 
+        val retrofit: Retrofit = get(named(NetworkQualifiers.RETROFIT_GSON)) 
+        retrofit.create(AuthApi::class.java)
     }
 
     single<AuthRepository> {

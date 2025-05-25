@@ -8,7 +8,7 @@ data class Song(
     val path: String,
     val songArtUri: String?,
     val dateAdded: Long,
-    val lastPlayed: Long?,
+    val lastPlayed: Long? = null,
     val isFavorited: Boolean = false,
     val isFromServer: Boolean = false
 )

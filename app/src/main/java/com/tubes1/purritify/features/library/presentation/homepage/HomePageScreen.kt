@@ -1,5 +1,9 @@
 package com.tubes1.purritify.features.library.presentation.homepage
 
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.util.Log
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -13,29 +17,32 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -48,8 +55,11 @@ import com.tubes1.purritify.features.library.presentation.homepage.components.So
 import com.tubes1.purritify.features.library.presentation.homepage.components.TopChartItem
 import com.tubes1.purritify.features.musicplayer.presentation.musicplayer.MusicPlayerViewModel
 import com.tubes1.purritify.features.musicplayer.presentation.musicplayer.SharedPlayerViewModel
-import com.tubes1.purritify.features.musicplayer.presentation.musicplayer.component.MiniPlayer
+import com.tubes1.purritify.features.profile.presentation.profile.getFlagEmoji
+import com.tubes1.purritify.features.onlinesongs.data.remote.OnlineSongsApi
+import com.tubes1.purritify.features.profile.presentation.profile.ProfileViewModel
 import org.koin.androidx.compose.koinViewModel
+import java.util.Locale
 
 @OptIn(ExperimentalGlideComposeApi::class)
 @Composable
@@ -57,9 +67,11 @@ fun HomeScreen(
     navController: NavController,
     viewModel: HomePageViewModel = koinViewModel(),
     sharedPlayerViewModel: SharedPlayerViewModel = koinViewModel(),
-    musicPlayerViewModel: MusicPlayerViewModel = koinViewModel()
+    musicPlayerViewModel: MusicPlayerViewModel = koinViewModel(),
+    profileViewModel: ProfileViewModel = koinViewModel()
 ) {
     val state by viewModel.state.collectAsState()
+    val profileState = viewModel.profile_state.collectAsState()
 
     val backgroundGradient = Brush.verticalGradient(
         colors = listOf(
@@ -108,23 +120,18 @@ fun HomeScreen(
                             }
                     ) {
                         Text(
-                            text = "13522007",
+                            text = profileState.value.profile?.username ?: "13522xxx",
                             color = Color.White,
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold
                         )
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                text = "🇮🇩",
-                                fontSize = 16.sp,
-                                modifier = Modifier.padding(end = 4.dp)
-                            )
-                            Text(
-                                text = "Indonesia",
-                                color = Color.White.copy(alpha = 0.8f),
-                                fontSize = 14.sp
-                            )
-                        }
+                        Text(
+                            text = profileState.value.profile?.location?.let {
+                                "${getFlagEmoji(it)} ${Locale("", it).displayCountry}"
+                            } ?: "",
+                            color = Color.White.copy(alpha = 0.8f),
+                            fontSize = 14.sp
+                        )
                     }
                 }
 
@@ -166,7 +173,8 @@ fun HomeScreen(
                             title = "TOP 50",
                             subtitle = "Global",
                             onClick = {
-                                // In Progress
+                                navController.navigate(Screen.OnlineChartsScreen.createRoute(
+                                    OnlineSongsApi.COUNTRY_CODE_GLOBAL))
                             }
                         )
                     }
@@ -177,7 +185,7 @@ fun HomeScreen(
                             title = "TOP 50",
                             subtitle = "Indo",
                             onClick = {
-                                // In Progress
+                                navController.navigate(Screen.OnlineChartsScreen.createRoute("ID"))
                             }
                         )
                     }
@@ -256,7 +264,40 @@ fun HomeScreen(
                     )
                 }
             }
-        }
 
+            // recommendation section
+            item {
+                Text(
+                    text = "Disarankan untukmu",
+                    color = Color.White,
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    modifier = Modifier.padding(top = 24.dp, bottom = 12.dp)
+                )
+            }
+
+            if (state.recommendedSongs.isEmpty()) {
+                item {
+                    Text(
+                        text = "Belum ada rekomendasi untukmu",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = Color.White,
+                        modifier = Modifier.fillMaxWidth().padding(16.dp),
+                        textAlign = TextAlign.Left
+                    )
+                }
+            } else {
+                items(state.recommendedSongs) { song ->
+                    SongListItem(
+                        song = song,
+                        onClick = {
+                            sharedPlayerViewModel.setSongAndQueue(song, state.recentlyPlayedSongs)
+                            navController.navigate(Screen.MusicPlayer.route)
+                            musicPlayerViewModel.playSong(song, state.recentlyPlayedSongs)
+                        }
+                    )
+                }
+            }
+        }
     }
 }

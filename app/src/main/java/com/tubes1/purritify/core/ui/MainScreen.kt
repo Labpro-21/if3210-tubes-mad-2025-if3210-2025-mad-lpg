@@ -39,6 +39,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import androidx.navigation.NavController
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.tubes1.purritify.MainActivity
 import com.tubes1.purritify.core.common.navigation.isLandscape
@@ -52,6 +54,8 @@ import com.tubes1.purritify.features.musicplayer.presentation.musicplayer.MusicP
 import com.tubes1.purritify.features.musicplayer.presentation.musicplayer.MusicPlayerViewModel
 import com.tubes1.purritify.features.musicplayer.presentation.musicplayer.PlayerUiState
 import com.tubes1.purritify.features.musicplayer.presentation.musicplayer.component.MiniPlayer
+import com.tubes1.purritify.features.onlinesongs.presentation.OnlineChartsScreen
+import com.tubes1.purritify.features.onlinesongs.presentation.OnlineChartsViewModel
 import com.tubes1.purritify.features.soundcapsule.presentation.SoundCapsuleScreen
 import kotlinx.coroutines.flow.StateFlow
 import org.koin.androidx.compose.koinViewModel
@@ -150,12 +154,16 @@ fun MainScreen(
 
     if (isLandscape()) {
         Row(modifier = Modifier.fillMaxSize()) {
-            BottomNavigation(
-                onClick = { },
-                navController = navController,
-                currentRoute = currentRoute,
-                modifier = Modifier.fillMaxHeight().width(200.dp)
-            )
+            if (currentRoute != Screen.Login.route &&
+                currentRoute != Screen.Profile.route &&
+                currentRoute != Screen.Settings.route) {
+                BottomNavigation(
+                    onClick = { },
+                    navController = navController,
+                    currentRoute = currentRoute,
+                    modifier = Modifier.fillMaxHeight().width(200.dp)
+                )
+            }
 
             if (startDestination != null) {
                 Scaffold(
@@ -214,6 +222,12 @@ fun MainScreen(
                         }
                         AnimatedVisibilityX(shouldShowMiniPlayer, playerState, playerViewModel, currentRoute, navController)
                     }
+                    composable(
+                        route = Screen.OnlineChartsScreen.route,
+                        arguments = listOf(navArgument(OnlineChartsViewModel.NAV_ARG_CHART_TYPE) { type = NavType.StringType })
+                    ) {
+                        OnlineChartsScreen(navController = navController)
+                    }
                 }
 
             } else {
@@ -226,7 +240,9 @@ fun MainScreen(
         if (startDestination != null) {
             Scaffold(
                 bottomBar = {
-                    if (currentRoute != Screen.Login.route) {
+                    if (currentRoute != Screen.Login.route &&
+                        currentRoute != Screen.Profile.route &&
+                        currentRoute != Screen.Settings.route) {
                         BottomNavigation(
                             onClick = { },
                             navController = navController,

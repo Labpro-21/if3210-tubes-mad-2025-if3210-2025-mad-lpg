@@ -1,6 +1,5 @@
 package com.tubes1.purritify.core.ui
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -97,8 +96,7 @@ fun SettingsScreen(navController: NavController) {
                     title = "Akun Anda",
                     subtitle = "Kelola pengaturan terkait akun Anda",
                     onClick = {
-                        // TODO: Navigate to Account Settings Screen
-                        // navController.navigate("account_settings_route")
+                        navController.navigate(Screen.Profile.route)
                     }
                 )
                 ListDivider()

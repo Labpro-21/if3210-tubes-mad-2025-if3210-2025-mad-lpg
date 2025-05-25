@@ -1,6 +1,5 @@
 package com.tubes1.purritify.features.profile.presentation.profile
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tubes1.purritify.core.common.utils.DeleteToken
@@ -50,7 +49,6 @@ class ProfileViewModel(
     fun getProfile() {
         viewModelScope.launch {
             val token = readToken()
-            Log.d("TOKEN_PRINT", "Token: $token")
             if (token == "") {
                 _state.value = _state.value.copy(
                     tokenExpired = true
@@ -59,9 +57,9 @@ class ProfileViewModel(
             }
 
             try {
-                getProfileUseCase("Bearer ${token}")
+                getProfileUseCase("Bearer $token")
                     .collect { resource ->
-                        when(resource) {
+                        when (resource) {
                             is Resource.Success -> {
                                 _state.value = ProfileState(
                                     isLoading = false,
@@ -69,12 +67,14 @@ class ProfileViewModel(
                                     error = ""
                                 )
                             }
+
                             is Resource.Error -> {
                                 _state.value = _state.value.copy(
                                     isLoading = false,
-                                    error = resource.message ?: "Login gagal"
+                                    error = resource.message ?: "Gagal mengambil profil"
                                 )
                             }
+
                             is Resource.Loading -> {
                                 _state.value = _state.value.copy(
                                     isLoading = true,
@@ -86,7 +86,7 @@ class ProfileViewModel(
 
                 getProfilePhotoUseCase(photoPath = _state.value.profile?.profilePhoto ?: "")
                     .collect { resource ->
-                        when(resource) {
+                        when (resource) {
                             is Resource.Success -> {
                                 _profilePhoto.value = _profilePhoto.value.copy(
                                     isLoading = false,
@@ -94,12 +94,14 @@ class ProfileViewModel(
                                     error = ""
                                 )
                             }
+
                             is Resource.Error -> {
                                 _profilePhoto.value = _profilePhoto.value.copy(
                                     isLoading = false,
                                     error = "Fetch foto profil gagal"
                                 )
                             }
+
                             is Resource.Loading -> {
                                 _profilePhoto.value = _profilePhoto.value.copy(
                                     isLoading = true,
@@ -117,7 +119,7 @@ class ProfileViewModel(
         }
     }
 
-    fun getStats() {
+    private fun getStats() {
         viewModelScope.launch {
             _userStats.value = _userStats.value.copy(
                 stats = Stats(
@@ -140,17 +142,4 @@ class ProfileViewModel(
     fun getNumberOfListenedSongs(): String {
         return _userStats.value.stats?.numberOfSongsListened.toString()
     }
-
-
-//    fun printToken() { // Contoh lain
-//        viewModelScope.launch {
-//            try {
-//                val token = readToken()
-//                Log.d("TOKEN_PRINT", "Token: $token")
-//            } catch(e: Error) {
-//                Log.d("Hai","Hai")
-//                _shouldRedirectToLogin.value = true
-//            }
-//        }
-//    }
 }

@@ -49,39 +49,4 @@ class LibraryPageViewModel (
             }
         }
     }
-
-    fun deleteSong(songId: Long) {
-        viewModelScope.launch {
-            _state.update { it.copy(isDeletingSong = true) }
-
-            try {
-                deleteSongUseCase(songId).fold(
-                    onSuccess = {
-                        _state.update {
-                            it.copy(
-                                isDeletingSong = false,
-                                operationSuccessMessage = "Lagu berhasil dihapus"
-                            )
-                        }
-                    },
-                    onFailure = { error ->
-                        _state.update {
-                            it.copy(
-                                isDeletingSong = false,
-                                error = "Gagal menghapus lagu: ${error.localizedMessage}"
-                            )
-                        }
-                    }
-                )
-            } catch (e: Exception) {
-                Log.e("LibraryPageViewModel", "Error deleting song: ${e.localizedMessage}")
-                _state.update {
-                    it.copy(
-                        isDeletingSong = false,
-                        error = "Gagal menghapus lagu: ${e.localizedMessage}"
-                    )
-                }
-            }
-        }
-    }
 }
