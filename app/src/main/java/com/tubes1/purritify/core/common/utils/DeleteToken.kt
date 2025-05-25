@@ -1,7 +1,7 @@
 package com.tubes1.purritify.core.common.utils
 
 import android.content.Context
-import com.tubes1.purritify.core.data.local.userPreferencesDataStore
+import com.tubes1.purritify.core.data.datastore.userPreferencesDataStore
 
 class DeleteToken(
     private val context: Context

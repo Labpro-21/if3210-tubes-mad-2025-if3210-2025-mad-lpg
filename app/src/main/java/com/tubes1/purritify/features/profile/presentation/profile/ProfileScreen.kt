@@ -19,9 +19,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
@@ -83,7 +86,12 @@ fun ProfileScreen(
                 actionLabel = "Login"
             )
             profileViewModel.logout()
-            navController.navigate(Screen.Login.route)
+            navController.navigate(Screen.Login.route) {
+                popUpTo(Screen.Home.route) {
+                    inclusive = true
+                }
+                launchSingleTop = true
+            }
         }
     }
 
@@ -160,7 +168,30 @@ fun ProfileScreen(
                 .background(brush = backgroundGradient)
                 .padding(WindowInsets.statusBars.asPaddingValues())
         ) {
-            Column(
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Back button
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Kembali",
+                    tint = Color.White,
+                    modifier = Modifier
+                        .size(28.dp)
+                        .clickable {
+                            navController.navigateUp()
+                        }
+                )
+
+                Text(
+                    text = "Akun Anda",
+                    style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                    color = Color.White,
+                    modifier = Modifier.padding(start = 16.dp)
+                    
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(top = 40.dp),
@@ -283,8 +314,174 @@ fun ProfileScreen(
                 ) {
                     SnackbarHost(hostState = snackbarHostState)
                 }
+
+            }
+        } else {
+            Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(brush = backgroundGradient)
+                .padding(WindowInsets.statusBars.asPaddingValues())
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Back button
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Kembali",
+                    tint = Color.White,
+                    modifier = Modifier
+                        .size(28.dp)
+                        .clickable {
+                            navController.navigateUp()
+                        }
+                )
+
+                Text(
+                    text = "Akun Anda",
+                    style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                    color = Color.White,
+                    modifier = Modifier.padding(start = 16.dp)
+                )
+            }
+
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(brush = backgroundGradient)
+                    .padding(WindowInsets.statusBars.asPaddingValues())
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(top = 40.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .padding(top = 40.dp)
+                    ) {
+                        if (profilePhotoState.value.isLoading) {
+                            CircularProgressIndicator()
+                        } else {
+                            bitmap.value?.let { bmp ->
+                                Image(
+                                    bitmap = bmp.asImageBitmap(),
+                                    contentDescription = "Profile Photo",
+                                    modifier = Modifier
+                                        .size(120.dp)
+                                        .clip(CircleShape)
+                                        .border(2.dp, Color.Gray, CircleShape)
+                                )
+                            }
+                        }
+                    }
+
+                    // username and location
+                    Text(
+                        text = state.profile?.username ?: "13522xxx",
+                        color = Color.White,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(top = 16.dp)
+                    )
+
+                    Text(
+                        text = state.profile?.location?.let {
+                            "${getFlagEmoji(it)} ${Locale("", it).displayCountry}"
+                        } ?: "",
+                        color = Color.White.copy(alpha = 0.7f),
+                        fontSize = 14.sp,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+
+                    // stats
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 32.dp, start = 10.dp, end = 10.dp),
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        StatItem(count = profileViewModel.getNumberOfSongs(), label = "LAGU", modifier = Modifier.weight(1f))
+                        StatItem(count = profileViewModel.getNumberOfFavoritedSongs(), label = "DISUKAI", modifier = Modifier.weight(1f))
+                        StatItem(count = profileViewModel.getNumberOfListenedSongs(), label = "DIDENGARKAN", modifier = Modifier.weight(1f))
+                    }
+
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 24.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        // Edit Profile Row
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { showEditDialog.value = true }
+                                .padding(vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.edit_icon),
+                                tint = Color.White,
+                                contentDescription = "Edit Profil",
+                                modifier = Modifier.size(24.dp)
+                            )
+                            Column(modifier = Modifier.padding(start = 12.dp)) {
+                                Text(
+                                    text = "Edit Profil",
+                                    color = Color.White,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 16.sp
+                                )
+                                Text(
+                                    text = "Ubah lokasi dan foto profil Anda",
+                                    color = Color.Gray,
+                                    fontSize = 14.sp
+                                )
+                            }
+                        }
+
+                        // Logout Row
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { showLogoutDialog.value = true }
+                                .padding(vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.logout_icon),
+                                tint = Color(0xFFEF5350),
+                                contentDescription = "Keluar",
+                                modifier = Modifier.size(24.dp)
+                            )
+                            Text(
+                                text = "Keluar",
+                                color = Color(0xFFEF5350),
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 16.sp,
+                                modifier = Modifier.padding(start = 12.dp)
+                            )
+                        }
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(bottom = 16.dp),
+                        contentAlignment = Alignment.BottomCenter
+                    ) {
+                        SnackbarHost(hostState = snackbarHostState)
+                    }
+                }
             }
         }
     }
-
+        }
+    }   
 }
