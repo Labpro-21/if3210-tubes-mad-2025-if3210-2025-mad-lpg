@@ -43,17 +43,43 @@ pengguna juga dapat menambah lagu dan menyukai lagu. Aplikasi pun memiliki fitur
    ![music_player.jpg](assets/music_player.jpg)  
    ![music_player2.jpg](assets/music_player2.jpg)
 
+8. Notif Controls
+   ![notif_controls.jpg](assets/notif_controls.jpg)
+
+9. Responsive Pages
+   ![responsive.png](assets/responsive.png)
+
+10. Share Song
+   ![share_song.png](assets/share_song.jpg)
+
+11. Edit Profil
+   ![edit_profil.jpg](assets/edit_profil.jpg)
+
+12. Audio Routing
+   ![audio_routing.jpg](assets/audio_routing.jpg)
+
+13. Online Songs
+   ![online_songs_download.jpg](assets/online_songs_download.jpg)
+
+14. Recommendation
+   ![rekomendasi.jpg](assets/rekomendasi.jpg)
+
+15. Sound Capsule
+   ![sound_capsule.jpg](assets/sound_capsule.jpg)
+
+16. Upload Song
+   ![upload_song.png](assets/upload_song.png)
 
 ## Pembagian Tugas
 | NIM      | Nama                      | Tugas                                                                        |
 |----------|---------------------------|------------------------------------------------------------------------------|
-| 13522007 | Irfan Sidiq Permana       | Header dan Navbar, Home, Library, Pemutaran dan Penambahan lagu, Liked songs |
-| 13522033 | Bryan Cornelius Lauwrence | Login, Logout, Background Service                                            |
-| 13522041 | Ahmad Hasan Albana        | Profile, Network sensing                                                     |
+| 13522007 | Irfan Sidiq Permana       | Header dan Navbar, Home, Library, Pemutaran dan Penambahan lagu, Liked songs, Notif Controls, Audio Routing, Sound Capsule, Online Songs & Download |
+| 13522033 | Bryan Cornelius Lauwrence | Login, Logout, Background Service, Edit Profil, Recommendation, Share Song                                            |
+| 13522041 | Ahmad Hasan Albana        | Profile, Network sensing, Responsive                                                     |
 
 ## Jam Pengerjaan
 | NIM      | Jam Persiapan | Jam Pengerjaan |
 |----------|---------------|----------------|
-| 13522007 | 10 jam        | 30 jam         |
-| 13522033 | 6 jam         | 24 jam         |
-| 13522041 | 6 jam         | 15 jam         |
+| 13522007 | 10 jam        | 60 jam         |
+| 13522033 | 6 jam         | 55 jam         |
+| 13522041 | 6 jam         | 30 jam         |
