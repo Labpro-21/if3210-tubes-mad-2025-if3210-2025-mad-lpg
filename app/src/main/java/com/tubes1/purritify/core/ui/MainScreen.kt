@@ -286,6 +286,12 @@ fun MainScreen(
                         composable(Screen.Library.route) {
                             LibraryScreen(navController = navController)
                         }
+                        composable(
+                            route = Screen.OnlineChartsScreen.route,
+                            arguments = listOf(navArgument(OnlineChartsViewModel.NAV_ARG_CHART_TYPE) { type = NavType.StringType })
+                        ) {
+                            OnlineChartsScreen(navController = navController)
+                        }
                         composable(Screen.Profile.route) {
                             ProfileScreen(navController = navController)
                         }
