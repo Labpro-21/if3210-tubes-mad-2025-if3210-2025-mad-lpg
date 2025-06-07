@@ -18,6 +18,9 @@ sealed class Screen(val route: String) {
         Screen("online-charts-screen/{${OnlineChartsViewModel.NAV_ARG_CHART_TYPE}}") {
         fun createRoute(chartType: String) = "online-charts-screen/$chartType"
     }
+    object LinkLanding : Screen("deeplink/{song_id}") {
+        fun createRoute(songId: Long): String = "deeplink/$songId"
+    }
 
     @Composable
     fun isLandscape(): Boolean {

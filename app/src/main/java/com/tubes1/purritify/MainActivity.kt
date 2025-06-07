@@ -8,6 +8,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import com.tubes1.purritify.core.common.navigation.Screen
 import com.tubes1.purritify.core.ui.MainScreen
 import com.tubes1.purritify.core.ui.theme.PurritifyTheme
 import com.tubes1.purritify.features.musicplayer.data.service.MusicPlayerService
@@ -42,9 +43,21 @@ class MainActivity : ComponentActivity() {
     private fun handleIntent(intent: Intent?) {
         if (intent?.action == MusicPlayerService.ACTION_OPEN_PLAYER) {
             Log.d("MainActivity", "ACTION_OPEN_PLAYER received. Emitting navigation request.")
-            _navigationRequestChannel.value = com.tubes1.purritify.core.common.navigation.Screen.MusicPlayer.route
+            _navigationRequestChannel.value = Screen.MusicPlayer.route
+            return
+        }
+
+        // Handle deep link like: purrytify://song/123
+        val data = intent?.data
+        if (data != null && data.scheme == "purrytify" && data.host == "song") {
+            val songId = data.lastPathSegment?.toLongOrNull()
+            Log.d("MainActivity", "Deep link detected: songId=$songId")
+            if (songId != null) {
+                _navigationRequestChannel.value = Screen.LinkLanding.createRoute(songId)
+            }
         }
     }
+
 
     fun clearNavigationRequest() {
         _navigationRequestChannel.value = null

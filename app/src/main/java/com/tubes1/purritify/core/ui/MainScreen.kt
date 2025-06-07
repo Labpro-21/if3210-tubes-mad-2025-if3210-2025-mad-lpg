@@ -121,18 +121,6 @@ fun MainScreen(
     val playerViewModel: MusicPlayerViewModel = koinViewModel(viewModelStoreOwner = viewModelStoreOwner)
     val playerState by playerViewModel.uiState.collectAsState()
 
-    LaunchedEffect(key1 = navigationRequestFlow) {
-        navigationRequestFlow.collect { route ->
-            if (route != null) {
-                Log.d("MainScreen", "Navigation request received: $route")
-                navController.navigate(route) {
-                    launchSingleTop = true
-                }
-                (context as? MainActivity)?.clearNavigationRequest()
-            }
-        }
-    }
-
     val shouldShowMiniPlayer = remember(playerState.currentSong, currentRoute) {
         val show = playerState.currentSong != null && currentRoute != Screen.MusicPlayer.route
         Log.d("MainScreen", "Calc shouldShowMiniPlayer: $show. Song: ${playerState.currentSong?.title}, Route: $currentRoute")
@@ -230,18 +218,35 @@ fun MainScreen(
                                 OnlineChartsScreen(navController = navController)
                             }
                             composable(
-                                route = "deeplink/{song_id}",
+                                route = Screen.LinkLanding.route,
                                 arguments = listOf(navArgument("song_id") { type = NavType.LongType }),
                                 deepLinks = listOf(navDeepLink {
                                     uriPattern = "purrytify://song/{song_id}"
                                     action = Intent.ACTION_VIEW
                                 })
                             ) { backStackEntry ->
-                                val songId = backStackEntry.arguments?.getLong("song_id") ?: return@composable
+                                val songId = backStackEntry.arguments?.getLong("song_id") ?: 0L
                                 LinkLandingScreen(songId = songId, navController = navController)
                             }
                         }
                         AnimatedVisibilityX(shouldShowMiniPlayer, playerState, playerViewModel, currentRoute, navController)
+                    }
+                }
+
+                // --- Safe navigation handling here ---
+                val navigationRequest by navigationRequestFlow.collectAsState()
+                LaunchedEffect(startDestination, navigationRequest) {
+                    val navReq = navigationRequest
+                    if (startDestination != null && navReq != null) {
+                        Log.d("MainScreen", "Navigation request received: $navReq")
+                        try {
+                            navController.navigate(navReq) {
+                                launchSingleTop = true
+                            }
+                        } catch (e: Exception) {
+                            Log.e("MainScreen", "Navigation failed for route: $navReq", e)
+                        }
+                        (context as? MainActivity)?.clearNavigationRequest()
                     }
                 }
 
@@ -323,15 +328,25 @@ fun MainScreen(
                         composable(Screen.Login.route) {
                             LoginPage(navController = navController)
                         }
+                        composable(
+                            route = Screen.LinkLanding.route,
+                            arguments = listOf(navArgument("song_id") { type = NavType.LongType }),
+                            deepLinks = listOf(navDeepLink {
+                                uriPattern = "purrytify://song/{song_id}"
+                                action = Intent.ACTION_VIEW
+                            })
+                        ) { backStackEntry ->
+                            val songId = backStackEntry.arguments?.getLong("song_id") ?: 0L
+                            LinkLandingScreen(songId = songId, navController = navController)
+                        }
                     }
 
-                    Box (contentAlignment = Alignment.BottomCenter) {
+                    Box(contentAlignment = Alignment.BottomCenter) {
                         AnimatedVisibility(
                             visible = shouldShowMiniPlayer,
                             enter = slideInVertically(initialOffsetY = { it }),
                             exit = slideOutVertically(targetOffsetY = { it }),
-                            modifier = Modifier
-                                .align(Alignment.BottomCenter)
+                            modifier = Modifier.align(Alignment.BottomCenter)
                         ) {
                             MiniPlayer(
                                 playerUiState = playerState,
@@ -352,6 +367,24 @@ fun MainScreen(
                     }
                 }
             }
+
+            // --- Safe navigation handling here ---
+            val navigationRequest by navigationRequestFlow.collectAsState()
+            LaunchedEffect(startDestination, navigationRequest) {
+                val navReq = navigationRequest
+                if (startDestination != null && navReq != null) {
+                    Log.d("MainScreen", "Navigation request received: $navReq")
+                    try {
+                        navController.navigate(navReq) {
+                            launchSingleTop = true
+                        }
+                    } catch (e: Exception) {
+                        Log.e("MainScreen", "Navigation failed for route: $navReq", e)
+                    }
+                    (context as? MainActivity)?.clearNavigationRequest()
+                }
+            }
+
         } else {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
