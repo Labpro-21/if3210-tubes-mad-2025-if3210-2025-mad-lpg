@@ -152,6 +152,28 @@ fun UploadSongBottomSheet(
                             )
                         }
 
+                        // title input
+                        InputField(
+                            label = "Judul",
+                            value = state.title,
+                            onValueChange = { viewModel.onTitleChanged(it) },
+                            placeholder = "Judul lagu",
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 16.dp)
+                        )
+
+                        // artist input
+                        InputField(
+                            label = "Artis",
+                            value = state.artist,
+                            onValueChange = { viewModel.onArtistChanged(it) },
+                            placeholder = "Artis lagu",
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 32.dp)
+                        )
+
                         if (isLandscape()) {
                             Row {
                                 // title input
