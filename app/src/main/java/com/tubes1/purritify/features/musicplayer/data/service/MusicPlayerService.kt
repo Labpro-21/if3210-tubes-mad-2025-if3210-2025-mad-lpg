@@ -169,7 +169,7 @@ class MusicPlayerService : Service(), KoinComponent {
                     currentSongListenedDurationBeforePause += elapsedTime
                     logPlayHistoryIfNeeded(isCompletion = true, manualStop = false, listenedDuration = currentSongListenedDurationBeforePause)
                 }
-                currentSongListenedDurationBeforePause = 0L // Reset for next song
+                currentSongListenedDurationBeforePause = 0L
                 playNext()
             }
             setOnPreparedListener { mp ->
@@ -179,8 +179,8 @@ class MusicPlayerService : Service(), KoinComponent {
                 applyAudioRouting()
                 mp.start()
                 _isPlaying.value = true
-                currentSongPlayStartTime = System.currentTimeMillis() // Record start time
-                currentSongListenedDurationBeforePause = 0L // Reset for new song play
+                currentSongPlayStartTime = System.currentTimeMillis()
+                currentSongListenedDurationBeforePause = 0L
                 startPositionUpdates()
                 mediaSession.isActive = true
 
@@ -211,7 +211,6 @@ class MusicPlayerService : Service(), KoinComponent {
                 Log.e(TAG, "MediaPlayer Error: What: $what, Extra: $extra")
                 stopPositionUpdates()
                 _isPlaying.value = false
-
                 updateMediaSessionStateAndNotification()
                 true
             }
@@ -251,12 +250,10 @@ class MusicPlayerService : Service(), KoinComponent {
                         if (targetSystemDevice != null) {
                             Log.d(TAG, "Match by address - A2DP preferred: ID=${targetSystemDevice!!.id}, Name=${targetSystemDevice!!.productName}")
                         } else {
-
                             targetSystemDevice = matchingAddressDevices.find { it.type == AudioDeviceInfo.TYPE_BLUETOOTH_SCO }
                             if (targetSystemDevice != null) {
                                 Log.d(TAG, "Match by address - SCO: ID=${targetSystemDevice!!.id}, Name=${targetSystemDevice!!.productName}")
                             } else {
-
                                 targetSystemDevice = matchingAddressDevices.firstOrNull()
                                 if (targetSystemDevice != null) {
                                     Log.d(TAG, "Match by address - Other BT type (${targetSystemDevice!!.type}): ID=${targetSystemDevice!!.id}, Name=${targetSystemDevice!!.productName}")
@@ -297,7 +294,6 @@ class MusicPlayerService : Service(), KoinComponent {
                 if (ContextCompat.checkSelfPermission(this, Manifest.permission.MODIFY_AUDIO_SETTINGS) == PackageManager.PERMISSION_GRANTED) {
                     val success = player.setPreferredDevice(targetSystemDevice)
                     Log.i(TAG, "MediaPlayer.setPreferredDevice(${targetSystemDevice?.productName ?: "DEFAULT"}, ID: ${targetSystemDevice?.id}) success: $success")
-
 
                     if (!success && targetSystemDevice != null &&
                         (targetSystemDevice.type == AudioDeviceInfo.TYPE_BLUETOOTH_A2DP || targetSystemDevice.type == AudioDeviceInfo.TYPE_BLUETOOTH_SCO)) {
@@ -571,9 +567,9 @@ class MusicPlayerService : Service(), KoinComponent {
             val playedDuration = System.currentTimeMillis() - currentSongPlayStartTime
             currentSongListenedDurationBeforePause += playedDuration
             Log.d(TAG, "Song changed while playing ${previouslyPlayingSong.title}. Logging its play duration: ${currentSongListenedDurationBeforePause}ms")
-            logPlayHistoryIfNeeded(isCompletion = false, manualStop = true, listenedDuration = currentSongListenedDurationBeforePause) // Treat as a stop for the old song
+            logPlayHistoryIfNeeded(isCompletion = false, manualStop = true, listenedDuration = currentSongListenedDurationBeforePause)
         }
-        currentSongListenedDurationBeforePause = 0L // Reset for the new song
+        currentSongListenedDurationBeforePause = 0L
 
         _currentSong.value = song
         currentQueue = queue
@@ -599,7 +595,11 @@ class MusicPlayerService : Service(), KoinComponent {
         mediaPlayer?.apply {
             try {
                 Log.d(TAG, "playSong: Setting data source to: ${song.path}")
-                setDataSource(applicationContext, Uri.parse(song.path))
+                if (song.path.startsWith("http://") || song.path.startsWith("https://")) {
+                    setDataSource(song.path)
+                } else {
+                    setDataSource(applicationContext, Uri.parse(song.path))
+                }
                 Log.d(TAG, "playSong: Data source set. Calling prepareAsync.")
                 prepareAsync()
             } catch (e: IOException) {
@@ -636,8 +636,8 @@ class MusicPlayerService : Service(), KoinComponent {
                 it.pause()
                 _isPlaying.value = false
                 val playedDuration = System.currentTimeMillis() - currentSongPlayStartTime
-                currentSongListenedDurationBeforePause += playedDuration // Accumulate
-                logPlayHistoryIfNeeded(isCompletion = false, manualStop = true, listenedDuration = currentSongListenedDurationBeforePause) // Log partial play
+                currentSongListenedDurationBeforePause += playedDuration
+                logPlayHistoryIfNeeded(isCompletion = false, manualStop = true, listenedDuration = currentSongListenedDurationBeforePause)
                 stopPositionUpdates()
             } else {
                 Log.d(TAG, "playPause: Playing.")
@@ -758,6 +758,9 @@ class MusicPlayerService : Service(), KoinComponent {
         _isPlaying.value = false
         _currentPosition.value = 0L
         _duration.value = 0L
+        _currentSong.value = null
+        currentSongIndex = -1
+        currentQueue = emptyList()
 
         mediaSession.isActive = false
         updateMediaSessionStateAndNotification()
@@ -779,8 +782,7 @@ class MusicPlayerService : Service(), KoinComponent {
             return
         }
 
-        // Define "significant play" - e.g., more than 10 seconds or if completed
-        val significantPlayThresholdMs = 10000L // 10 seconds
+        val significantPlayThresholdMs = 10000L
         if (!isCompletion && listenedDuration < significantPlayThresholdMs) {
             Log.d(TAG, "Song '${songToLog.title}' listened for ${listenedDuration}ms, less than threshold. Not logging.")
             return
@@ -788,21 +790,20 @@ class MusicPlayerService : Service(), KoinComponent {
 
         val actualListenedDuration = if (isCompletion) songToLog.duration else listenedDuration
 
-        // Format month as "YYYY-MM"
         val calendar = java.util.Calendar.getInstance()
         val year = calendar.get(java.util.Calendar.YEAR)
-        val monthInt = calendar.get(java.util.Calendar.MONTH) + 1 // Month is 0-indexed
+        val monthInt = calendar.get(java.util.Calendar.MONTH) + 1
         val monthYear = String.format("%d-%02d", year, monthInt)
 
         val historyEntry = PlayHistoryEntity(
             datetime = System.currentTimeMillis(),
-            songId = songToLog.id!!, // Already checked for null
+            songId = songToLog.id!!,
             artist = songToLog.artist,
             month = monthYear,
-            duration = actualListenedDuration // Log the actual duration listened or full if completed
+            duration = actualListenedDuration
         )
 
-        serviceScope.launch(Dispatchers.IO) { // Perform DB operation on IO dispatcher
+        serviceScope.launch(Dispatchers.IO) {
             try {
                 val id = currentPlayHistoryDao.insertPlayHistory(historyEntry)
                 Log.i(TAG, "Logged play history for '${songToLog.title}', ID: $id, Duration: $actualListenedDuration, Month: $monthYear")
@@ -873,14 +874,6 @@ class MusicPlayerService : Service(), KoinComponent {
             } else {
                 Log.d("MusicPlayerService", "Stopping foreground. Song: ${songToUpdateWith?.title}, Active: ${mediaSession.isActive}, isPlaying: $isPlayingUpdate")
                 stopForegroundAndRemoveNotification()
-
-                if (!mediaSession.isActive) {
-                    Log.d("MusicPlayerService", "MediaSession not active, clearing current song from service state.")
-                    _currentSong.value = null
-                    currentSongIndex = -1
-                    currentQueue = emptyList()
-                    _duration.value = 0L
-                }
             }
         }
     }

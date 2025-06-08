@@ -34,7 +34,6 @@ fun OnlineChartsScreen(
     navController: NavController,
     viewModel: OnlineChartsViewModel = koinViewModel(),
     sharedPlayerViewModel: SharedPlayerViewModel = koinViewModel(),
-    musicPlayerViewModel: MusicPlayerViewModel = koinViewModel()
 ) {
     val uiState by viewModel.state.collectAsState()
     val context = LocalContext.current
@@ -44,7 +43,6 @@ fun OnlineChartsScreen(
             when (event) {
                 is OnlineChartsViewModel.PlayerEvent.PrepareToPlay -> {
                     Log.d("OnlineChartsScreen", "Received PrepareToPlay event for ${event.song.title}")
-                    
                     sharedPlayerViewModel.setSongAndQueue(event.song, event.queue)
                     navController.navigate(Screen.MusicPlayer.route) 
                 }
@@ -54,16 +52,10 @@ fun OnlineChartsScreen(
 
     LaunchedEffect(uiState.songDownloadStatuses) {
         uiState.songDownloadStatuses.forEach { (id, status) ->
-            
-            
-            
             if (status is DownloadStatus.Completed) {
-                
                 val songTitle = uiState.chartSongs.find { it.serverId == id }?.title ?: "Lagu"
-                
                 Log.i("OnlineChartsScreen", "$songTitle (ID: $id) successfully downloaded.")
             } else if (status is DownloadStatus.Failed) {
-                
                 Log.e("OnlineChartsScreen", "Failed to download song (ID: $id): ${status.message}")
             }
         }
@@ -120,14 +112,12 @@ fun OnlineChartsScreen(
                         )
                         if (uiState.currentCountryCode != null &&
                             !SUPPORTED_COUNTRY_CODES.contains(uiState.currentCountryCode?.uppercase())){
-                            
                         } else {
                             Spacer(modifier = Modifier.height(8.dp))
                             Button(onClick = { viewModel.retryLoadChart() }) {
                                 Text("Muat Ulang")
                             }
                         }
-
                     }
                 }
                 else -> {

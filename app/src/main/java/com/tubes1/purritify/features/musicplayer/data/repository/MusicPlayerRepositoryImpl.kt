@@ -113,8 +113,6 @@ class MusicPlayerRepositoryImpl(
                         isPlaying = isPlaying,
                         currentPosition = position,
                         duration = duration,
-
-
                         activeAudioDevice = preferredDevice
                     )
                 }
@@ -183,7 +181,7 @@ class MusicPlayerRepositoryImpl(
     override fun getCurrentSongMonthYear(): Flow<String?> = serviceBoundFlow.flatMapLatest { isBound ->
         if (isBound && musicService != null) {
             musicService!!.currentSong.map { song ->
-                song?.lastPlayed?.let { ts -> // Or song.dateAdded if lastPlayed is not always set
+                song?.lastPlayed?.let { ts ->
                     val cal = Calendar.getInstance()
                     cal.timeInMillis = ts
                     SimpleDateFormat("yyyy-MM", Locale.getDefault()).format(cal.time)

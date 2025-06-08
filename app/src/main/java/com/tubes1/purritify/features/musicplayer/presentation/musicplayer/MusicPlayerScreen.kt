@@ -1,5 +1,6 @@
 package com.tubes1.purritify.features.musicplayer.presentation.musicplayer
 
+import android.util.Log
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -60,6 +61,8 @@ fun MusicPlayerScreen(
         )
     )
 
+    val isFavorited by playerViewModel.isFavorited.collectAsState()
+
     fun formatDuration(millis: Long): String {
         val totalSeconds = millis / 1000
         val minutes = totalSeconds / 60
@@ -72,8 +75,6 @@ fun MusicPlayerScreen(
     } else {
         0f
     }
-
-    var isFavorite by remember { mutableStateOf(false) }
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -184,7 +185,7 @@ fun MusicPlayerScreen(
                                         }
                                     }) {
                                         Icon(
-                                            imageVector = if (state.currentSong?.isFavorited == true)
+                                            imageVector = if (isFavorited)
                                                 Icons.Default.Favorite
                                             else
                                                 Icons.Default.FavoriteBorder,

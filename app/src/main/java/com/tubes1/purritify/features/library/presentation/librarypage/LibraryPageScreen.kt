@@ -131,7 +131,6 @@ fun LibraryScreen(
                                 onItemClick = { song ->
                                     sharedPlayerViewModel.setSongAndQueue(song, displayedSongs)
                                     navController.navigate(Screen.MusicPlayer.route)
-                                    musicPlayerViewModel.playSong(song, displayedSongs)
                                 }
                             )
                             addItemDecoration(DividerItemDecoration(ctx, DividerItemDecoration.VERTICAL))

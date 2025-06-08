@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -37,47 +38,71 @@ class MusicPlayerViewModel(
     private val _uiState = MutableStateFlow(PlayerUiState())
     val uiState: StateFlow<PlayerUiState> = _uiState.asStateFlow()
 
+    val isFavorited = MutableStateFlow(_uiState.value.currentSong?.isFavorited ?: false)
+
     init {
-        Log.d("MusicPlayerViewModel", "music player viewmodel created")
-        observeSharedPlayerState()
+        Log.d("MusicPlayerViewModel", "MusicPlayerViewModel instance created: $this")
+
+        viewModelScope.launch {
+            getPlayerStateUseCase().collectLatest { playerState ->
+                Log.d("MusicPlayerVM", "UI_UPDATE_COLLECTOR: PlayerState: Song='${playerState.currentSong?.title}', Playing=${playerState.isPlaying}, Pos=${playerState.currentPosition}, Dur=${playerState.duration}")
+                _uiState.update {
+                    val stillLoading = if (it.isLoading && playerState.currentSong?.id == it.currentSong?.id) true else false
+                    it.copy(
+                        isLoading = stillLoading, 
+                        currentSong = playerState.currentSong,
+                        isPlaying = playerState.isPlaying,
+                        currentPosition = playerState.currentPosition,
+                        duration = playerState.duration,
+                        error = playerState.error
+                    )
+                }
+                SharedPlayerState.updateSongAndQueue(playerState.currentSong, playerState.queue)
+            }
+        }
+        observeSharedPlayerCommands()
     }
 
-    private fun observeSharedPlayerState() {
+    private fun observeSharedPlayerCommands() {
         viewModelScope.launch {
-            combine(SharedPlayerState.currentPlayingSong, SharedPlayerState.musicQueue) { song, queue ->
-                Pair(song, queue)
-            }.collectLatest { (song, queue) ->
-                if (song != null && queue.isNotEmpty()) {
-                    playSong(song, queue)
-                }
+            combine(
+                SharedPlayerState.currentPlayingSong, 
+                SharedPlayerState.musicQueue          
+            ) { commandedSong, commandedQueue ->
+                Pair(commandedSong, commandedQueue)
             }
+                .collectLatest { (commandedSong, commandedQueue) ->
+                    Log.d("MusicPlayerVM", "COMMAND_COLLECTOR: CommandedSong='${commandedSong?.title}'")
+
+                    if (commandedSong != null && commandedQueue.isNotEmpty()) {
+                        val currentUiSong = _uiState.value.currentSong
+                        if (currentUiSong?.id != commandedSong.id || currentUiSong?.path != commandedSong.path) {
+                            Log.i("MusicPlayerVM", "COMMAND: Request to play '${commandedSong.title}'. Calling playSongInternal.")
+                            playSongInternal(commandedSong, commandedQueue)
+                        } else {
+                            Log.i("MusicPlayerVM", "COMMAND: Request for '${commandedSong.title}' matches current UI song. No new play command issued.")
+                            
+                        }
+                    } else if (commandedSong == null && _uiState.value.currentSong != null) {
+                        Log.d("MusicPlayerVM", "COMMAND: SharedPlayerState cleared song. UI song: '${_uiState.value.currentSong?.title}'. No explicit stop here.")
+                    }
+                }
         }
     }
 
-    fun playSong(song: Song, queue: List<Song>) {
+    
+    private fun playSongInternal(song: Song, queue: List<Song>) {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
+            _uiState.update { it.copy(isLoading = true, currentSong = song, isPlaying = false, currentPosition = 0L) }
             try {
+                Log.d("MusicPlayerVM", "playSongInternal: Telling service to play ${song.title}")
                 playSongUseCase(song, queue)
                 song.id?.let { id ->
                     updateLastPlayedUseCase(id)
                 }
-                getPlayerStateUseCase().collectLatest { playerState ->
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            currentSong = playerState.currentSong,
-                            isPlaying = playerState.isPlaying,
-                            currentPosition = playerState.currentPosition,
-                            duration = playerState.duration,
-                            error = null
-                        )
-                    }
-                }
             } catch (e: Exception) {
-                _uiState.update { it.copy(error = "Failed to play song: ${e.message}") }
-            } finally {
-                _uiState.update { it.copy(isLoading = false) }
+                Log.e("MusicPlayerVM", "Error in playSongInternal for ${song.title}: ${e.message}", e)
+                _uiState.update { it.copy(isLoading = false, error = "Failed to play song: ${e.message}") }
             }
         }
     }
@@ -107,6 +132,7 @@ class MusicPlayerViewModel(
         viewModelScope.launch {
             try {
                 toggleFavoritedUseCase(songId)
+                isFavorited.value = !isFavorited.value
             } catch (e: Exception) {
                 _uiState.update { it.copy(error = "Failed to toggle favorite: ${e.message}") }
             }

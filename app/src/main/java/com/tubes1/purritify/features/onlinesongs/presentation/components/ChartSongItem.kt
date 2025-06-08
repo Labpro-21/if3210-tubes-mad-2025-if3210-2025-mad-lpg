@@ -31,7 +31,7 @@ import com.tubes1.purritify.features.onlinesongs.domain.model.ChartSong
 @Composable
 fun ChartSongItem(
     chartSong: ChartSong,
-    downloadStatus: DownloadStatus, // To show download progress or downloaded state
+    downloadStatus: DownloadStatus,
     onPlayClick: (ChartSong) -> Unit,
     onDownloadClick: (ChartSong) -> Unit,
     modifier: Modifier = Modifier
@@ -43,7 +43,7 @@ fun ChartSongItem(
         modifier = modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp, horizontal = 8.dp)
-            .clickable { onPlayClick(chartSong) }, // Make the whole item playable
+            .clickable { onPlayClick(chartSong) },
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
@@ -55,8 +55,8 @@ fun ChartSongItem(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(chartSong.artworkUrl)
                     .crossfade(true)
-                    .placeholder(R.drawable.dummy_song_art) // Replace with your placeholder
-                    .error(R.drawable.dummy_song_art)       // Replace with your error placeholder
+                    .placeholder(R.drawable.dummy_song_art)
+                    .error(R.drawable.dummy_song_art)
                     .build(),
                 contentDescription = chartSong.title,
                 contentScale = ContentScale.Crop,
@@ -82,7 +82,7 @@ fun ChartSongItem(
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
-                    text = chartSong.durationMillis.formatDurationMillis(), // Use the formatter
+                    text = chartSong.durationMillis.formatDurationMillis(),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -90,7 +90,6 @@ fun ChartSongItem(
 
             Spacer(Modifier.width(8.dp))
 
-            // Show progress or play/download icon
             Box(contentAlignment = Alignment.Center) {
                 when (downloadStatus) {
                     is DownloadStatus.Downloading -> {
@@ -101,17 +100,13 @@ fun ChartSongItem(
                         )
                     }
                     is DownloadStatus.Completed, DownloadStatus.AlreadyDownloaded -> {
-                        // Potentially show a "Downloaded" checkmark or nothing specific here,
-                        // as the "Download" option in menu will be hidden.
-                        // For now, let main action be play.
                         Icon(
-                            imageVector = Icons.Filled.PlayArrow, // Or a checkmark if preferred
+                            imageVector = Icons.Filled.PlayArrow,
                             contentDescription = "Downloaded",
                             tint = MaterialTheme.colorScheme.primary
                         )
                     }
-                    else -> { // Idle, Failed
-                        // Default to play, download is in menu
+                    else -> {
                         Icon(
                             imageVector = Icons.Filled.PlayArrow,
                             contentDescription = "Play",
@@ -121,14 +116,12 @@ fun ChartSongItem(
                 }
             }
 
-
             IconButton(onClick = { menuExpanded = true }) {
                 Icon(Icons.Filled.MoreVert, contentDescription = "Lainnya")
                 DropdownMenu(
                     expanded = menuExpanded,
                     onDismissRequest = { menuExpanded = false }
                 ) {
-                    // "Download" option
                     if (downloadStatus !is DownloadStatus.Completed &&
                         downloadStatus !is DownloadStatus.AlreadyDownloaded &&
                         downloadStatus !is DownloadStatus.Downloading) {

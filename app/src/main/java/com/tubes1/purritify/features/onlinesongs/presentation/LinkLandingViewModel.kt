@@ -12,6 +12,7 @@ import com.tubes1.purritify.core.data.local.entity.toSong
 import com.tubes1.purritify.core.domain.model.Song
 import com.tubes1.purritify.core.domain.repository.ServerSongRepository
 import com.tubes1.purritify.features.musicplayer.domain.repository.MusicPlayerRepository
+import com.tubes1.purritify.features.musicplayer.presentation.musicplayer.SharedPlayerViewModel
 import com.tubes1.purritify.features.onlinesongs.domain.model.ChartSong
 import com.tubes1.purritify.features.onlinesongs.domain.model.toPlayerSong
 import com.tubes1.purritify.features.onlinesongs.domain.usecase.GetOnlineSongUseCase
@@ -23,7 +24,8 @@ class LinkLandingViewModel(
     private val getOnlineSongUseCase: GetOnlineSongUseCase,
     private val songDao: SongDao,
     private val serverSongRepository: ServerSongRepository,
-    private val musicPlayerRepository: MusicPlayerRepository
+    private val musicPlayerRepository: MusicPlayerRepository,
+    private val sharedPlayerViewModel: SharedPlayerViewModel
 ) : ViewModel() {
 
     private val _navigateToPlayer = mutableStateOf(false)
@@ -54,7 +56,7 @@ class LinkLandingViewModel(
             }
 
             val (song, queue) = prepareSongForPlayback(chartSong)
-            musicPlayerRepository.playSong(song, queue)
+            sharedPlayerViewModel.setSongAndQueue(song, queue)
             _navigateToPlayer.value = true
         }
     }

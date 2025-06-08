@@ -233,7 +233,6 @@ fun MainScreen(
                     }
                 }
 
-                // --- Safe navigation handling here ---
                 val navigationRequest by navigationRequestFlow.collectAsState()
                 LaunchedEffect(startDestination, navigationRequest) {
                     val navReq = navigationRequest
@@ -368,7 +367,6 @@ fun MainScreen(
                 }
             }
 
-            // --- Safe navigation handling here ---
             val navigationRequest by navigationRequestFlow.collectAsState()
             LaunchedEffect(startDestination, navigationRequest) {
                 val navReq = navigationRequest

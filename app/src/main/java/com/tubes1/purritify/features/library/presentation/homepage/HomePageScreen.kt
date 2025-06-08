@@ -54,8 +54,8 @@ import com.tubes1.purritify.R
 import com.tubes1.purritify.core.common.navigation.Screen
 import com.tubes1.purritify.core.common.network.Connectivity
 import com.tubes1.purritify.features.library.presentation.common.ui.components.SongListItem
+import com.tubes1.purritify.features.library.presentation.common.ui.components.TopChartItem
 import com.tubes1.purritify.features.library.presentation.homepage.components.SongGridItem
-import com.tubes1.purritify.features.library.presentation.homepage.components.TopChartItem
 import com.tubes1.purritify.features.musicplayer.presentation.musicplayer.MusicPlayerViewModel
 import com.tubes1.purritify.features.musicplayer.presentation.musicplayer.SharedPlayerViewModel
 import com.tubes1.purritify.features.profile.presentation.profile.getFlagEmoji
@@ -247,7 +247,6 @@ fun HomeScreen(
                                 onClick = {
                                     sharedPlayerViewModel.setSongAndQueue(song, state.newlyAddedSongs)
                                     navController.navigate(Screen.MusicPlayer.route)
-                                    musicPlayerViewModel.playSong(song, state.newlyAddedSongs)
                                 }
                             )
                         }
@@ -283,7 +282,6 @@ fun HomeScreen(
                         onClick = {
                             sharedPlayerViewModel.setSongAndQueue(song, state.recentlyPlayedSongs)
                             navController.navigate(Screen.MusicPlayer.route)
-                            musicPlayerViewModel.playSong(song, state.recentlyPlayedSongs)
                         }
                     )
                 }
@@ -317,7 +315,6 @@ fun HomeScreen(
                         onClick = {
                             sharedPlayerViewModel.setSongAndQueue(song, state.recentlyPlayedSongs)
                             navController.navigate(Screen.MusicPlayer.route)
-                            musicPlayerViewModel.playSong(song, state.recentlyPlayedSongs)
                         }
                     )
                 }

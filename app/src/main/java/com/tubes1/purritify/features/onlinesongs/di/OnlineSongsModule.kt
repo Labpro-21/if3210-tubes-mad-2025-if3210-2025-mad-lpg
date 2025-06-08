@@ -45,6 +45,6 @@ val onlineSongsModule = module {
         )
     }
     viewModel {
-        LinkLandingViewModel( get(), get(), get(), get() )
+        LinkLandingViewModel( get(), get(), get(), get(), get() )
     }
 }
